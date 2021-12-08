@@ -1,0 +1,40 @@
+{
+  "name": "testit-adapter-cucumber",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/formatter.js",
+  "scripts": {
+    "prebuild": "rimraf dist",
+    "build": "tsc",
+    "start": "npm run build && cd demo && npm run test",
+    "lint": "eslint . --ext=.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "peerDependencies": {
+    "axios": "^0.22.0",
+    "minimist": "^1.2.5"
+  },
+  "dependencies": {
+    "@cucumber/cucumber": "^7.3.1",
+    "@cucumber/messages": "^17.1.1",
+    "testit-api-client": "file:testit-api-client-1.0.0.tgz"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.15.8",
+    "@babel/preset-typescript": "^7.15.0",
+    "@types/node": "^16.10.3",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "eslint": "^7.32.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-import": "^2.25.1",
+    "eslint-plugin-prettier": "^4.0.0",
+    "prettier": "^2.4.1",
+    "rimraf": "^3.0.2",
+    "ts-node": "^10.3.0",
+    "typescript": "^4.4.3"
+  }
+}
