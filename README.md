@@ -42,6 +42,8 @@ And fill object with your configuration. Formatter sends results to Test IT.
 
 > TestRunId is optional. If it's not provided than it create automatically.
 
+### Tags
+
 Formatter provides additional methods to World:
 
 - addMessage - adds message to autotest
@@ -67,8 +69,6 @@ When('Something happens', function () {
 });
 ```
 
-### Tags
-
 Cucumber tags can be used to specify information about autotest.
 
 > Only those specified above the `Scenario` are taken into account
@@ -79,7 +79,7 @@ Cucumber tags can be used to specify information about autotest.
 - `@Description` - Autotest description
 - `@Link` - can be specified either in JSON (`@Link={"url":"http://google.com","hasInfo":true,"description":"GoogleDescription","title":"Google","type":"Defect"}`) or in text (`@Link=http://google.com`)
 - `@Label` - Label that is going to be linked to autotest
-- `@WorkItemID` - Work item's ID to which autotest is going to be linked
+- `@WorkItemId` - Work item's ID to which autotest is going to be linked
 
 ### Examples
 
