@@ -42,6 +42,15 @@ And fill object with your configuration. Formatter sends results to Test IT.
 
 > TestRunId is optional. If it's not provided than it create automatically.
 
+Add to `cucumber.js` file
+
+```js
+module.exports = {
+  default:
+    '-f ./testitFormatter.js',
+};
+```
+
 ### Tags
 
 Formatter provides additional methods to World:
