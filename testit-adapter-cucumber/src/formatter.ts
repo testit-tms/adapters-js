@@ -23,11 +23,13 @@ import { Storage } from './storage';
 import { IFormatter } from './types/formatter';
 import { AutotestPostWithWorkItemId } from './mappers';
 import { AxiosError } from 'axios';
+import { parseTags, parsedAutotests } from './utils';
 
 export class TestItFormatter extends Formatter implements IFormatter {
   client: IClient;
   storage: IStorage = new Storage();
   currentTestCaseId: string | undefined;
+  resolvedAutotests: Array<string | undefined> | undefined;
 
   constructor(
     options: IFormatterOptions,
@@ -43,9 +45,24 @@ export class TestItFormatter extends Formatter implements IFormatter {
         return this.onGherkinDocument(envelope.gherkinDocument);
       }
       if (envelope.pickle) {
-        return this.onPickle(envelope.pickle);
+        if (this.resolvedAutotests !== undefined) {
+          if (this.resolvedAutotests.length > 0) {
+            const tags = parseTags(envelope.pickle.tags);
+            for (const externalId of this.resolvedAutotests) {
+              if (externalId === tags.externalId) {
+                return this.onPickle(envelope.pickle);
+              }
+            }
+          }
+          envelope.pickle = undefined;
+        } else {
+          return this.onPickle(envelope.pickle);
+        }
       }
       if (envelope.testCase) {
+        if (this.testRunId === undefined && this.storage.isResolvedTestCase(envelope.testCase)) {
+          this.createTestRun();
+        }
         return this.onTestCase(envelope.testCase);
       }
       if (envelope.testRunStarted) {
@@ -80,15 +97,11 @@ export class TestItFormatter extends Formatter implements IFormatter {
   private attachmentsQueue: Promise<void>[] = [];
 
   onMeta(_meta: Meta): void {
-    const { projectId, testRunId } = this.client.getConfig();
-    if (testRunId === undefined) {
-      this.testRunId = this.client
-        .createTestRun({
-          projectId,
-        })
-        .then((testRun) => testRun.id);
-    } else {
+    const { testRunId, configurationId } = this.client.getConfig();
+    if (testRunId !== undefined) {
       this.testRunId = Promise.resolve(testRunId);
+      const responce = this.client.getTestRun(testRunId);
+      this.resolvedAutotests = parsedAutotests(responce.testResults!, configurationId);
     }
   }
 
@@ -101,12 +114,11 @@ export class TestItFormatter extends Formatter implements IFormatter {
   }
 
   onTestRunStarted(_testRunStarted: TestRunStarted): void {
-    if (this.testRunId === undefined) {
-      throw new Error('TestRunId is not yet specified');
-    }
-    this.testRunStarted = this.testRunId.then((id) =>
+    if (this.testRunId !== undefined) {
+      this.testRunStarted = this.testRunId.then((id) =>
       this.client.startTestRun(id)
     );
+    }
   }
 
   onTestCase(testCase: TestCase): void {
@@ -132,46 +144,42 @@ export class TestItFormatter extends Formatter implements IFormatter {
   }
 
   onTestRunFinished(_testRunFinished: TestRunFinished): void {
-    if (this.testRunId === undefined) {
-      throw new Error('TestRunId is not yet specified');
-    }
-    if (this.testRunStarted === undefined) {
-      throw new Error('Test run is not started yet');
-    }
-
-    Promise.all([
-      this.testRunId,
-      this.testRunStarted,
-      Promise.all(this.attachmentsQueue),
-    ])
-      .then(async ([id]) => {
-        const { configurationId } = this.client.getConfig();
-        const autotests = this.storage.getAutotests(
-          this.client.getConfig().projectId
-        );
-        const results = this.storage.getTestRunResults(configurationId);
-        await Promise.all(
-          autotests.map((autotestPost) => {
-            const result = results.find(
-              (result) => result.autotestExternalId === autotestPost.externalId
+      const { configurationId } = this.client.getConfig();
+      const results = this.storage.getTestRunResults(configurationId);
+      if (this.testRunId !== undefined && results.length > 0) {
+        Promise.all([
+          this.testRunId,
+          this.testRunStarted,
+          Promise.all(this.attachmentsQueue),
+        ])
+          .then(async ([id]) => {
+            const autotests = this.storage.getAutotests(
+              this.client.getConfig().projectId
             );
-            if (result === undefined) {
-              throw new Error(
-                `Cannot find result for ${autotestPost.externalId} autotest`
+              await Promise.all(
+                autotests.map((autotestPost) => {
+                  const result = results.find(
+                      (result) => result.autotestExternalId === autotestPost.externalId
+                  );
+                  if (result !== undefined) {
+                    if (result.outcome !== 'Passed') {
+                      return this.loadAutotest(autotestPost);
+                    }
+                    return this.loadPassedAutotest(autotestPost);
+                  }
+                })
               );
-            }
-            if (result.outcome !== 'Passed') {
-              return this.loadAutotest(autotestPost);
-            }
-            return this.loadPassedAutotest(autotestPost);
-          })
-        );
-        return this.client.loadTestRunResults(id, results);
-      })
-      .catch((err) => {
-        console.error(err);
-        this.testRunId?.then((id) => this.client.completeTestRun(id));
-      });
+              await Promise.all(
+                results.map((result) => {
+                  return this.client.loadTestRunResults(id, [result]);
+                })
+              );
+              })
+              .catch((err) => {
+                console.error(err);
+                this.testRunId?.then((id) => this.client.completeTestRun(id));
+              });
+      }
   }
 
   async loadAutotest(autotestPost: AutotestPostWithWorkItemId): Promise<void> {
@@ -212,6 +220,18 @@ export class TestItFormatter extends Formatter implements IFormatter {
     if (autotestPost.workItemId !== undefined) {
       this.linkWorkItem(autotestPost.externalId, autotestPost.workItemId);
     }
+  }
+
+  createTestRun(): void {
+    const { projectId } = this.client.getConfig();
+    this.testRunId = this.client
+        .createTestRun({
+          projectId,
+        })
+        .then((testRun) => testRun.id);
+    this.testRunStarted = this.testRunId.then((id) =>
+      this.client.startTestRun(id)
+    );
   }
 
   async createNewAutotest(

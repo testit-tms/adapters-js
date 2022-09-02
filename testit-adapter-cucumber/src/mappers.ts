@@ -96,7 +96,11 @@ export function mapScenario(
 ): AutotestPostWithWorkItemId {
   const tags = parseTags(scenario.tags);
   if (tags.externalId === undefined) {
-    throw new Error(`External id is not provided in ${scenario.name}`);
+    return {
+      externalId: '',
+      name: scenario.name,
+      projectId
+    };
   }
   const exampleSteps = scenario.examples.map(mapExamples);
   return {
@@ -117,6 +121,7 @@ export function mapScenario(
   };
 }
 
+//TODO: Implement using "parameters" fields
 export function mapExamples(examples: Examples): AutotestStep {
   let table: string[][] | Record<string, string>[] = [];
   const body = examples.tableBody.map((row) =>
@@ -142,7 +147,7 @@ export function mapExamples(examples: Examples): AutotestStep {
   }
 
   return {
-    title: tags.title ?? tags.name ?? examples.name,
+    title: tags.title ?? tags.name ?? (examples.name !== '' ? examples.name : 'Parameters'),
     description: tags.description ?? description.join('\n\n'),
   };
 }
