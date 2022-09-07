@@ -19,6 +19,7 @@ import {
   AutotestPostWithWorkItemId,
   mapDate,
   mapDocument,
+  mapParameters,
   mapStatus,
 } from './mappers';
 import { calculateResultOutcome, parseTags } from './utils';
@@ -34,9 +35,19 @@ export class Storage implements IStorage {
   private messages: Record<string, string[]> = {};
   private links: Record<string, LinkPost[]> = {};
   private attachments: Record<string, string[]> = {};
+  private parameters: Record<string, Record<string, string>[]> = {};
 
   saveGherkinDocument(document: GherkinDocument): void {
     this.gherkinDocuments.push(document);
+    
+    for(const child of document.feature!.children) {
+      const tags = parseTags(child.scenario!.tags);
+      var examples = child.scenario!.examples;
+
+      if (tags.externalId !== undefined && examples.length != 0) {
+          this.parameters[tags.externalId] = mapParameters(examples);
+      }
+    }
   }
   getAutotests(projectId: string): AutotestPostWithWorkItemId[] {
     return this.gherkinDocuments.flatMap((document) =>
@@ -126,6 +137,7 @@ export class Storage implements IStorage {
           message: this.messages[testCase.id]?.join('\n\n') ?? undefined,
           traces: messages.join('\n\n'),
           attachments: this.getAttachments(testCase.id),
+          parameters: this.getParameters(tags.externalId),
         };
         results.push(result);
       }
@@ -192,6 +204,15 @@ export class Storage implements IStorage {
       return undefined;
     }
     return this.attachments[testCaseId].map((id) => ({ id }));
+  }
+  getParameters(externalId: string): Record<string, string> | undefined {
+    let parameters = this.parameters[externalId];
+
+    if (parameters !== undefined) {
+        return this.parameters[externalId].shift();
+    }
+    
+    return undefined;
   }
   addMessage(testCaseId: string, message: string): void {
     if (this.messages[testCaseId] === undefined) {
