@@ -152,6 +152,30 @@ export function mapExamples(examples: Examples): AutotestStep {
   };
 }
 
+export function mapParameters(examples: readonly Examples[]): Record<string, string>[] {
+  let table: Record<string, string>[] = [];
+  
+  for (const example of examples) {
+    if (example.tableHeader === undefined) {
+      continue;
+    }
+
+    const body = example.tableBody.map((row) =>
+        row.cells.map((cell) => cell.value)
+      );
+    const header = example.tableHeader?.cells.map((cell) => cell.value);
+
+    table = body.map((row) =>
+      header.reduce((acc, key, i) => {
+        acc[key] = row[i];
+        return acc;
+      }, {} as Record<string, string>)
+    );
+  }
+
+  return table;
+}
+
 export function mapStep(step: Step): AutotestStep {
   return {
     title: `${step.keyword} ${step.text}`,
