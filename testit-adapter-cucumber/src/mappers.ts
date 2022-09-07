@@ -156,19 +156,21 @@ export function mapParameters(examples: readonly Examples[]): Record<string, str
   let table: Record<string, string>[] = [];
   
   for (const example of examples) {
-    const body = example.tableBody.map((row) =>
-      row.cells.map((cell) => cell.value)
-    );
-
-    if (example.tableHeader !== undefined) {
-      const header = example.tableHeader?.cells.map((cell) => cell.value);
-      table = body.map((row) =>
-        header.reduce((acc, key, i) => {
-          acc[key] = row[i];
-          return acc;
-        }, {} as Record<string, string>)
-      );
+    if (example.tableHeader === undefined) {
+      continue;
     }
+
+    const body = example.tableBody.map((row) =>
+        row.cells.map((cell) => cell.value)
+      );
+    const header = example.tableHeader?.cells.map((cell) => cell.value);
+
+    table = body.map((row) =>
+      header.reduce((acc, key, i) => {
+        acc[key] = row[i];
+        return acc;
+      }, {} as Record<string, string>)
+    );
   }
 
   return table;
