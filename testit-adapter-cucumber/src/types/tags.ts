@@ -8,7 +8,8 @@ export type ParsedTags = {
   name?: string;
   description?: string;
   /**
-   * @deprecated The tag "WorkItemId" should not be used
+   * @deprecated This tag is no longer acceptable to compute time between versions.
+   * Use "Labels" instead.
   */
   label?: string,
   labels: string[];
@@ -23,7 +24,8 @@ export enum TagType {
   Name,
   Description,
   /**
-   * @deprecated The tag "WorkItemId" should not be used
+   * @deprecated This tag is no longer acceptable to compute time between versions.
+   * Use "Labels" instead.
   */
   Label,
   Labels,
