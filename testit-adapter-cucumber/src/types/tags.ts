@@ -4,7 +4,11 @@ export type ParsedTags = {
   externalId?: string;
   links: Omit<Link, 'id'>[];
   title?: string;
+  /**
+   * @deprecated The tag "WorkItemId" should not be used
+  */
   workItemId?: string;
+  workItemIds?: string[];
   name?: string;
   description?: string;
   labels: string[];
@@ -15,7 +19,11 @@ export enum TagType {
   LinkUrl,
   Link,
   Title,
+  /**
+   * @deprecated The tag "WorkItemId" should not be used
+  */
   WorkItemId,
+  WorkItemIds,
   Name,
   Description,
   Label,
@@ -28,6 +36,7 @@ export const tags: Record<keyof ParsedTags, string> = {
   title: 'Title',
   name: 'DisplayName',
   workItemId: 'WorkItemId',
+  workItemIds: 'WorkItemIds',
   description: 'Description',
   labels: 'Label',
 };
