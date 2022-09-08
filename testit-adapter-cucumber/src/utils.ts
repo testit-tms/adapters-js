@@ -25,8 +25,11 @@ export function getTagType(tag: string): TagType {
   if (new RegExp(`^@${tags.description}=.+$`).test(tag)) {
     return TagType.Description;
   }
-  if (new RegExp(`^@${tags.labels}=.+$`).test(tag)) {
+  if (new RegExp(`^@${tags.label}=.+$`).test(tag)) {
     return TagType.Label;
+  }
+  if (new RegExp(`^@${tags.labels}=.+$`).test(tag)) {
+    return TagType.Labels;
   }
   return TagType.Unknown;
 }
