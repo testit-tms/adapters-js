@@ -7,6 +7,10 @@ export type ParsedTags = {
   workItemId?: string;
   name?: string;
   description?: string;
+  /**
+   * @deprecated The tag "WorkItemId" should not be used
+  */
+  label?: string,
   labels: string[];
 };
 
@@ -18,7 +22,11 @@ export enum TagType {
   WorkItemId,
   Name,
   Description,
+  /**
+   * @deprecated The tag "WorkItemId" should not be used
+  */
   Label,
+  Labels,
   Unknown,
 }
 
@@ -29,5 +37,6 @@ export const tags: Record<keyof ParsedTags, string> = {
   name: 'DisplayName',
   workItemId: 'WorkItemId',
   description: 'Description',
-  labels: 'Label',
+  label: 'Label',
+  labels: 'Labels',
 };
