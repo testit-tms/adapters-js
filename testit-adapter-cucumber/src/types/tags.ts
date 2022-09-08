@@ -5,7 +5,8 @@ export type ParsedTags = {
   links: Omit<Link, 'id'>[];
   title?: string;
   /**
-   * @deprecated The tag "WorkItemId" should not be used
+   * @deprecated This tag is no longer acceptable to compute time between versions.
+   * Use "WorkItemIds" instead.
   */
   workItemId?: string;
   workItemIds?: string[];
@@ -20,7 +21,8 @@ export enum TagType {
   Link,
   Title,
   /**
-   * @deprecated The tag "WorkItemId" should not be used
+   * @deprecated This tag is no longer acceptable to compute time between versions.
+   * Use "WorkItemIds" instead.
   */
   WorkItemId,
   WorkItemIds,
