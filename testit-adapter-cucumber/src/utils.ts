@@ -19,6 +19,9 @@ export function getTagType(tag: string): TagType {
   if (new RegExp(`^@${tags.workItemId}=.+$`).test(tag)) {
     return TagType.WorkItemId;
   }
+  if (new RegExp(`^@${tags.workItemIds}=.+$`).test(tag)) {
+    return TagType.WorkItemIds;
+  }
   if (new RegExp(`^@${tags.name}=.+$`).test(tag)) {
     return TagType.Name;
   }
@@ -51,8 +54,29 @@ export function getTitle(tag: string): string {
   return tag.replace(new RegExp(`^@${tags.title}=`), '');
 }
 
-export function getWorkItemId(tag: string): string {
-  return tag.replace(new RegExp(`^@${tags.workItemId}=`), '');
+export function getWorkItemIds(tag: string | string[]): string[] {
+  if (typeof tag === "string" ) {
+    var reg = getRegForWorkItemTag(tag);
+
+    return [tag.replace(reg, '')];
+  }
+
+  for (var value of tag) {
+    var reg = getRegForWorkItemTag(value);
+
+    value = value.replace(reg, '');
+  }
+
+  return tag;
+}
+
+export function getRegForWorkItemTag(tag: string): RegExp {
+  if (tag.includes(tags.workItemId)) {
+    return new RegExp(`^@${tags.workItemId}=`);
+  }
+  else {
+    return new RegExp(`^@${tags.workItemIds}=`);
+  }
 }
 
 export function getName(tag: string): string {
@@ -88,7 +112,7 @@ export function getRegForLabelsTag(tag: string): RegExp {
 }
 
 export function parseTags(tags: readonly Pick<Tag, 'name'>[]): ParsedTags {
-  const parsedTags: ParsedTags = { links: [], labels: [] };
+  const parsedTags: ParsedTags = { links: [], labels: [], workItemIds: [] };
   for (const tag of tags) {
     switch (getTagType(tag.name)) {
       case TagType.ExternalId:
@@ -106,9 +130,8 @@ export function parseTags(tags: readonly Pick<Tag, 'name'>[]): ParsedTags {
         parsedTags.title = getTitle(tag.name);
         continue;
       }
-      case TagType.WorkItemId: {
-        parsedTags.workItemId = getWorkItemId(tag.name);
-        continue;
+      case TagType.WorkItemId | TagType.WorkItemIds: {
+        parsedTags.workItemIds?.concat(getWorkItemIds(tag.name));
       }
       case TagType.Name: {
         parsedTags.name = getName(tag.name);

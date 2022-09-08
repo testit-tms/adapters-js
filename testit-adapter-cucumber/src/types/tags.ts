@@ -4,7 +4,12 @@ export type ParsedTags = {
   externalId?: string;
   links: Omit<Link, 'id'>[];
   title?: string;
+  /**
+   * @deprecated This tag is no longer acceptable to compute time between versions.
+   * Use "WorkItemIds" instead.
+  */
   workItemId?: string;
+  workItemIds?: string[];
   name?: string;
   description?: string;
   /**
@@ -20,7 +25,12 @@ export enum TagType {
   LinkUrl,
   Link,
   Title,
+  /**
+   * @deprecated This tag is no longer acceptable to compute time between versions.
+   * Use "WorkItemIds" instead.
+  */
   WorkItemId,
+  WorkItemIds,
   Name,
   Description,
   /**
@@ -38,6 +48,7 @@ export const tags: Record<keyof ParsedTags, string> = {
   title: 'Title',
   name: 'DisplayName',
   workItemId: 'WorkItemId',
+  workItemIds: 'WorkItemIds',
   description: 'Description',
   label: 'Label',
   labels: 'Labels',

@@ -12,7 +12,7 @@ import { AutotestPost, AutotestStep, OutcomeType } from 'testit-api-client';
 import { parseTags } from './utils';
 
 export interface AutotestPostWithWorkItemId extends AutotestPost {
-  workItemId?: string;
+  workItemIds?: string[];
 }
 
 export function mapStatus(status: TestStepResultStatus): OutcomeType {
@@ -112,7 +112,7 @@ export function mapScenario(
     description: tags.description ?? scenario.description,
     projectId,
     steps: scenario.steps.map(mapStep),
-    workItemId: tags.workItemId,
+    workItemIds: tags.workItemIds,
     // Disable for now (BUG??)
     // labels:
     //   tags.labels.length > 0

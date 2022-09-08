@@ -217,8 +217,10 @@ export class TestItFormatter extends Formatter implements IFormatter {
       }
     }
 
-    if (autotestPost.workItemId !== undefined) {
-      this.linkWorkItem(autotestPost.externalId, autotestPost.workItemId);
+    if (autotestPost.workItemIds !== undefined) {
+      for (const workItemId of autotestPost.workItemIds) {
+        this.linkWorkItem(autotestPost.externalId, workItemId);
+      }
     }
   }
 
