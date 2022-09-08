@@ -25,8 +25,11 @@ export function getTagType(tag: string): TagType {
   if (new RegExp(`^@${tags.description}=.+$`).test(tag)) {
     return TagType.Description;
   }
-  if (new RegExp(`^@${tags.labels}=.+$`).test(tag)) {
+  if (new RegExp(`^@${tags.label}=.+$`).test(tag)) {
     return TagType.Label;
+  }
+  if (new RegExp(`^@${tags.labels}=.+$`).test(tag)) {
+    return TagType.Labels;
   }
   return TagType.Unknown;
 }
@@ -60,8 +63,28 @@ export function getDescription(tag: string): string {
   return tag.replace(new RegExp(`^@${tags.description}=`), '');
 }
 
-export function getLabel(tag: string): string {
-  return tag.replace(new RegExp(`^@${tags.labels}=`), '');
+export function getLabels(tag: string | string[]): string[] {
+  if (typeof tag === "string" ) {
+    var reg = getRegForLabelsTag(tag);
+
+    return [tag.replace(reg, '')];
+  }
+
+  for (var value of tag) {
+    var reg = getRegForLabelsTag(value);
+
+    value = value.replace(reg, '');
+  }
+
+  return tag;
+}
+
+export function getRegForLabelsTag(tag: string): RegExp {
+  if (tag.includes(tags.label)) {
+    return new RegExp(`^@${tags.label}=`);
+  }
+
+  return new RegExp(`^@${tags.labels}=`);
 }
 
 export function parseTags(tags: readonly Pick<Tag, 'name'>[]): ParsedTags {
@@ -95,8 +118,8 @@ export function parseTags(tags: readonly Pick<Tag, 'name'>[]): ParsedTags {
         parsedTags.description = getDescription(tag.name);
         continue;
       }
-      case TagType.Label: {
-        parsedTags.labels?.push(getLabel(tag.name));
+      case TagType.Label | TagType.Labels: {
+        parsedTags.labels?.concat(getLabels(tag.name));
         continue;
       }
       case TagType.Unknown:

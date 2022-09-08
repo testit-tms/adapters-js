@@ -7,6 +7,11 @@ export type ParsedTags = {
   workItemId?: string;
   name?: string;
   description?: string;
+  /**
+   * @deprecated This tag is no longer acceptable to compute time between versions.
+   * Use "Labels" instead.
+  */
+  label?: string,
   labels: string[];
 };
 
@@ -18,7 +23,12 @@ export enum TagType {
   WorkItemId,
   Name,
   Description,
+  /**
+   * @deprecated This tag is no longer acceptable to compute time between versions.
+   * Use "Labels" instead.
+  */
   Label,
+  Labels,
   Unknown,
 }
 
@@ -29,5 +39,6 @@ export const tags: Record<keyof ParsedTags, string> = {
   name: 'DisplayName',
   workItemId: 'WorkItemId',
   description: 'Description',
-  labels: 'Label',
+  label: 'Label',
+  labels: 'Labels',
 };
