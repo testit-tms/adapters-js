@@ -1,8 +1,8 @@
 import { World } from '@cucumber/cucumber';
-import { LinkPost } from 'testit-api-client';
+import { LinkPostModel } from 'testit-api-client';
 
 export interface TestItWorld extends World {
-  addMessage(message: string): void;
-  addLinks(links: LinkPost[]): void;
-  addAttachments(attachments: string[]): void;
+    addMessage(message: string): void;
+    addLinks(links: LinkPostModel[]): void;
+    addAttachments(attachments: string[]): void;
 }
