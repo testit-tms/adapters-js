@@ -1,16 +1,16 @@
-import { Properties } from '../types/properties';
+import { AdapterProperties } from '../types/adapter-properties';
 import { IClientConfiguration } from '../types/client-configuration';
 
 export class ClientConfiguration implements IClientConfiguration {
-    url: string;
-    privateToken: string;
-    projectId: string;
-    configurationId: string;
-    testRunId: string | undefined;
-    testRunName: string | undefined;
-    adapterMode: string;
+    private url: string;
+    private privateToken: string;
+    private projectId: string;
+    private configurationId: string;
+    private testRunId: string | undefined;
+    private testRunName: string | undefined;
+    private adapterMode: string;
 
-    constructor(properties: Properties) {
+    constructor(properties: AdapterProperties) {
         this.url = properties.url;
         this.privateToken = properties.privateToken;
         this.projectId = properties.projectId;

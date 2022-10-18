@@ -1,7 +1,7 @@
 import minimist from 'minimist';
 import { existsSync, readFileSync } from 'fs';
 import { z } from 'zod';
-import { Properties } from './types/properties';
+import { AdapterProperties } from '../types/adapter-properties';
 
 export class AppPropetries {
     private static envPrefix: string = 'TMS';
@@ -15,7 +15,7 @@ export class AppPropetries {
         adapterMode: z.string(),
     });
 
-    static loadProperties(properties: Partial<Properties>): Properties {
+    static loadProperties(properties: Partial<AdapterProperties>): AdapterProperties {
         properties = this.mergeProperties(properties, this.loadFileProperties());
 
         if (properties.privateToken) {
@@ -28,7 +28,7 @@ export class AppPropetries {
         return this.validateProperties(properties);
     }
 
-    static loadFileProperties(): Partial<Properties> {
+    static loadFileProperties(): Partial<AdapterProperties> {
         const args = minimist(process.argv.slice(2));
         var path;
         let properties = {};
@@ -45,14 +45,14 @@ export class AppPropetries {
                 properties,
                 JSON.parse(
                     readFileSync(path, { encoding: 'utf8' })
-                ) as Partial<Properties>
+                ) as Partial<AdapterProperties>
             );
         }
 
         return properties;
     }
 
-    static loadCliProperties(): Partial<Properties> {
+    static loadCliProperties(): Partial<AdapterProperties> {
         const args = minimist(process.argv.slice(2));
         let properties = {};
 
@@ -67,7 +67,7 @@ export class AppPropetries {
         });
     }
 
-    static loadEnvProperties(): Partial<Properties> {
+    static loadEnvProperties(): Partial<AdapterProperties> {
         let properties = {};
 
         return this.mergeProperties(properties, {
@@ -82,9 +82,9 @@ export class AppPropetries {
     }
 
     static mergeProperties(
-        oldProperties: Partial<Properties>,
-        newProperties: Partial<Properties>
-    ): Partial<Properties> {
+        oldProperties: Partial<AdapterProperties>,
+        newProperties: Partial<AdapterProperties>
+    ): Partial<AdapterProperties> {
         return {
             url: newProperties.url ?? oldProperties.url,
             privateToken: newProperties.privateToken ?? oldProperties.privateToken,
@@ -96,7 +96,7 @@ export class AppPropetries {
         };
     }
 
-    static validateProperties(properties: Partial<Properties>): Properties {
+    static validateProperties(properties: Partial<AdapterProperties>): AdapterProperties {
         return this.propertiesSchema.parse(properties);
     }
 }

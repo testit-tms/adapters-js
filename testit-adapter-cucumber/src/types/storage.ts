@@ -7,12 +7,12 @@ import {
     TestStepFinished,
     TestStepStarted,
 } from '@cucumber/messages';
-import { AutoTestResultsForTestRunModel, LinkPostModel } from 'testit-api-client';
-import { AutotestPostWithWorkItemId } from '../mappers';
+import { Link } from 'testit-js-commons/types/link';
+import { TestResult } from './test-result';
 
 export interface IStorage {
     saveGherkinDocument(document: GherkinDocument): void;
-    getAutotests(projectId: string): AutotestPostWithWorkItemId[];
+    getTestResult(testId: string): TestResult;
     savePickle(pickle: Pickle): void;
     isResolvedTestCase(testCase: TestCase): boolean;
     saveTestCase(testCase: TestCase): void;
@@ -20,8 +20,7 @@ export interface IStorage {
     saveTestCaseFinished(testCaseFinished: TestCaseFinished): void;
     saveTestStepStarted(testStepStarted: TestStepStarted): void;
     saveTestStepFinished(testStepFinished: TestStepFinished): void;
-    getTestRunResults(configurationId: string): AutoTestResultsForTestRunModel[];
     addMessage(testCaseId: string, message: string): void;
-    addLinks(testCaseId: string, links: LinkPostModel[]): void;
+    addLinks(testCaseId: string, links: Link[]): void;
     addAttachment(testCaseId: string, attachmentId: string): void;
 }

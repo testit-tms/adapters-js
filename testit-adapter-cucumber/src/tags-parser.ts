@@ -1,17 +1,24 @@
 import { Tag } from '@cucumber/messages';
-import { LinkModel, TestResultV2GetModel } from 'testit-api-client';
+import { Link } from 'testit-js-commons/types/link';
 import { ParsedTags, tags, TagType } from './types/tags';
 
 export function getTagType(tag: string): TagType {
     if (new RegExp(`^@${tags.externalId}=.+$`).test(tag)) {
         return TagType.ExternalId;
     }
-    if (new RegExp(`^@${tags.links}=.+$`).test(tag)) {
+    if (new RegExp(`^@${tags.link}=.+$`).test(tag)) {
         // Check if it is JSON
         if (tag.endsWith('}')) {
             return TagType.Link;
         }
         return TagType.LinkUrl;
+    }
+    if (new RegExp(`^@${tags.links}=.+$`).test(tag)) {
+        // Check if it is JSON
+        if (tag.endsWith('}')) {
+            return TagType.Links;
+        }
+        return TagType.LinksUrl;
     }
     if (new RegExp(`^@${tags.title}=.+$`).test(tag)) {
         return TagType.Title;
@@ -42,11 +49,25 @@ export function getExternalId(tag: string): string {
 }
 
 export function getLinkUrl(tag: string): string {
-    return tag.replace(new RegExp(`^@${tags.links}=`), '');
+    return tag.replace(new RegExp(`^@${tags.link}=`), '');
 }
 
-export function getLink(tag: string): Omit<LinkModel, 'id'> {
-    const linkData: Omit<LinkModel, 'id'> = JSON.parse(getLinkUrl(tag));
+export function getLinksUrl(tag: string): string[] {
+    return tag.replace(new RegExp(`^@${tags.links}=`), '').split(',');
+}
+
+export function getLink(tag: string): Link {
+    const linkData: Link = JSON.parse(getLinkUrl(tag));
+    return linkData;
+}
+
+export function getLinks(tag: string): Link[] {
+    const linkData: Link[] = [];
+
+    for (const link of getLinksUrl(tag)) {
+        linkData.push(JSON.parse(link));
+    }
+
     return linkData;
 }
 
@@ -54,20 +75,10 @@ export function getTitle(tag: string): string {
     return tag.replace(new RegExp(`^@${tags.title}=`), '');
 }
 
-export function getWorkItemIds(tag: string | string[]): string[] {
-    if (typeof tag === "string") {
-        var reg = getRegForWorkItemTag(tag);
+export function getWorkItemIds(tag: string): string[] {
+    const reg = getRegForWorkItemTag(tag);
 
-        return [tag.replace(reg, '')];
-    }
-
-    for (var value of tag) {
-        var reg = getRegForWorkItemTag(value);
-
-        value = value.replace(reg, '');
-    }
-
-    return tag;
+    return tag.replace(reg, '').split(',');
 }
 
 export function getRegForWorkItemTag(tag: string): RegExp {
@@ -87,20 +98,10 @@ export function getDescription(tag: string): string {
     return tag.replace(new RegExp(`^@${tags.description}=`), '');
 }
 
-export function getLabels(tag: string | string[]): string[] {
-    if (typeof tag === "string") {
-        var reg = getRegForLabelsTag(tag);
+export function getLabels(tag: string): string[] {
+    const reg = getRegForLabelsTag(tag);
 
-        return [tag.replace(reg, '')];
-    }
-
-    for (var value of tag) {
-        var reg = getRegForLabelsTag(value);
-
-        value = value.replace(reg, '');
-    }
-
-    return tag;
+    return tag.replace(reg, '').split(',');
 }
 
 export function getRegForLabelsTag(tag: string): RegExp {
@@ -128,9 +129,24 @@ export function parseTags(tags: readonly Pick<Tag, 'name'>[]): ParsedTags {
                 });
                 continue;
             }
+            case TagType.LinksUrl: {
+                for (const linkUrl of getLinksUrl(tag.name)) {
+                    parsedTags.links?.push({
+                        url: linkUrl,
+                        type: undefined,
+                        title: undefined,
+                        description: undefined,
+                        hasInfo: undefined
+                    });
+                }
+                continue;
+            }
             case TagType.Link: {
                 parsedTags.links?.push(getLink(tag.name));
                 continue;
+            }
+            case TagType.Links: {
+                parsedTags.links?.concat(getLinks(tag.name));
             }
             case TagType.Title: {
                 parsedTags.title = getTitle(tag.name);
@@ -158,35 +174,4 @@ export function parseTags(tags: readonly Pick<Tag, 'name'>[]): ParsedTags {
         }
     }
     return parsedTags;
-}
-
-export function calculateResultOutcome(
-    outcomes: (string | undefined)[]
-): string {
-    if (outcomes.some((outcome) => outcome === 'Failed')) {
-        return 'Failed';
-    }
-    if (outcomes.some((outcome) => outcome === 'Blocked')) {
-        return 'Blocked';
-    }
-    if (outcomes.some((outcome) => outcome === 'Skipped')) {
-        return 'Skipped';
-    }
-    if (outcomes.every((outcome) => outcome === 'Passed')) {
-        return 'Passed';
-    }
-    throw new Error('Cannot calculate result outcome');
-}
-
-export function parsedAutotests(
-    autotests: Array<TestResultV2GetModel>,
-    configurationId: string
-): Array<string | undefined> {
-    var resolvedAutotests = [];
-    for (const autotest of autotests) {
-        if (configurationId === autotest.configurationId) {
-            resolvedAutotests.push(autotest.autoTest!.externalId);
-        }
-    }
-    return resolvedAutotests;
 }

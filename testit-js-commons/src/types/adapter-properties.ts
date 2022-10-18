@@ -1,4 +1,4 @@
-export interface Properties {
+export interface AdapterProperties {
     url: string;
     privateToken: string;
     projectId: string;

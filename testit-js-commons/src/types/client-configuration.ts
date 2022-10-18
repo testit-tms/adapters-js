@@ -1,11 +1,4 @@
 export interface IClientConfiguration {
-    url: string;
-    privateToken: string;
-    projectId: string;
-    configurationId: string;
-    testRunId?: string;
-    testRunName?: string;
-    adapterMode: string;
     getUrl(): string;
     getPrivateToken(): string;
     getProjectId(): string;

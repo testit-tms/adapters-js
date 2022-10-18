@@ -1,8 +1,7 @@
 {
-  "name": "testit-adapter-cucumber",
-  "version": "2.0.0",
-  "description": "Adapter provides formatter for cucumber output and some additional methods to Cucumber world.",
-  "main": "dist/formatter.js",
+  "name": "testit-js-commons",
+  "version": "1.0.0",
+  "description": "JS commons for Test IT",
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "tsc",
@@ -21,7 +20,7 @@
     "@cucumber/messages": "^17.1.1",
     "minimist": "^1.2.5",
     "zod": "^3.11.6",
-    "testit-js-commons": "^1.0.0"
+    "testit-api-client": "^2.0.0"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.15.8",
@@ -47,7 +46,6 @@
     "type": "git",
     "url": "git+https://github.com/testit-tms/adapters-js.git"
   },
-  "types": "./dist\\formatter.d.ts",
   "files": [
     "dist"
   ]

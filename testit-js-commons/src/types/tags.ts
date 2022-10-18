@@ -1,4 +1,4 @@
-import { Link } from "testit-js-commons/types/link";
+import { Link } from "./link";
 
 
 export type ParsedTags = {
