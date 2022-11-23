@@ -2,9 +2,10 @@
   "name": "testit-js-commons",
   "version": "1.0.0",
   "description": "JS commons for Test IT",
+  "main": "./dist/index.js",
   "scripts": {
-    "prebuild": "rimraf dist",
-    "build": "tsc",
+    "build": "tsc --outDir dist/",
+    "prepare": "npm run build",
     "start": "npm run build && cd demo && npm run test",
     "lint": "eslint . --ext=.ts"
   },

@@ -1,5 +1,5 @@
 import { Tag } from '@cucumber/messages';
-import { Link } from 'testit-js-commons/types/link';
+import { Link } from 'testit-js-commons';
 import { ParsedTags, tags, TagType } from './types/tags';
 
 export function getTagType(tag: string): TagType {

@@ -14,10 +14,12 @@ import {
 import { unlinkSync, writeFileSync} from 'fs';
 import {v4 as uuidv4} from 'uuid';
 import { join } from 'path';
-import { AdapterProperties } from 'testit-js-commons/types/adapter-properties';
-import { Link } from 'testit-js-commons/types/link';
-import { Adapter } from 'testit-js-commons/services/adapter';
-import { AdapterManager } from 'testit-js-commons/services/adapter-manager';
+import {
+    Adapter,
+    AdapterManager,
+    AdapterProperties,
+    Link
+} from 'testit-js-commons';
 import { IFormatter } from './types/formatter';
 import { parseTags } from './tags-parser';
 import { IStorage } from './types/storage';

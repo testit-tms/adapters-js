@@ -1,7 +1,7 @@
 import {
     TestStepResultStatus,
 } from '@cucumber/messages';
-import { OutcomeType } from 'testit-js-commons/types/outcome';
+import { OutcomeType } from 'testit-js-commons';
 
 export function mapStatus(status: TestStepResultStatus): OutcomeType {
     switch (status) {

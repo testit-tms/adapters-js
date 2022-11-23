@@ -8,11 +8,13 @@ TestCaseStarted,
 TestStepFinished,
 TestStepStarted,
 } from '@cucumber/messages';
-import { Link } from 'testit-js-commons/types/link';
-import { TestResult } from 'testit-js-commons/types/test-result';
-import { Attachment } from 'testit-js-commons/types/attachment';
-import { TestResultStep } from 'testit-js-commons/types/test-result-step';
-import { calculateResultOutcome } from 'testit-js-commons/services/utils';
+import {
+    TestResult,
+    Attachment,
+    TestResultStep,
+    calculateResultOutcome,
+    Link
+} from 'testit-js-commons';
 import { IStorage } from './types/storage';
 import {
 mapDate,

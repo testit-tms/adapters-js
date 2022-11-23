@@ -7,8 +7,10 @@ import {
     TestStepFinished,
     TestStepStarted,
 } from '@cucumber/messages';
-import { Link } from 'testit-js-commons/types/link';
-import { TestResult } from './test-result';
+import {
+    Link,
+    TestResult
+} from 'testit-js-commons';
 
 export interface IStorage {
     saveGherkinDocument(document: GherkinDocument): void;
