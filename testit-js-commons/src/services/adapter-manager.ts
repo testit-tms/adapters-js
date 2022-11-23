@@ -43,4 +43,8 @@ export class AdapterManager {
                 this.client.setTestResultForTestRun(testResult);
             });
     }
+
+    loadAttachment(attachmentPath: string): Promise<string | void> {
+        return this.client.loadAttachment(attachmentPath);
+    }
 }

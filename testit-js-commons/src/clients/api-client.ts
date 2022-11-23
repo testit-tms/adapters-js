@@ -153,11 +153,11 @@ export class ApiClientWorker {
         }
     }
 
-    async loadAttachment(attachment: string): Promise<any> {
+    async loadAttachment(filePath: string): Promise<string | void> {
         const attachmentId = await this.attachmentsApi.apiV2AttachmentsPost(
-            {'file': new File([attachment], basename(attachment))})
+            new File([filePath], basename(filePath)))
             .then(response => {
-                return response.data[0]
+                return response.data['id']
             })
             .catch(response => this.logError(response));
 
