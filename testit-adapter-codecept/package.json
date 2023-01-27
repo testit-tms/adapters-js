@@ -1,0 +1,38 @@
+{
+  "name": "testit-adapter-codecept",
+  "version": "1.0.0",
+  "description": "Codecept adapter for TestIT",
+  "keywords": [],
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "scripts": {
+    "build": "run-p build:*",
+    "build:main": "tsc -p tsconfig.publish.json",
+    "build:dev": "tsc -p tsconfig.json",
+    "publish:local": "npm run build:main && npm pack --pack-destination ~/Packages",
+    "watch:dev": "tsc -p tsconfig.publish.json -w",
+    "test": "jest"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "npm-run-all": "^4.1.5",
+    "testit-api-client": "^1.0.5"
+  },
+  "devDependencies": {
+    "@codeceptjs/configure": "^0.10.0",
+    "@codeceptjs/examples": "^1.2.1",
+    "@codeceptjs/ui": "^0.4.7",
+    "@types/jest": "^29.2.2",
+    "@types/node": "^18.11.9",
+    "@typescript-eslint/eslint-plugin": "^5.42.0",
+    "@typescript-eslint/parser": "^5.42.0",
+    "codeceptjs": "^3.3.6",
+    "eslint": "^8.27.0",
+    "jest": "^29.2.2",
+    "playwright": "^1.27.1",
+    "prettier": "2.7.1",
+    "ts-jest": "^29.0.3",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.8.4"
+  }
+}
