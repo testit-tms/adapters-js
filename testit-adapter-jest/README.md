@@ -1,8 +1,6 @@
 # Test IT TMS adapters for Jest
 ![Test IT](https://raw.githubusercontent.com/testit-tms/adapters-js/master/images/banner.png)
 
-# Cucumber
-
 ## Getting Started
 
 ### Compatibility
