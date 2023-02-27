@@ -1,0 +1,13 @@
+src
+node_modules
+.env
+.eslintrc.js
+.gitignore
+.github
+.idea
+.prettierignore
+codecept.config.ts
+jest.config.ts
+testit-adapter.config.json
+tsconfig.json
+tsconfig.publish.json
