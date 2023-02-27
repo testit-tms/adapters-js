@@ -67,9 +67,6 @@ export class TestItFormatter extends Formatter implements IFormatter {
         }
         return this.onTestCase(envelope.testCase);
       }
-      if (envelope.testRunStarted) {
-        return this.onTestRunStarted(envelope.testRunStarted);
-      }
       if (envelope.testCaseStarted) {
         return this.onTestCaseStarted(envelope.testCaseStarted);
       }
@@ -115,12 +112,6 @@ export class TestItFormatter extends Formatter implements IFormatter {
     this.storage.savePickle(pickle);
   }
 
-  onTestRunStarted(_testRunStarted: TestRunStarted): void {
-    if (this.testRunId !== undefined) {
-      this.testRunStarted = this.testRunId.then((id) => this.client.startTestRun(id));
-    }
-  }
-
   onTestCase(testCase: TestCase): void {
     this.storage.saveTestCase(testCase);
   }
@@ -149,7 +140,6 @@ export class TestItFormatter extends Formatter implements IFormatter {
     if (this.testRunId !== undefined && results.length > 0) {
       Promise.all([
         this.testRunId,
-        this.testRunStarted,
         Promise.all(this.attachmentsQueue),
       ])
       .then(async ([id]) => {
@@ -221,9 +211,7 @@ export class TestItFormatter extends Formatter implements IFormatter {
         projectId,
     })
         .then((testRun) => testRun.id);
-    this.testRunStarted = this.testRunId.then((id) => this.client.startTestRun(id));
   }
-
 
   async createNewAutotest(
     autotestPost: AutotestPostWithWorkItemId

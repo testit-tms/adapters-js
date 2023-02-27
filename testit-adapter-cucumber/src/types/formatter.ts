@@ -22,7 +22,6 @@ export interface IFormatter {
   onMeta(meta: Meta): void;
   onGherkinDocument(document: GherkinDocument): void;
   onPickle(pickle: Pickle): void;
-  onTestRunStarted(testRunStarted: TestRunStarted): void;
   onTestCase(testCase: TestCase): void;
   onTestCaseStarted(testCaseStarted: TestCaseStarted): void;
   testStepStarted(testStepStarted: TestStepStarted): void;
