@@ -8,6 +8,8 @@
 | Test IT | Adapter |
 |---------|---------|
 | 3.5     | 1.0     |
+|---------|---------|
+| 4.0     | 1.1     |
 
 ### Installation
 ```
@@ -113,19 +115,18 @@ declare namespace CodeceptJS {
 Methods can be used to specify information about autotest.
 
 Description of metadata methods:
-- `testit.workItemIds` - linking an autotest to a test case
-- `testit.displayName` - name of the autotest in the Test IT system (can be replaced with documentation strings)
-- `testit.externalId` - ID of the autotest within the project in the Test IT System
-- `testit.title` - title in the autotest card
-- `testit.description` - description in the autotest card
-- `testit.labels` - tags in the work item
-- `testit.link` - links in the autotest card
-- `testit.step` - the designation of the step called in the body of the test or other step
+- `workItemIds` - linking an autotest to a test case
+- `displayName` - name of the autotest in the Test IT system (can be replaced with documentation strings)
+- `externalId` - ID of the autotest within the project in the Test IT System
+- `title` - title in the autotest card
+- `description` - description in the autotest card
+- `labels` - tags in the work item
+- `link` - links in the autotest card
 
 Description of methods:
-- `testit.addLinks` - links in the autotest result
-- `testit.addAttachments` - uploading files in the autotest result
-- `testit.addMessage` - information about autotest in the autotest result
+- `addLinks` - links in the autotest result
+- `addAttachments` - uploading files in the autotest result
+- `addMessage` - information about autotest in the autotest result
 
 ### Examples
 

@@ -10,6 +10,8 @@
 | Test IT | Adapter |
 |---------|---------|
 | 3.5     | 1.0     |
+|---------|---------|
+| 4.0     | 1.1     |
 
 ### Installation
 ```
@@ -109,7 +111,6 @@ Description of metadata methods:
 - `testit.description` - description in the autotest card
 - `testit.labels` - tags in the work item
 - `testit.link` - links in the autotest card
-- `testit.step` - the designation of the step called in the body of the test or other step
 
 Description of methods:
 - `testit.addLinks` - links in the autotest result
