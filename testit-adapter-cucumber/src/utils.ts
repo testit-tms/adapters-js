@@ -1,5 +1,5 @@
 import { Tag } from '@cucumber/messages';
-import { Link, OutcomeType } from 'testit-api-client';
+import { Link, OutcomeType, TestResultGet } from 'testit-api-client';
 import { ParsedTags, tags, TagType } from './types/tags';
 
 export function getTagType(tag: string): TagType {
@@ -124,4 +124,17 @@ export function calculateResultOutcome(
     return 'Passed';
   }
   throw new Error('Cannot calculate result outcome');
+}
+
+export function parsedAutotests(
+  autotests: Array<TestResultGet>,
+  configurationId: string
+): Array<string | undefined> {
+  var resolvedAutotests = [];
+  for (const autotest of autotests) {
+      if (configurationId === autotest.configurationId) {
+          resolvedAutotests.push(autotest.autoTest!.externalId);
+      }
+  }
+  return resolvedAutotests;
 }

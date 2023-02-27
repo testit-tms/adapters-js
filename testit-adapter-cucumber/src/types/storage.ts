@@ -14,6 +14,7 @@ export interface IStorage {
   saveGherkinDocument(document: GherkinDocument): void;
   getAutotests(projectId: string): AutotestPostWithWorkItemId[];
   savePickle(pickle: Pickle): void;
+  isResolvedTestCase(testCase: TestCase): boolean;
   saveTestCase(testCase: TestCase): void;
   saveTestCaseStarted(testCaseStarted: TestCaseStarted): void;
   saveTestCaseFinished(testCaseFinished: TestCaseFinished): void;
