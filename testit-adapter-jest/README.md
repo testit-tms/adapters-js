@@ -62,6 +62,8 @@ module.exports = {
     projectId: '<id>',
     configurationId: '<id>',
     testRunId: '<optional id>',
+    adapterMode: <optional>,
+    automaticCreationTestCases: <optional boolean>
   },
 };
 ```
@@ -89,11 +91,20 @@ module.exports = {
     
     * `testRunId` - id of the created test run in TMS instance. `testRunId` is optional. If it is not provided, it is created automatically.  
       
-    * `testRunName` - parameter for specifying the name of test run in TMS instance. `testRunName` is optional. If it is not provided, it is created automatically.   
+    * `testRunName` - parameter for specifying the name of test run in TMS instance. `testRunName` is optional. If it is not provided, it is created automatically.  
+
+    * `adapterMode` - adapter mode. Default value - 0. The adapter supports following modes:
+      * 0 - in this mode, the adapter filters tests by test run ID and configuration ID, and sends the results to the test run.
+      * 1 - in this mode, the adapter sends all results to the test run without filtering.
+      * 2 - in this mode, the adapter creates a new test run and sends results to the new test run.
+    
+    * `automaticCreationTestCases` - mode of automatic creation test cases. Default value - false. The adapter supports following modes:
+       * true - in this mode, the adapter will create a test case linked to the created autotest (not to the updated autotest).
+       * false - in this mode, the adapter will not create a test case.
 
 #### Command line
 
-You can also specify options via cli arguments `jest --testEnvironment testit-adapter-jest --testEnvironmentOptions "{\"url\":\"<url>\",\"privateToken\":\"<token>\",\"projectId\":\"<id>\",\"configurationId\":\"<id>\",\"testRunId\":\"<optional id>\"}" --globalSetup testit-adapter-jest/dist/globalSetup.js --globalTeardown testit-adapter-jest/dist/globalTeardown.js`
+You can also specify options via cli arguments `jest --testEnvironment testit-adapter-jest --testEnvironmentOptions "{\"url\":\"<url>\",\"privateToken\":\"<token>\",\"projectId\":\"<id>\",\"configurationId\":\"<id>\",\"testRunId\":\"<optional id>\",\"automaticCreationTestCases\": <optional boolean>}" --globalSetup testit-adapter-jest/dist/globalSetup.js --globalTeardown testit-adapter-jest/dist/globalTeardown.js`
 
 
 ### Methods

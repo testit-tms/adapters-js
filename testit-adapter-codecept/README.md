@@ -74,12 +74,14 @@ declare namespace CodeceptJS {
 
 ```json
 {
-  "url": "example-project-url",
-  "projectId": "example-project-id",
-  "testRunId": "example-project-run-id",
-  "configurationId": "example-project-configuration-id",
-  "adapterMode": "example-adapter-mode",
-  "testRunName": "example-test-run-name"
+  "url": "<url>",
+  "privateToken": "<token>",
+  "projectId": "<id>",
+  "configurationId": "<id>",
+  "testRunId": "<id>",
+  "testRunName": "<optional name>",
+  "adapterMode": <optional>,
+  "automaticCreationTestCases": <optional boolean>
 }
 ```
 
@@ -107,6 +109,15 @@ declare namespace CodeceptJS {
     * `testRunId` - id of the created test run in TMS instance. `testRunId` is optional. If it is not provided, it is created automatically.  
       
     * `testRunName` - parameter for specifying the name of test run in TMS instance. `testRunName` is optional. If it is not provided, it is created automatically.   
+
+    * `adapterMode` - adapter mode. Default value - 0. The adapter supports following modes:
+      * 0 - in this mode, the adapter filters tests by test run ID and configuration ID, and sends the results to the test run.
+      * 1 - in this mode, the adapter sends all results to the test run without filtering.
+      * 2 - in this mode, the adapter creates a new test run and sends results to the new test run.
+
+    * `automaticCreationTestCases` - mode of automatic creation test cases. Default value - false. The adapter supports following modes:
+       * true - in this mode, the adapter will create a test case linked to the created autotest (not to the updated autotest).
+       * false - in this mode, the adapter will not create a test case.
 
 
 ### Methods
