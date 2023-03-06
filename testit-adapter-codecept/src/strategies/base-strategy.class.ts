@@ -51,6 +51,8 @@ export abstract class BaseStrategy {
   }
 
   protected async createTestInOriginSystem(testToOriginSystem: AutotestPost, test: Codecept.Test) {
+    testToOriginSystem.shouldCreateWorkItem = this.config.automaticCreationTestCases;
+
     const response = await this.http.create(testToOriginSystem);
 
     if (!response) {

@@ -7,6 +7,7 @@ export default async (
   projectConfig: Config.ProjectConfig
 ) => {
   const adapterMode = projectConfig.testEnvironmentOptions?.adapterMode ?? 0;
+  const automaticCreationTestCases = projectConfig.testEnvironmentOptions?.automaticCreationTestCases ?? false;
 
   let testRunId: string;
   try {
@@ -37,4 +38,5 @@ export default async (
     process.exit(1);
   }
   projectConfig.globals['testRunId'] = testRunId;
+  projectConfig.globals['automaticCreationTestCases'] = automaticCreationTestCases;
 };

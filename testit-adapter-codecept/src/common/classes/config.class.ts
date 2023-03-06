@@ -43,6 +43,10 @@ export class ConfigComposer {
       testRunId: environment?.TMS_TEST_RUN_ID ?? file?.testRunId ?? base?.testRunId,
       testRunName: environment?.TMS_TEST_RUN_NAME ?? file?.testRunName ?? base?.testRunName,
       adapterMode: environment?.TMS_ADAPTER_MODE ?? file?.adapterMode ?? base?.adapterMode ?? 0,
+      automaticCreationTestCases: 
+        environment?.TMS_AUTOMATIC_CREATION_TEST_CASES ?? 
+          file?.automaticCreationTestCases ?? 
+            base?.automaticCreationTestCases ?? false,
       __DEV: file.__DEV ?? false
     }
   }

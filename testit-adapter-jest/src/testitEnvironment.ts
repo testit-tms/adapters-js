@@ -69,13 +69,19 @@ export default class TestItEnvironment extends NodeEnvironment {
   private autotests: AutotestData[] = [];
   private testPath: string;
   private attachmentsQueue: Promise<void>[] = [];
+  private automaticCreationTestCases: boolean;
 
   constructor(config: JestEnvironmentConfig, context: EnvironmentContext) {
     super(config, context);
     const testRunId = config.projectConfig.globals['testRunId'];
+    const automaticCreationTestCases = config.projectConfig.globals['automaticCreationTestCases'];
     if (!testRunId || typeof testRunId !== 'string') {
       throw new Error('Looks like globalSetup was not called');
     }
+    if (!automaticCreationTestCases || typeof automaticCreationTestCases !== 'boolean') {
+      throw new Error('Looks like globalSetup was not called');
+    }
+    this.automaticCreationTestCases = automaticCreationTestCases;
     this.testClient = new TestClient({
       ...config.projectConfig.testEnvironmentOptions,
       testRunId,
@@ -250,6 +256,7 @@ export default class TestItEnvironment extends NodeEnvironment {
         teardown: teardownSteps.map(mapStep),
         links: autotest.links,
         labels: autotest.labels.map((label) => ({ name: label })),
+        shouldCreateWorkItem: this.automaticCreationTestCases,
       };
 
       if (!result.isFailed) {
