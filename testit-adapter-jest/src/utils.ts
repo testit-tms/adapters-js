@@ -2,7 +2,6 @@ import { createHash, randomUUID } from 'crypto';
 import { mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { dirname, join, normalize, parse } from 'path';
-import axios from 'axios';
 import { debug } from './debug';
 
 const log = debug.extend('utils');
@@ -74,10 +73,12 @@ export function generateFileName() {
   return `${randomUUID()}-attachment.txt`;
 }
 
-export function formatError(error: any) {
-  return axios.isAxiosError(error)
-    ? error.response?.data ?? error.response?.statusText ?? error.message
-    : error instanceof Error
-    ? error.message
-    : error;
+export function formatError(error: any): string {
+  return `
+    ${ error.response?.data ?? error.response?.statusText ?? error.message
+      ?? error instanceof Error
+      ? error.message
+      : error
+    }
+  `
 }

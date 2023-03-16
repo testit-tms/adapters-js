@@ -1,4 +1,3 @@
-import { LinkPost } from 'testit-api-client';
 import { AdapterMode } from '../strategies/strategy.factory';
 
 export namespace Origin {
@@ -23,6 +22,22 @@ export namespace Origin {
     message?: string;
     text?: TestText
   }
+
+  export interface LinkPost {
+    title?: string;
+    url: string;
+    description?: string;
+    type?: LinkType;
+    hasInfo?: boolean;
+  }
+  
+  export type LinkType =
+  | 'Related'
+  | 'BlockedBy'
+  | 'Defect'
+  | 'Issue'
+  | 'Requirement'
+  | 'Repository';
 
   export interface Config {
     url?: string

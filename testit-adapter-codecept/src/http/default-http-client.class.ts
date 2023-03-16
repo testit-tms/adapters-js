@@ -1,12 +1,33 @@
-import axios from 'axios';
-import { Attachment, Autotest, AutotestPost, AutotestPut, AutotestResultsForTestRun, Client, TestRunGet } from 'testit-api-client';
+import { readFileSync } from 'fs';
+import { basename } from 'path';
+import { 
+  AttachmentPutModel,
+  AutoTestModelV2GetModel,
+  AutoTestPostModel,
+  AutoTestPutModel,
+  AutoTestResultsForTestRunModel,
+  AttachmentsApi,
+  AutoTestsApi,
+  TestRunsApi,
+  AttachmentsApiApiKeys,
+  AutoTestsApiApiKeys,
+  TestRunsApiApiKeys,
+  TestRunV2GetModel,
+  AutotestFilterModel,
+  AutotestsSelectModel,
+  RequestDetailedFile,
+  TestRunState,
+  SearchAutoTestsQueryIncludesModel
+} from 'testit-api-client';
 import { Logger } from '../common/classes/logger.class';
 import { Origin } from '../types/origin.type';
 import { HttpClientErrors } from './http-client.errors';
 
 
 export class DefaultHttpClient {
-  public readonly http: Client;
+  private readonly attachmentsApi: AttachmentsApi;
+  private readonly autoTestsApi: AutoTestsApi;
+  private readonly testRunsApi: TestRunsApi;
 
   constructor(
     public readonly config: Origin.Config,
@@ -17,22 +38,25 @@ export class DefaultHttpClient {
     }
 
     try {
-      this.http = new Client(this.config);
+      this.attachmentsApi = new AttachmentsApi(config.url);
+      this.attachmentsApi.setApiKey(AttachmentsApiApiKeys['Bearer or PrivateToken'], `PrivateToken ${config.privateToken}`);
+      this.autoTestsApi = new AutoTestsApi(config.url);
+      this.autoTestsApi.setApiKey(AutoTestsApiApiKeys['Bearer or PrivateToken'], `PrivateToken ${config.privateToken}`);
+      this.testRunsApi = new TestRunsApi(config.url);
+      this.testRunsApi.setApiKey(TestRunsApiApiKeys['Bearer or PrivateToken'], `PrivateToken ${config.privateToken}`);
     } catch (e) {
       this.logger.warn(e);
     }
+}
+
+  public hasInSystem(id: string): Promise<AutoTestModelV2GetModel | null> {
+    return this.autoTestsApi.getAllAutoTests(this.config.projectId, id)
+      .then(response => response.body[0]);
   }
 
-  public hasInSystem(id: string): Promise<Autotest | null> {
-    const query = { projectId: this.config.projectId, externalId: id };
-
-    return this.http
-      .getAutotest(query)
-      .then(([test]) => test);
-  }
-
-  public create(test: AutotestPost): Promise<Autotest | void> {
-    return this.http.createAutotest(test)
+  public create(test: AutoTestPostModel): Promise<AutoTestModelV2GetModel | void> {
+    return this.autoTestsApi.createAutoTest(test)
+      .then(response => response.body)
       .catch(error => {
         this.logger.error(error);
 
@@ -40,8 +64,16 @@ export class DefaultHttpClient {
       });
   }
 
-  public loadAttachment(path: string): Promise<Attachment | void> {
-    return this.http.loadAttachment(path)
+  public loadAttachment(path: string): Promise<AttachmentPutModel | void> {
+    const file: RequestDetailedFile = {
+      value: readFileSync(path),
+      options: {
+        filename: basename(path)
+      }
+    };
+
+    return this.attachmentsApi.apiV2AttachmentsPost(file)
+      .then(response => response.body)
       .catch(error => {
         this.logger.error(error);
 
@@ -49,8 +81,9 @@ export class DefaultHttpClient {
       });
   }
 
-  public update(test: AutotestPut): Promise<void> {
-    return this.http.updateAutotest(test)
+  public update(test: AutoTestPutModel): Promise<AutoTestModelV2GetModel> {
+    return this.autoTestsApi.updateAutoTest(test)
+      .then(response => response.body)
       .catch(error => {
         this.logger.error(error);
 
@@ -58,33 +91,24 @@ export class DefaultHttpClient {
       });
   }
 
-  public async validate() {
-    try {
-      await this.http.checkConnection();
-    } catch (e) {
-      this.logger.error(e);
-
-      throw new Error();
-    }
+  public async updateRuns(result: AutoTestResultsForTestRunModel, run = this.config.testRunId) {
+    await this.testRunsApi.setAutoTestResultsForTestRun(run, [result]);
   }
 
-  public async updateRuns(result: AutotestResultsForTestRun, run = this.config.testRunId) {
-    await this.http.loadTestRunResults(run, [result]);
-  }
-
-  public async updateManyRuns(result: AutotestResultsForTestRun[], run = this.config.testRunId) {
-    await this.http.loadTestRunResults(run, result);
+  public async updateManyRuns(result: AutoTestResultsForTestRunModel[], run = this.config.testRunId) {
+    await this.testRunsApi.setAutoTestResultsForTestRun(run, result);
   }
   public async createEmptyRun(name = '') {
-    return this.http
-      .createTestRun({ name, projectId: this.config.projectId })
+    return this.testRunsApi
+      .createEmpty({ name, projectId: this.config.projectId })
+      .then(response => response.body)
       .catch((error) => this.logger.error(error));
   }
 
   public async linkToWorkItem(autotestId: string, ids: string[]) {
     for (const id of ids) {
       try {
-        await this.http.linkToWorkItem(autotestId, { id });
+        await this.autoTestsApi.linkAutoTestToWorkItem(autotestId, { id });
 
         this.logger.log(`Test - ${autotestId} linked with WI - ${ids}`);
       } catch (error) {
@@ -97,8 +121,8 @@ export class DefaultHttpClient {
     try {
       const run = await this.getRun(id);
 
-      if (run.stateName !== 'Completed') {
-        await this.http.startTestRun(id);
+      if (run.stateName === TestRunState.NotStarted) {
+        await this.testRunsApi.startTestRun(id);
 
         this.logger.log(`Test run  - ${run.id} started`);
       }
@@ -111,8 +135,8 @@ export class DefaultHttpClient {
     try {
       const run = await this.getRun(id);
 
-      if (run.stateName !== 'Completed') {
-        await this.http.completeTestRun(id);
+      if (run.stateName === TestRunState.InProgress) {
+        await this.testRunsApi.completeTestRun(id);
 
         this.logger.log(`Test run - ${run.id} completed`);
       }
@@ -121,16 +145,9 @@ export class DefaultHttpClient {
     }
   }
 
-  public getRun(id: string): Promise<TestRunGet> {
-    const baseURL = new URL('/api/v2', this.config.url).toString();
-    const client = axios.create({
-      baseURL,
-      headers: {
-        Authorization: `PrivateToken ${this.config.privateToken}`
-      }
-    });
-
-    return client.get(`testRuns/${id}`).then(response => response.data);
+  public getRun(id: string): Promise<TestRunV2GetModel> {
+    return this.testRunsApi.getTestRunById(id)
+    .then(response => response.body);
   }
 
   public async getTestsIdsByRunId(id: string): Promise<string[]> {

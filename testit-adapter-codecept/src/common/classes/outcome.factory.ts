@@ -1,11 +1,8 @@
-import {OutcomeType} from "testit-api-client/dist/types/outcome";
-
 export type SomeOutcome = 'passed' | 'failed' | 'skipped' | 'success';
-export type Outcome = OutcomeType;
 
 export class OutcomeFactory {
-  public static create(outcome: SomeOutcome): Outcome {
-    const outcomes: Record<SomeOutcome, Outcome> = {
+  public static create(outcome: SomeOutcome): string {
+    const outcomes: Record<SomeOutcome, string> = {
       passed: 'Passed',
       success: 'Passed',
       failed: 'Failed',

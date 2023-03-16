@@ -1,4 +1,4 @@
-import { AutotestPost, AutotestStep } from 'testit-api-client';
+import { AutoTestPostModel, AutoTestStepModel } from 'testit-api-client';
 import { humanize } from '../common/functions/humanize.function';
 import { useCompositeHash, useConfig, useDefaultHash } from '../common/functions/use-hash.function';
 import { Codecept } from '../types/codecept.type';
@@ -8,7 +8,7 @@ export class TestsBuilder {
   constructor(private readonly config: Origin.Config) {
   }
 
-  public build(test: Codecept.Test<Origin.TestConfig>): AutotestPost {
+  public build(test: Codecept.Test<Origin.TestConfig>): AutoTestPostModel {
     const config = useConfig(test);
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
@@ -38,7 +38,7 @@ export class TestsBuilder {
     };
   }
 
-  private buildManySteps(steps: Codecept.Step[] = []): AutotestStep[] {
+  private buildManySteps(steps: Codecept.Step[] = []): AutoTestStepModel[] {
     return steps
       .map(step => ({
         title: `${step.name}  ${humanize(step.args).join(',')}`.trim(),

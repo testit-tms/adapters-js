@@ -5,20 +5,20 @@ import type {
 import { Event, State } from 'jest-circus';
 import NodeEnvironment from 'jest-environment-node';
 import {
-  AutotestPost,
-  AutotestResultsForTestRun,
-  LinkPost,
+  AutoTestPostModel,
+  AutoTestResultsForTestRunModel,
+  AvailableTestResultOutcome,
 } from 'testit-api-client';
 import { debug } from './debug';
 import {
   mapAttachments,
-  mapDate,
   mapParams,
   mapStep,
   mapStepResult,
+  mapLinks
 } from './mappers';
 import { TestClient } from './testClient';
-import { AutotestData, AutotestResult, StepData } from './types';
+import { AutotestData, AutotestResult, LinkPost, StepData } from './types';
 import {
   createTempDir,
   createTempFile,
@@ -233,7 +233,7 @@ export default class TestItEnvironment extends NodeEnvironment {
     log('Waiting for attachments to be uploaded');
     await Promise.all(this.attachmentsQueue);
 
-    const results: AutotestResultsForTestRun[] = [];
+    const results: AutoTestResultsForTestRunModel[] = [];
     for (let i = 0; i < this.autotests.length; i++) {
       const autotest = this.autotests[i];
       const result = this.autotestResults[i];
@@ -242,7 +242,7 @@ export default class TestItEnvironment extends NodeEnvironment {
       const setupSteps = this.beforeAllSteps.concat(autotest.beforeEach);
       const teardownSteps = autotest.afterEach.concat(this.afterAllSteps);
 
-      const autotestPost: AutotestPost = {
+      const autotestPost: AutoTestPostModel = {
         projectId: this.testClient.projectId,
         externalId:
           autotest.externalId ?? this.generateExternalId(autotest.name),
@@ -289,12 +289,12 @@ export default class TestItEnvironment extends NodeEnvironment {
       }
 
       results.push({
-        autotestExternalId: autotestPost.externalId,
+        autoTestExternalId: autotestPost.externalId,
         configurationId: this.testClient.configurationId,
-        outcome: result.isFailed ? 'Failed' : 'Passed',
-        startedOn: result.startedAt ? mapDate(result.startedAt) : undefined,
+        outcome: AvailableTestResultOutcome[result.isFailed ? 'Failed' : 'Passed'],
+        startedOn: result.startedAt ? new Date(result.startedAt) : undefined,
         duration: result.duration ? result.duration : undefined,
-        completeOn: result.finishedAt ? mapDate(result.finishedAt) : undefined,
+        completedOn: result.finishedAt ? new Date(result.finishedAt) : undefined,
         attachments: mapAttachments(autotest.attachments),
         message: messages.length > 0 ? messages.join('\n') : undefined,
         traces: result.trace,
@@ -383,7 +383,7 @@ export default class TestItEnvironment extends NodeEnvironment {
 
   addLinks(links: LinkPost[]) {
     log('Adding links to %s', this.autotestData.name);
-    this.autotestData.runtimeLinks.push(...links);
+    this.autotestData.runtimeLinks.push(...mapLinks(links));
   }
 
   addMessage(message: string) {
@@ -393,7 +393,7 @@ export default class TestItEnvironment extends NodeEnvironment {
 
   setAutotestLinks(links: LinkPost[]) {
     log('Setting autotest links to %s', this.autotestData.name);
-    this.autotestData.links = links;
+    this.autotestData.links = mapLinks(links);
   }
 
   setLabels(labels: string[]) {

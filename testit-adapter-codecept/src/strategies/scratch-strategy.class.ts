@@ -1,4 +1,4 @@
-import { TestRunGet } from 'testit-api-client';
+import { TestRunV2GetModel } from 'testit-api-client';
 import { Logger } from '../common/classes/logger.class';
 import { Nullable } from '../common/types/nullable.type';
 import { DefaultHttpClient } from '../http/default-http-client.class';
@@ -11,7 +11,7 @@ export class ScratchStrategy
   extends BaseStrategy implements Strategy {
   private readonly attachments = new AttachmentsService(this.http);
 
-  private run: Nullable<TestRunGet>;
+  private run: Nullable<TestRunV2GetModel>;
 
   constructor(
     protected readonly http: DefaultHttpClient,

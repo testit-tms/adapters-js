@@ -1,4 +1,4 @@
-import { LinkPost } from 'testit-api-client';
+import { LinkPostModel } from 'testit-api-client';
 
 export type StepData = {
   title: string;
@@ -17,8 +17,8 @@ export type AutotestData = {
   beforeEach: StepData[];
   steps: StepData[];
   afterEach: StepData[];
-  links: LinkPost[];
-  runtimeLinks: LinkPost[];
+  links: LinkPostModel[];
+  runtimeLinks: LinkPostModel[];
   message?: string;
   labels: string[];
   workItems: string[];
@@ -33,3 +33,31 @@ export type AutotestResult = {
   message?: string;
   trace?: string;
 };
+
+export interface Config {
+  url: string
+  privateToken: string,
+  projectId: string,
+  configurationId: string,
+  testRunId?: string,
+  testRunName?: string,
+  automaticCreationTestCases?: boolean;
+  configFile?: string,
+  __DEV?: boolean
+}
+
+export interface LinkPost {
+  title?: string;
+  url: string;
+  description?: string;
+  type?: LinkType;
+  hasInfo?: boolean;
+}
+
+export type LinkType =
+| 'Related'
+| 'BlockedBy'
+| 'Defect'
+| 'Issue'
+| 'Requirement'
+| 'Repository';

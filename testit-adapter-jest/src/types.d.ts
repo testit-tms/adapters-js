@@ -1,4 +1,4 @@
-import { LinkPost } from 'testit-api-client';
+import { LinkPost } from './types';
 
 declare global {
   const testit: {

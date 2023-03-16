@@ -1,23 +1,24 @@
 import {
-  AttachmentPut,
-  AttachmentPutModelAutotestStepResults,
-  AutotestStep,
-  Parameters,
+  AttachmentModel,
+  AttachmentModelAutoTestStepResultsModel,
+  AutoTestStepModel,
+  LinkPostModel,
+  LinkType,
 } from 'testit-api-client';
-import { StepData } from './types';
+import { LinkPost, StepData } from './types';
 
 export function mapDate(date: number): string {
   return new Date(date).toISOString();
 }
 
-export function mapStep(step: StepData): AutotestStep {
+export function mapStep(step: StepData): AutoTestStepModel {
   return {
     title: step.title,
     description: step.description,
   };
 }
 
-export function mapParams(params: any): Parameters {
+export function mapParams(params: any): Record<string, string> {
   switch (typeof params) {
     case 'string':
     case 'bigint':
@@ -31,7 +32,7 @@ export function mapParams(params: any): Parameters {
       return Object.keys(params).reduce((acc, key) => {
         acc[key] = params[key].toString();
         return acc;
-      }, {} as Parameters);
+      }, {} as Record<string, string>);
     default:
       return {};
   }
@@ -39,7 +40,7 @@ export function mapParams(params: any): Parameters {
 
 export function mapStepResult(
   step: StepData
-): AttachmentPutModelAutotestStepResults {
+): AttachmentModelAutoTestStepResultsModel {
   return {
     title: step.title,
     description: step.description,
@@ -48,5 +49,26 @@ export function mapStepResult(
 }
 
 export function mapAttachments(attachments: string[]) {
-  return attachments.map<AttachmentPut>((id) => ({ id }));
+  return attachments.map<AttachmentModel>((id) => ({
+    id: id,
+    name: '',
+    type: '',
+    fileId: '',
+    size: 0}));
+}
+
+export function mapLinks(links: LinkPost[]): LinkPostModel[] {
+  return links?.map(link => {
+    const model = new LinkPostModel();
+
+    model.url = link.url;
+    model.title = link.title;
+    model.description = link.description;
+
+    if (link.type !== undefined) {
+        model.type = LinkType[link.type];
+    }
+
+    return model;
+  });
 }

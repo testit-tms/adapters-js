@@ -1,52 +1,74 @@
-import type { AxiosError } from 'axios';
+import { readFileSync } from 'fs';
+import { basename } from 'path';
 import {
-  AutotestPost,
-  AutotestResultsForTestRun,
-  Client,
-  ClientConfig,
+  AutoTestPostModel,
+  AutoTestResultsForTestRunModel,
+  AttachmentsApi,
+  AutoTestsApi,
+  TestRunsApi,
+  AttachmentsApiApiKeys,
+  AutoTestsApiApiKeys,
+  TestRunsApiApiKeys,
+  HttpError,
+  RequestDetailedFile,
+  TestRunState
 } from 'testit-api-client';
 import { debug } from './debug';
+import { Config } from './types';
 import { formatError } from './utils';
 
 const log = debug.extend('client');
 
 export class TestClient {
-  constructor(clientConfig: Partial<ClientConfig> = {}) {
-    this.client = new Client(clientConfig);
-    this._testRunId = clientConfig.testRunId;
+  constructor(config: Partial<Config>) {
+    this.attachmentsApi = new AttachmentsApi(config.url);
+    this.attachmentsApi.setApiKey(AttachmentsApiApiKeys['Bearer or PrivateToken'], `PrivateToken ${config.privateToken}`);
+    this.autoTestsApi = new AutoTestsApi(config.url);
+    this.autoTestsApi.setApiKey(AutoTestsApiApiKeys['Bearer or PrivateToken'], `PrivateToken ${config.privateToken}`);
+    this.testRunsApi = new TestRunsApi(config.url);
+    this.testRunsApi.setApiKey(TestRunsApiApiKeys['Bearer or PrivateToken'], `PrivateToken ${config.privateToken}`);
+
+    this.config = config;
   }
 
-  private client: Client;
-  private _testRunId: string | undefined;
+  private readonly attachmentsApi: AttachmentsApi;
+  private readonly autoTestsApi: AutoTestsApi;
+  private readonly testRunsApi: TestRunsApi;
+  private readonly config: Partial<Config>;
 
   get testRunId(): string {
-    if (this._testRunId === undefined) {
+    if (this.config.testRunId === undefined) {
       throw new Error('Test run id is not set');
     }
-    return this._testRunId;
+    return this.config.testRunId;
   }
 
   get projectId(): string {
-    return this.client.getConfig().projectId;
+    if (this.config.projectId === undefined) {
+      throw new Error('Project id is not set');
+    }
+    return this.config.projectId;
   }
 
   get configurationId(): string {
-    return this.client.getConfig().configurationId;
+    if (this.config.configurationId === undefined) {
+      throw new Error('Configuration id is not set');
+    }
+    return this.config.configurationId;
   }
 
   async createTestRun() {
-    const { projectId, testRunId } = this.client.getConfig();
+    const { testRunId } = this.config;
     if (testRunId === undefined) {
       log(
         'Test run id is not provided, creating test run for project %s',
-        projectId
+        this.projectId
       );
-      this._testRunId = await this.client
-        .createTestRun({ projectId })
-        .then((testRun) => testRun.id);
+      this.config.testRunId = await this.testRunsApi
+        .createEmpty({ projectId: this.projectId })
+        .then((testRun) => testRun.body.id);
     } else {
-      log('Using provided test run id %s', testRunId);
-      this._testRunId = testRunId;
+      log('Using provided test run id %s', this.testRunId);
     }
     log('Starting test run %s', this.testRunId);
     return this.testRunId;
@@ -54,97 +76,110 @@ export class TestClient {
 
   async startTestRun() {
     log('Starting test run %s', this.testRunId);
-    await this.client.startTestRun(this.testRunId);
+    if (this.testRunId) {
+      await this.testRunsApi.startTestRun(this.testRunId);
+    }
   }
 
   async completeTestRun() {
     log('Completing test run %s', this.testRunId);
-    const testRun = await this.client.getTestRun(this.testRunId);
-    if (testRun.stateName === 'InProgress') {
-      await this.client.completeTestRun(this.testRunId);
+    const testRun = await this.testRunsApi.getTestRunById(this.testRunId)
+      .then((response) => response.body);
+    if (testRun.stateName === TestRunState.InProgress) {
+      await this.testRunsApi.completeTestRun(this.testRunId);
     }
   }
 
-  async loadAutotest(autotestPost: AutotestPost) {
+  async loadAutotest(autotestPost: AutoTestPostModel) {
     try {
       log('Creating autotest %o', autotestPost);
-      const { id } = await this.client.createAutotest(autotestPost);
-      return id!;
+      const id = await this.autoTestsApi.createAutoTest(autotestPost)
+        .then((response) => response.body.id);
+      return id;
     } catch (err) {
-      const axiosError = err as AxiosError;
-      if (axiosError.response?.status === 409) {
+      const error = err as HttpError;
+      if (error.response?.statusCode === 409) {
         log(
           'Autotest %s already exists, updating with %o',
           autotestPost.externalId,
           autotestPost
         );
-        const [autotest] = await this.client.getAutotest({
-          projectId: this.client.getConfig().projectId,
-          externalId: autotestPost.externalId,
-        });
-        await this.client.updateAutotest({
+        const autotest = await this.autoTestsApi.getAllAutoTests(
+          this.projectId,
+          autotestPost.externalId,)
+          .then((response) => response.body[0]);
+        await this.autoTestsApi.updateAutoTest({
           ...autotest,
           links: autotest.links,
         });
-        return autotest.id!;
+        return autotest.id;
       } else {
-        console.error(formatError(err));
+        console.error(formatError(err as HttpError));
         throw err;
       }
     }
   }
 
-  async loadPassedAutotest(autotest: AutotestPost) {
+  async loadPassedAutotest(autotestPost: AutoTestPostModel) {
     try {
-      log('Creating autotest %o', autotest);
-      await this.client.createAutotest(autotest);
+      log('Creating autotest %o', autotestPost);
+      await this.autoTestsApi.createAutoTest(autotestPost);
     } catch (err) {
-      const axiosError = err as AxiosError;
-      if (axiosError.response?.status === 409) {
+      const error = err as HttpError;
+      if (error.response?.statusCode === 409) {
         log(
           'Autotest %s already exists, updating with %o',
-          autotest.externalId,
-          autotest
+          autotestPost.externalId,
+          autotestPost
         );
-        await this.client.updateAutotest(autotest);
+        await this.autoTestsApi.updateAutoTest(autotestPost);
       } else {
-        console.error(formatError(err));
+        console.error(formatError(err as HttpError));
         throw err;
       }
     }
   }
 
   async getAutotestId(externalId: string): Promise<string> {
-    const [autotest] = await this.client.getAutotest({
-      projectId: this.client.getConfig().projectId,
-      externalId,
-    });
+    const autotest = await this.autoTestsApi.getAllAutoTests(
+      this.projectId,
+      externalId)
+      .then((response) => response.body[0]);
     return autotest.id!;
   }
 
   async linkWorkItem(externalId: string, workItemId: string) {
     log('Linking work item %s to autotest %s', workItemId, externalId);
-    return this.client.linkToWorkItem(externalId, { id: workItemId });
+    return this.autoTestsApi.linkAutoTestToWorkItem(externalId, { id: workItemId });
   }
 
-  async loadAutotestResults(results: AutotestResultsForTestRun[]) {
+  async loadAutotestResults(results: AutoTestResultsForTestRunModel[]) {
     log('Loading autotest results %o', results);
-    await this.client.loadTestRunResults(this.testRunId, results);
+    await this.testRunsApi.setAutoTestResultsForTestRun(this.testRunId, results);
   }
 
-  async uploadAttachments(attachments: string[]): Promise<string[]> {
+  async uploadAttachments(paths: string[]): Promise<string[]> {
     const attachmentIds: string[] = [];
-    for (const attachment of attachments) {
+    for (const path of paths) {
       try {
-        log('Uploading attachment %s', attachment);
-        const { id } = await this.client.loadAttachment(attachment);
+        const file: RequestDetailedFile = {
+          value: readFileSync(path),
+          options: {
+            filename: basename(path)
+          }
+        };
+    
+        const id = await this.attachmentsApi.apiV2AttachmentsPost(file)
+          .then((response) => {return response.body.id});
+
+        log('Uploaded attachment %s', path);
         if (!id) {
           log('Attachment id is not returned');
           continue;
         }
         attachmentIds.push(id);
       } catch (err) {
-        console.error(`Failed to load attachment`, formatError(err));
+        console.error(`Failed to load attachment`, formatError(err as HttpError));
       }
     }
     return attachmentIds;

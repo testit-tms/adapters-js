@@ -1,4 +1,3 @@
-import { LinkPost, LinkType } from 'testit-api-client';
 import { Nullable } from './common/types/nullable.type';
 import { Origin } from './types/origin.type';
 
@@ -22,7 +21,7 @@ export class TestMetadataHelper extends Helper {
     }
   }
 
-  public addLinks(linksOrName: LinkPost[] | string, description?: string, type?: LinkType, url?: string) {
+  public addLinks(linksOrName: Origin.LinkPost[] | string, description?: string, type?: Origin.LinkType, url?: string) {
     if (typeof linksOrName !== 'string') {
       this.metadata.links = linksOrName;
     } else {

@@ -1,7 +1,13 @@
-import { AttachmentPut, AutotestResultsForTestRun, AutotestStep } from 'testit-api-client';
+import {
+  AttachmentPutModel,
+  AutoTestResultsForTestRunModel,
+  AttachmentPutModelAutoTestStepResultsModel,
+  AvailableTestResultOutcome,
+  LinkPostModel,
+  LinkType
+} from 'testit-api-client';
 import { OutcomeFactory, SomeOutcome } from '../common/classes/outcome.factory';
 import { humanize } from '../common/functions/humanize.function';
-import { safetyUseISOString } from '../common/functions/to-iso-string.function';
 import { useCompositeHash, useDefaultHash } from '../common/functions/use-hash.function';
 import { Codecept } from '../types/codecept.type';
 import { Origin } from '../types/origin.type';
@@ -13,8 +19,8 @@ export class RunsBuilder {
   public build(
     test: Codecept.Test<Origin.TestConfig>,
     metadata: Origin.TestMetadata,
-    attachments: AttachmentPut[]
-  ): AutotestResultsForTestRun {
+    attachments: AttachmentPutModel[]
+  ): AutoTestResultsForTestRunModel {
     // @ts-ignore
     const { _beforeEach, _afterEach, _afterAll, _beforeAll } = test.parent;
 
@@ -34,31 +40,47 @@ export class RunsBuilder {
 
     return {
       configurationId: this.config.configurationId,
-      autotestExternalId: useDefaultHash(test) ?? useCompositeHash(test),
-      links: metadata?.links ?? [],
-      startedOn: safetyUseISOString(test.startedAt),
-      duration: test.duration,
+      autoTestExternalId: useDefaultHash(test) ?? useCompositeHash(test),
+      links: this.buildLinks(metadata?.links),
+      startedOn: test?.startedAt ? new Date(test?.startedAt) : undefined,
+      duration: test?.duration ?? 0,
       attachments,
       parameters,
       traces: test?.err?.cliMessage() ?? '',
       teardownResults,
       setupResults,
-      completeOn: safetyUseISOString(test?.startedAt + test?.duration),
+      completedOn: test?.startedAt && test?.duration ? new Date(test?.startedAt + test?.duration) : undefined,
       message: metadata?.message ?? null,
-      outcome: OutcomeFactory.create(test.state),
+      outcome: AvailableTestResultOutcome[OutcomeFactory.create(test.state)],
       stepResults: !OutcomeFactory.isSkipped(test.state) ? this.buildManySteps(test.steps) : null
     };
   }
 
-  private buildManySteps(steps: Codecept.Step[]): AutotestStep[] {
+  private buildManySteps(steps: Codecept.Step[]): AttachmentPutModelAutoTestStepResultsModel[] {
     return steps?.map(step => ({
       title: `${step.name}  ${humanize(step.args).join(',')}`.trim(),
-      outcome: OutcomeFactory.create(step.status as SomeOutcome),
+      outcome: AvailableTestResultOutcome[OutcomeFactory.create(step.status as SomeOutcome)],
       description: '',
-      startedOn: safetyUseISOString(step.startedAt),
-      duration: step.duration,
-      completedOn: safetyUseISOString(step?.startedAt + step?.duration)
+      startedOn: step?.startedAt ? new Date(step?.startedAt) : undefined,
+      duration: step.duration ?? 0,
+      completedOn: step?.startedAt && step?.duration ? new Date(step?.startedAt + step?.duration) : undefined
     }));
+  }
+
+  private buildLinks(links: Origin.LinkPost[]): LinkPostModel[] {
+    return links?.map(link => {
+      const model = new LinkPostModel();
+
+      model.url = link.url;
+      model.title = link.title;
+      model.description = link.description;
+
+      if (link.type !== undefined) {
+          model.type = LinkType[link.type];
+      }
+
+      return model;
+    });
   }
 
   private reduceAfterOrBeforeSuites(suite: Codecept.Test[]) {

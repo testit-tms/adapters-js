@@ -1,4 +1,3 @@
-import { AxiosError } from 'axios';
 import { output } from 'codeceptjs';
 
 export class Logger {
@@ -17,12 +16,12 @@ export class Logger {
     this.logger.error(message);
   }
 
-  public error(error: AxiosError): void {
+  public error(error): void {
     this.logger.error(`
-      ${error.response?.status},
-      ${error.config?.method},
-      ${error.config?.url},
-      ${JSON.stringify(error.response?.data)}
+    ${error.response?.status},
+    ${error.config?.method},
+    ${error.config?.url},
+    ${JSON.stringify(error.response?.data)}
     `);
   }
 }
