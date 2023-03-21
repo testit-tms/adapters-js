@@ -1,4 +1,5 @@
 import { Config } from '@jest/reporters';
+import { HttpError } from 'testit-api-client';
 import { TestClient } from './testClient';
 import { formatError } from './utils';
 
@@ -8,6 +9,7 @@ export default async (
 ) => {
   const adapterMode = projectConfig.testEnvironmentOptions?.adapterMode ?? 0;
   const automaticCreationTestCases = projectConfig.testEnvironmentOptions?.automaticCreationTestCases ?? false;
+  const certValidation = projectConfig.testEnvironmentOptions?.certValidation ?? true;
 
   let testRunId: string;
   try {
@@ -34,9 +36,10 @@ export default async (
         throw new Error(`Unknown adapter mode ${adapterMode}`);
     }
   } catch (err) {
-    console.error('Failed to setup', formatError(err));
+    console.error('Failed to setup', formatError(err as HttpError));
     process.exit(1);
   }
   projectConfig.globals['testRunId'] = testRunId;
   projectConfig.globals['automaticCreationTestCases'] = automaticCreationTestCases;
+  projectConfig.globals['certValidation'] = certValidation;
 };

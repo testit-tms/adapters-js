@@ -1,4 +1,5 @@
 import { Config } from '@jest/reporters';
+import { HttpError } from 'testit-api-client';
 import { formatError } from './utils';
 
 export default async (
@@ -13,6 +14,6 @@ export default async (
   try {
     await globalThis.testClient.completeTestRun();
   } catch (err) {
-    console.error('Failed to complete test run', formatError(err));
+    console.error('Failed to complete test run', formatError(err as HttpError));
   }
 };

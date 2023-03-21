@@ -2,6 +2,7 @@ import { createHash, randomUUID } from 'crypto';
 import { mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { dirname, join, normalize, parse } from 'path';
+import { HttpError } from 'testit-api-client';
 import { debug } from './debug';
 
 const log = debug.extend('utils');
@@ -73,12 +74,11 @@ export function generateFileName() {
   return `${randomUUID()}-attachment.txt`;
 }
 
-export function formatError(error: any): string {
+export function formatError(error: HttpError): string {
   return `
-    ${ error.response?.data ?? error.response?.statusText ?? error.message
-      ?? error instanceof Error
-      ? error.message
-      : error
-    }
+    ${error.response?.statusCode},
+    ${error.response?.method},
+    ${error.response?.url},
+    ${JSON.stringify(error.body)}
   `
 }

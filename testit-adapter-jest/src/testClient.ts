@@ -1,5 +1,6 @@
 import { readFileSync } from 'fs';
 import { basename } from 'path';
+import https from 'https';
 import {
   AutoTestPostModel,
   AutoTestResultsForTestRunModel,
@@ -28,6 +29,11 @@ export class TestClient {
     this.testRunsApi = new TestRunsApi(config.url);
     this.testRunsApi.setApiKey(TestRunsApiApiKeys['Bearer or PrivateToken'], `PrivateToken ${config.privateToken}`);
 
+    this.options = {
+      httpsAgent: new https.Agent({
+        rejectUnauthorized: config.certValidation,
+      }),
+    };
     this.config = config;
   }
 
@@ -35,6 +41,7 @@ export class TestClient {
   private readonly autoTestsApi: AutoTestsApi;
   private readonly testRunsApi: TestRunsApi;
   private readonly config: Partial<Config>;
+  private readonly options;
 
   get testRunId(): string {
     if (this.config.testRunId === undefined) {
@@ -65,7 +72,7 @@ export class TestClient {
         this.projectId
       );
       this.config.testRunId = await this.testRunsApi
-        .createEmpty({ projectId: this.projectId })
+        .createEmpty({ projectId: this.projectId }, this.options)
         .then((testRun) => testRun.body.id);
     } else {
       log('Using provided test run id %s', this.testRunId);
@@ -77,23 +84,24 @@ export class TestClient {
   async startTestRun() {
     log('Starting test run %s', this.testRunId);
     if (this.testRunId) {
-      await this.testRunsApi.startTestRun(this.testRunId);
+      await this.testRunsApi.startTestRun(this.testRunId, this.options);
+      await this.testRunsApi.startTestRun(this.testRunId, this.options);
     }
   }
 
   async completeTestRun() {
     log('Completing test run %s', this.testRunId);
-    const testRun = await this.testRunsApi.getTestRunById(this.testRunId)
+    const testRun = await this.testRunsApi.getTestRunById(this.testRunId, this.options)
       .then((response) => response.body);
     if (testRun.stateName === TestRunState.InProgress) {
-      await this.testRunsApi.completeTestRun(this.testRunId);
+      await this.testRunsApi.completeTestRun(this.testRunId, this.options);
     }
   }
 
   async loadAutotest(autotestPost: AutoTestPostModel) {
     try {
       log('Creating autotest %o', autotestPost);
-      const id = await this.autoTestsApi.createAutoTest(autotestPost)
+      const id = await this.autoTestsApi.createAutoTest(autotestPost, this.options)
         .then((response) => response.body.id);
       return id;
     } catch (err) {
@@ -106,12 +114,14 @@ export class TestClient {
         );
         const autotest = await this.autoTestsApi.getAllAutoTests(
           this.projectId,
-          autotestPost.externalId,)
+          autotestPost.externalId,
+          this.options)
           .then((response) => response.body[0]);
         await this.autoTestsApi.updateAutoTest({
           ...autotest,
           links: autotest.links,
-        });
+        }, this.options
+        );
         return autotest.id;
       } else {
         console.error(formatError(err as HttpError));
@@ -123,7 +133,7 @@ export class TestClient {
   async loadPassedAutotest(autotestPost: AutoTestPostModel) {
     try {
       log('Creating autotest %o', autotestPost);
-      await this.autoTestsApi.createAutoTest(autotestPost);
+      await this.autoTestsApi.createAutoTest(autotestPost, this.options);
     } catch (err) {
       const error = err as HttpError;
       if (error.response?.statusCode === 409) {
@@ -132,7 +142,7 @@ export class TestClient {
           autotestPost.externalId,
           autotestPost
         );
-        await this.autoTestsApi.updateAutoTest(autotestPost);
+        await this.autoTestsApi.updateAutoTest(autotestPost, this.options);
       } else {
         console.error(formatError(err as HttpError));
         throw err;
@@ -140,22 +150,14 @@ export class TestClient {
     }
   }
 
-  async getAutotestId(externalId: string): Promise<string> {
-    const autotest = await this.autoTestsApi.getAllAutoTests(
-      this.projectId,
-      externalId)
-      .then((response) => response.body[0]);
-    return autotest.id!;
-  }
-
   async linkWorkItem(externalId: string, workItemId: string) {
     log('Linking work item %s to autotest %s', workItemId, externalId);
-    return this.autoTestsApi.linkAutoTestToWorkItem(externalId, { id: workItemId });
+    return this.autoTestsApi.linkAutoTestToWorkItem(externalId, { id: workItemId }, this.options);
   }
 
   async loadAutotestResults(results: AutoTestResultsForTestRunModel[]) {
     log('Loading autotest results %o', results);
-    await this.testRunsApi.setAutoTestResultsForTestRun(this.testRunId, results);
+    await this.testRunsApi.setAutoTestResultsForTestRun(this.testRunId, results, this.options);
   }
 
   async uploadAttachments(paths: string[]): Promise<string[]> {
@@ -169,7 +171,7 @@ export class TestClient {
           }
         };
     
-        const id = await this.attachmentsApi.apiV2AttachmentsPost(file)
+        const id = await this.attachmentsApi.apiV2AttachmentsPost(file, this.options)
           .then((response) => {return response.body.id});
 
         log('Uploaded attachment %s', path);

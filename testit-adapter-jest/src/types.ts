@@ -42,6 +42,7 @@ export interface Config {
   testRunId?: string,
   testRunName?: string,
   automaticCreationTestCases?: boolean;
+  certValidation?: boolean,
   configFile?: string,
   __DEV?: boolean
 }

@@ -48,6 +48,7 @@ export namespace Origin {
     testRunName?: string,
     adapterMode?: AdapterMode;
     automaticCreationTestCases?: boolean;
+    certValidation?: boolean;
     configFile?: string,
     __DEV?: boolean
   }
@@ -61,6 +62,7 @@ export namespace Origin {
     TMS_TEST_RUN_NAME: string,
     TMS_ADAPTER_MODE: AdapterMode,
     TMS_AUTOMATIC_CREATION_TEST_CASES: boolean,
+    TMS_CERT_VALIDATION: boolean,
     TMS_CONFIG_FILE: string,
   }>
 }

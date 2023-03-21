@@ -1,5 +1,7 @@
 import { readFileSync } from 'fs';
 import { basename } from 'path';
+import https from 'https';
+
 import { 
   AttachmentPutModel,
   AutoTestModelV2GetModel,
@@ -28,6 +30,7 @@ export class DefaultHttpClient {
   private readonly attachmentsApi: AttachmentsApi;
   private readonly autoTestsApi: AutoTestsApi;
   private readonly testRunsApi: TestRunsApi;
+  private readonly options;
 
   constructor(
     public readonly config: Origin.Config,
@@ -47,15 +50,21 @@ export class DefaultHttpClient {
     } catch (e) {
       this.logger.warn(e);
     }
+
+    this.options = {
+      httpsAgent: new https.Agent({
+        rejectUnauthorized: config.certValidation,
+      }),
+    };
 }
 
   public hasInSystem(id: string): Promise<AutoTestModelV2GetModel | null> {
-    return this.autoTestsApi.getAllAutoTests(this.config.projectId, id)
+    return this.autoTestsApi.getAllAutoTests(this.config.projectId, id, this.options)
       .then(response => response.body[0]);
   }
 
   public create(test: AutoTestPostModel): Promise<AutoTestModelV2GetModel | void> {
-    return this.autoTestsApi.createAutoTest(test)
+    return this.autoTestsApi.createAutoTest(test, this.options)
       .then(response => response.body)
       .catch(error => {
         this.logger.error(error);
@@ -72,7 +81,7 @@ export class DefaultHttpClient {
       }
     };
 
-    return this.attachmentsApi.apiV2AttachmentsPost(file)
+    return this.attachmentsApi.apiV2AttachmentsPost(file, this.options)
       .then(response => response.body)
       .catch(error => {
         this.logger.error(error);
@@ -82,7 +91,7 @@ export class DefaultHttpClient {
   }
 
   public update(test: AutoTestPutModel): Promise<AutoTestModelV2GetModel> {
-    return this.autoTestsApi.updateAutoTest(test)
+    return this.autoTestsApi.updateAutoTest(test, this.options)
       .then(response => response.body)
       .catch(error => {
         this.logger.error(error);
@@ -92,15 +101,15 @@ export class DefaultHttpClient {
   }
 
   public async updateRuns(result: AutoTestResultsForTestRunModel, run = this.config.testRunId) {
-    await this.testRunsApi.setAutoTestResultsForTestRun(run, [result]);
+    await this.testRunsApi.setAutoTestResultsForTestRun(run, [result], this.options);
   }
 
   public async updateManyRuns(result: AutoTestResultsForTestRunModel[], run = this.config.testRunId) {
-    await this.testRunsApi.setAutoTestResultsForTestRun(run, result);
+    await this.testRunsApi.setAutoTestResultsForTestRun(run, result, this.options);
   }
   public async createEmptyRun(name = '') {
     return this.testRunsApi
-      .createEmpty({ name, projectId: this.config.projectId })
+      .createEmpty({ name, projectId: this.config.projectId }, this.options)
       .then(response => response.body)
       .catch((error) => this.logger.error(error));
   }
@@ -108,7 +117,7 @@ export class DefaultHttpClient {
   public async linkToWorkItem(autotestId: string, ids: string[]) {
     for (const id of ids) {
       try {
-        await this.autoTestsApi.linkAutoTestToWorkItem(autotestId, { id });
+        await this.autoTestsApi.linkAutoTestToWorkItem(autotestId, { id }, this.options);
 
         this.logger.log(`Test - ${autotestId} linked with WI - ${ids}`);
       } catch (error) {
@@ -122,7 +131,7 @@ export class DefaultHttpClient {
       const run = await this.getRun(id);
 
       if (run.stateName === TestRunState.NotStarted) {
-        await this.testRunsApi.startTestRun(id);
+        await this.testRunsApi.startTestRun(id, this.options);
 
         this.logger.log(`Test run  - ${run.id} started`);
       }
@@ -136,7 +145,7 @@ export class DefaultHttpClient {
       const run = await this.getRun(id);
 
       if (run.stateName === TestRunState.InProgress) {
-        await this.testRunsApi.completeTestRun(id);
+        await this.testRunsApi.completeTestRun(id, this.options);
 
         this.logger.log(`Test run - ${run.id} completed`);
       }
@@ -146,7 +155,7 @@ export class DefaultHttpClient {
   }
 
   public getRun(id: string): Promise<TestRunV2GetModel> {
-    return this.testRunsApi.getTestRunById(id)
+    return this.testRunsApi.getTestRunById(id, this.options)
     .then(response => response.body);
   }
 

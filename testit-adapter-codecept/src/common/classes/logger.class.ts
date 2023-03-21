@@ -1,4 +1,5 @@
 import { output } from 'codeceptjs';
+import { HttpError } from 'testit-api-client';
 
 export class Logger {
   private readonly logger = output;
@@ -16,12 +17,12 @@ export class Logger {
     this.logger.error(message);
   }
 
-  public error(error): void {
+  public error(error: HttpError): void {
     this.logger.error(`
-    ${error.response?.status},
-    ${error.config?.method},
-    ${error.config?.url},
-    ${JSON.stringify(error.response?.data)}
+      ${error.response?.statusCode},
+      ${error.response?.method},
+      ${error.response?.url},
+      ${JSON.stringify(error.body)}
     `);
   }
 }

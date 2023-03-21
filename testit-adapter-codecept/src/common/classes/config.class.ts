@@ -47,6 +47,7 @@ export class ConfigComposer {
         environment?.TMS_AUTOMATIC_CREATION_TEST_CASES ?? 
           file?.automaticCreationTestCases ?? 
             base?.automaticCreationTestCases ?? false,
+      certValidation: environment?.TMS_CERT_VALIDATION ?? file?.certValidation ?? base?.certValidation ?? true,
       __DEV: file.__DEV ?? false
     }
   }

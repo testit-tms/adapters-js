@@ -8,6 +8,7 @@ import {
   AutoTestPostModel,
   AutoTestResultsForTestRunModel,
   AvailableTestResultOutcome,
+  HttpError,
 } from 'testit-api-client';
 import { debug } from './debug';
 import {
@@ -75,10 +76,12 @@ export default class TestItEnvironment extends NodeEnvironment {
     super(config, context);
     const testRunId = config.projectConfig.globals['testRunId'];
     const automaticCreationTestCases = config.projectConfig.globals['automaticCreationTestCases'];
-    if (!testRunId || typeof testRunId !== 'string') {
-      throw new Error('Looks like globalSetup was not called');
-    }
-    if (!automaticCreationTestCases || typeof automaticCreationTestCases !== 'boolean') {
+    const certValidation = config.projectConfig.globals['certValidation'];
+    if (
+      testRunId === undefined || typeof testRunId !== 'string' ||
+      automaticCreationTestCases === undefined || typeof automaticCreationTestCases !== 'boolean' ||
+      certValidation === undefined || typeof certValidation !== 'boolean'
+      ) {
       throw new Error('Looks like globalSetup was not called');
     }
     this.automaticCreationTestCases = automaticCreationTestCases;
@@ -266,15 +269,14 @@ export default class TestItEnvironment extends NodeEnvironment {
       }
 
       if (autotest.workItems.length > 0) {
-        const id = await this.testClient.getAutotestId(autotestPost.externalId);
         try {
           await Promise.all(
             autotest.workItems.map((workItem) => {
-              return this.testClient.linkWorkItem(id, workItem);
+              return this.testClient.linkWorkItem(autotestPost.externalId, workItem);
             })
           );
         } catch (err) {
-          console.error('Failed to link work items', formatError(err));
+          console.error('Failed to link work items', formatError(err as HttpError));
         }
       }
 
