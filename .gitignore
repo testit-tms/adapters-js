@@ -1,6 +1,8 @@
 *.vs
 *.idea
 *dist
+*build
+*.tgz
 *node_modules
 *.vscode
 *dist

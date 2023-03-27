@@ -3,13 +3,6 @@
 
 ## Getting Started
 
-### Compatibility
-
-| Test IT | Adapter |
-|---------|---------|
-| 3.5     | 1.0     |
-| 4.0     | 1.1     |
-
 ### Installation
 ```
 npm install testit-adapter-cucumber
