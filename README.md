@@ -3,10 +3,10 @@ The repository contains new versions of adapters for JS test frameworks.
 
 ## Compatibility
 
-| Test IT | Adapter |
-|---------|---------|
-| 3.5     | 1.0     |
-| 4.0     | 1.1     |
+| Test IT | Codecept | Cucumber | Jest |
+|---------|----------|----------|------|
+| 3.5     | -        | 1.0      | -    |
+| 4.0     | 1.1      | 1.1      | 1.1  |
 
 Supported test frameworks :
  1. [Cucumber](https://github.com/testit-tms/adapters-js/tree/main/testit-adapter-cucumber)
