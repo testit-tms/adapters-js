@@ -1,0 +1,39 @@
+name: Code checks
+
+on:
+  pull_request
+
+jobs:
+  build:
+    name: "Build"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [14.x, 16.x]
+    steps:
+      - uses: actions/checkout@v3.3.0
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'yarn'
+
+      - name: yarn install
+        run: |
+          yarn install
+      - run: yarn workspace allure-playwright playwright install chromium --with-deps
+
+      - name: yarn build
+        run: |
+          yarn run build
+      - name: prettier:check
+        run: |
+          yarn prettier:check
+      - name: yarn lint
+        run: |
+          yarn run lint
+      - name: yarn test
+        run: |
+          yarn run test
