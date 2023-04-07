@@ -5,7 +5,11 @@ on:
 
 jobs:
   test:
-    runs-on: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: [14, 16]
     steps:
       - name: Get repository code
         uses: actions/checkout@v3
@@ -19,7 +23,11 @@ jobs:
       - name: Test application
         run: npm run test
   lint:
-    runs-on: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: [14, 16]
     steps:
       - name: Get repository code
         uses: actions/checkout@v3
@@ -34,11 +42,11 @@ jobs:
         run: npm run lint
   build:
     needs: [lint, test]
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         node-version: [14, 16]
-    runs-on: ${{ matrix.os }}
     steps:
       - name: Get repository code
         uses: actions/checkout@v3
