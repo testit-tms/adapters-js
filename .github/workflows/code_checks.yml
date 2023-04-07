@@ -24,7 +24,7 @@ jobs:
           path: ~/.npm
           key: node-modules-${{ hashFiles('**/package-lock.json') }}
       - name: Install dependecies
-        run: npm ci
+        run: npm i --package-lock-only && npm ci
       - name: Test application
         run: npm run test
   lint:
