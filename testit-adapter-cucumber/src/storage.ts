@@ -115,7 +115,7 @@ export class Storage implements IStorage {
           stepResults: steps,
           outcome: calculateResultOutcome(steps.map((step) => step.outcome)),
           startedOn: mapDate(testCaseStarted.timestamp.seconds),
-          completeOn: mapDate(testCaseFinished.timestamp.seconds),
+          completedOn: mapDate(testCaseFinished.timestamp.seconds),
           duration:
             testCaseFinished.timestamp.seconds -
             testCaseStarted.timestamp.seconds,

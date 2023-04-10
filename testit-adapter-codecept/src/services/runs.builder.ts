@@ -43,7 +43,7 @@ export class RunsBuilder {
       traces: test?.err?.cliMessage() ?? '',
       teardownResults,
       setupResults,
-      completeOn: safetyUseISOString(test?.startedAt + test?.duration),
+      completedOn: safetyUseISOString(test?.startedAt + test?.duration),
       message: metadata?.message ?? null,
       outcome: OutcomeFactory.create(test.state),
       stepResults: !OutcomeFactory.isSkipped(test.state) ? this.buildManySteps(test.steps) : null
