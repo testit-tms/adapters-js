@@ -25,7 +25,7 @@ jobs:
           key: node-modules-${{ hashFiles('**/package-lock.json') }}
       - name: Install dependecies
         working-directory: ${{ matrix.package }}
-        run: npm ci
+        run: npm install
       # - name: Test application
       #   run: npm run test
       #   working-directory: ${{ matrix.package }}
@@ -51,7 +51,7 @@ jobs:
           key: node-modules-${{ hashFiles('**/package-lock.json') }}
       - name: Install dependecies
         working-directory: ${{ matrix.package }}
-        run: npm ci
+        run: npm install
       # - name: Lint application ${{ matrix.package }}
       #   working-directory: ${{ matrix.package }}
       #   run: npm run lint
@@ -82,7 +82,7 @@ jobs:
           key: node-modules-${{ hashFiles('**/package-lock.json') }}
       - name: Install dependecies
         working-directory: ${{ matrix.package }}
-        run: npm ci
+        run: npm install
       - name: Build application ${{ matrix.package }}
         working-directory: ${{ matrix.package }}
         run: npm run build
