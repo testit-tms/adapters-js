@@ -294,7 +294,7 @@ export default class TestItEnvironment extends NodeEnvironment {
         outcome: result.isFailed ? 'Failed' : 'Passed',
         startedOn: result.startedAt ? mapDate(result.startedAt) : undefined,
         duration: result.duration ? result.duration : undefined,
-        completeOn: result.finishedAt ? mapDate(result.finishedAt) : undefined,
+        completedOn: result.finishedAt ? mapDate(result.finishedAt) : undefined,
         attachments: mapAttachments(autotest.attachments),
         message: messages.length > 0 ? messages.join('\n') : undefined,
         traces: result.trace,
