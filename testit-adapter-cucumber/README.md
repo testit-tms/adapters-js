@@ -87,6 +87,8 @@ Cucumber tags can be used to specify information about autotest.
 - `@Link` - can be specified either in JSON (`@Link={"url":"http://google.com","hasInfo":true,"description":"GoogleDescription","title":"Google","type":"Defect"}`) or in text (`@Link=http://google.com`)
 - `@Label` - Label that is going to be linked to autotest
 - `@WorkItemId` - Work item's ID to which autotest is going to be linked
+- `@NameSpace` - directory in the TMS system
+- `@ClassName` - subdirectory in the TMS system
 
 ### Examples
 

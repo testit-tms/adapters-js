@@ -105,6 +105,8 @@ export default class TestItEnvironment extends NodeEnvironment {
       addAttachments: this.addAttachments.bind(this),
       addLinks: this.addLinks.bind(this),
       addMessage: this.addMessage.bind(this),
+      nameSpace: this.setNameSpace.bind(this),
+      className: this.setClassName.bind(this),
     };
   }
 
@@ -249,8 +251,8 @@ export default class TestItEnvironment extends NodeEnvironment {
         title: autotest.title,
         name: autotest.name,
         description: autotest.description,
-        namespace: getDir(this.testPath),
-        classname: getFileName(this.testPath),
+        namespace: autotest.namespace ?? getDir(this.testPath),
+        classname: autotest.classname ?? getFileName(this.testPath),
         setup: setupSteps.map(mapStep),
         steps: autotest.steps.map(mapStep),
         teardown: teardownSteps.map(mapStep),
@@ -409,6 +411,16 @@ export default class TestItEnvironment extends NodeEnvironment {
   setParams(params: any) {
     log('Setting params to %s', this.autotestData.name);
     this.autotestData.params = params;
+  }
+
+  setNameSpace(nameSpace: string) {
+    log('Setting nameSpace to %s', nameSpace);
+    this.autotestData.namespace = nameSpace;
+  }
+
+  setClassName(className: string) {
+    log('Setting className to %s', className);
+    this.autotestData.classname = className;
   }
 
   startStep(name: string, description?: string) {
