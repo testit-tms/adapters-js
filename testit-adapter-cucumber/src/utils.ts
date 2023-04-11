@@ -28,6 +28,12 @@ export function getTagType(tag: string): TagType {
   if (new RegExp(`^@${tags.labels}=.+$`).test(tag)) {
     return TagType.Label;
   }
+  if (new RegExp(`^@${tags.nameSpace}=.+$`).test(tag)) {
+    return TagType.NameSpace;
+  }
+  if (new RegExp(`^@${tags.className}=.+$`).test(tag)) {
+    return TagType.ClassName;
+  }
   return TagType.Unknown;
 }
 
@@ -64,6 +70,14 @@ export function getLabel(tag: string): string {
   return tag.replace(new RegExp(`^@${tags.labels}=`), '');
 }
 
+export function getNameSpace(tag: string): string {
+  return tag.replace(new RegExp(`^@${tags.nameSpace}=`), '');
+}
+
+export function getClassName(tag: string): string {
+  return tag.replace(new RegExp(`^@${tags.className}=`), '');
+}
+
 export function parseTags(tags: readonly Pick<Tag, 'name'>[]): ParsedTags {
   const parsedTags: ParsedTags = { links: [], labels: [] };
   for (const tag of tags) {
@@ -97,6 +111,14 @@ export function parseTags(tags: readonly Pick<Tag, 'name'>[]): ParsedTags {
       }
       case TagType.Label: {
         parsedTags.labels?.push(getLabel(tag.name));
+        continue;
+      }
+      case TagType.NameSpace: {
+        parsedTags.nameSpace = getNameSpace(tag.name);
+        continue;
+      }
+      case TagType.ClassName: {
+        parsedTags.className = getClassName(tag.name);
         continue;
       }
       case TagType.Unknown:

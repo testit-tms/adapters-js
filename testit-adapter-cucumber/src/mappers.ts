@@ -113,6 +113,8 @@ export function mapScenario(
     projectId,
     steps: scenario.steps.map(mapStep),
     workItemId: tags.workItemId,
+    namespace: tags.nameSpace,
+    classname: tags.className,
     // Disable for now (BUG??)
     // labels:
     //   tags.labels.length > 0
