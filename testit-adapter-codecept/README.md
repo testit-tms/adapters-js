@@ -125,6 +125,8 @@ Description of metadata methods:
 - `description` - description in the autotest card
 - `labels` - tags in the work item
 - `link` - links in the autotest card
+- `nameSpace` - directory in the TMS system
+- `className` - subdirectory in the TMS system
 
 Description of methods:
 - `addLinks` - links in the autotest result
