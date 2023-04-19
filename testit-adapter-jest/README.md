@@ -112,6 +112,8 @@ Description of metadata methods:
 - `testit.description` - description in the autotest card
 - `testit.labels` - tags in the work item
 - `testit.link` - links in the autotest card
+- `testit.nameSpace` - directory in the TMS system (default - directory's name of test)
+- `testit.className` - subdirectory in the TMS system (default - file's name of test)
 
 Description of methods:
 - `testit.addLinks` - links in the autotest result

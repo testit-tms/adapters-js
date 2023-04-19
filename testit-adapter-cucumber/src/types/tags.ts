@@ -8,6 +8,8 @@ export type ParsedTags = {
   name?: string;
   description?: string;
   labels: string[];
+  nameSpace?: string;
+  className?: string;
 };
 
 export enum TagType {
@@ -19,6 +21,8 @@ export enum TagType {
   Name,
   Description,
   Label,
+  NameSpace,
+  ClassName,
   Unknown,
 }
 
@@ -30,4 +34,6 @@ export const tags: Record<keyof ParsedTags, string> = {
   workItemId: 'WorkItemId',
   description: 'Description',
   labels: 'Label',
+  nameSpace: 'NameSpace',
+  className: 'ClassName'
 };

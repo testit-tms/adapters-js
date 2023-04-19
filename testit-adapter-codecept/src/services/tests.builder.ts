@@ -34,7 +34,9 @@ export class TestsBuilder {
       setup,
       links: config?.links ?? [],
       teardown,
-      externalId: useDefaultHash(test) ?? useCompositeHash(test)
+      externalId: useDefaultHash(test) ?? useCompositeHash(test),
+      namespace: config?.nameSpace,
+      classname: config?.className
     };
   }
 
