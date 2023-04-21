@@ -1,0 +1,88 @@
+name: Code checks
+
+on:
+  pull_request
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: [14,16,18]
+        package: [
+            testit-adapter-codecept,
+            testit-adapter-cucumber,
+            testit-adapter-jest
+        ]
+    steps:
+      - name: Get repository code [${{ matrix.package }}]
+        uses: actions/checkout@v3
+      - name: Cache deps
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: node-modules-${{ hashFiles('**/package-lock.json') }}
+      - name: Install dependecies
+        working-directory: ${{ matrix.package }}
+        run: npm install
+      # - name: Test application
+      #   run: npm run test
+      #   working-directory: ${{ matrix.package }}
+
+  lint:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: [14,16,18]
+        package: [
+            testit-adapter-codecept,
+            testit-adapter-cucumber,
+            testit-adapter-jest
+        ]
+    steps:
+      - name: Get repository code [${{ matrix.package }}]
+        uses: actions/checkout@v3
+      - name: Cache deps
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: node-modules-${{ hashFiles('**/package-lock.json') }}
+      - name: Install dependecies
+        working-directory: ${{ matrix.package }}
+        run: npm install
+      # - name: Lint application ${{ matrix.package }}
+      #   working-directory: ${{ matrix.package }}
+      #   run: npm run lint
+
+  build:
+    needs: [lint, test]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: [14,16,18]
+        package: [
+            testit-adapter-codecept,
+            testit-adapter-cucumber,
+            testit-adapter-jest
+        ]
+    steps:
+      - name: Get repository code [${{ matrix.package }}]
+        uses: actions/checkout@v3
+      - name: Install Node JS
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Cache deps
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: node-modules-${{ hashFiles('**/package-lock.json') }}
+      - name: Install dependecies
+        working-directory: ${{ matrix.package }}
+        run: npm install
+      - name: Build application ${{ matrix.package }}
+        working-directory: ${{ matrix.package }}
+        run: npm run build

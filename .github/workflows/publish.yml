@@ -1,0 +1,36 @@
+name: Publish Package
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        node-version: [18]
+        package: [
+            testit-adapter-codecept,
+            testit-adapter-cucumber,
+            testit-adapter-jest
+        ]
+    steps:
+      - name: Get repository code [${{ matrix.package }}]
+        uses: actions/checkout@v3
+      - name: Install Node JS
+        uses: actions/setup-node@v3
+        with:
+          node-version:  ${{ matrix.node-version }}
+          registry-url: 'https://registry.npmjs.org'
+      - name: Install dependecies
+        working-directory: ${{ matrix.package }}
+        run: npm install
+      - name: Build application ${{ matrix.package }}
+        working-directory: ${{ matrix.package }}
+        run: npm run build
+      - run: npm publish
+        working-directory: ${{ matrix.package }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
