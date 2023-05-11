@@ -29,11 +29,13 @@ module.exports = {
   globalSetup: 'testit-adapter-jest/dist/globalSetup.js',
   globalTeardown: 'testit-adapter-jest/dist/globalTeardown.js',
   testEnvironmentOptions: {
-    url: '<url>',
-    privateToken: '<token>',
-    projectId: '<id>',
-    configurationId: '<id>',
-    testRunId: '<optional id>',
+    url: 'URL',
+    privateToken: 'USER_PRIVATE_TOKEN',
+    projectId: 'PROJECT_ID',
+    configurationId: 'CONFIGURATION_ID',
+    testRunId: 'TEST_RUN_ID',
+    adapterMode: ADAPTER_MODE,
+    automaticCreationTestCases: AUTOMATIC_CREATION_TEST_CASES
   },
 };
 ```
@@ -97,7 +99,7 @@ module.exports = {
 
 #### Command line
 
-You can also specify options via cli arguments `jest --testEnvironment testit-adapter-jest --testEnvironmentOptions "{\"url\":\"<url>\",\"privateToken\":\"<token>\",\"projectId\":\"<id>\",\"configurationId\":\"<id>\",\"testRunId\":\"<optional id>\",\"automaticCreationTestCases\": <optional boolean>}" --globalSetup testit-adapter-jest/dist/globalSetup.js --globalTeardown testit-adapter-jest/dist/globalTeardown.js`
+You can also specify options via cli arguments `jest --testEnvironment testit-adapter-jest --testEnvironmentOptions "{\"url\":\"URL\",\"privateToken\":\"USER_PRIVATE_TOKEN\",\"projectId\":\"PROJECT_ID\",\"configurationId\":\"CONFIGURATION_ID\",\"testRunId\":\"TEST_RUN_ID\",\"adapterMode\":ADAPTER_MODE,\"automaticCreationTestCases\":AUTOMATIC_CREATION_TEST_CASES}" --globalSetup testit-adapter-jest/dist/globalSetup.js --globalTeardown testit-adapter-jest/dist/globalTeardown.js`
 
 
 ### Methods
