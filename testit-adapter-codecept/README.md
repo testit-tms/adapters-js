@@ -19,6 +19,18 @@ npm install testit-api-client
 
 ### Configuration
 
+| Property                   | Environment variable              | CLI argument                  | Required | Description                                                                                                                                                                                                                                                                                                                                                                            |
+|----------------------------|-----------------------------------|-------------------------------|----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| url                        | TMS_URL                           | tmsUrl                        | ✔        | Location of the TMS instance                                                                                                                                                                                                                                                                                                                                                           |
+| privateToken               | TMS_PRIVATE_TOKEN                 | tmsPrivateToken               | ✔        | API secret key [How to getting API secret key?](https://github.com/testit-tms/.github/tree/main/configuration#privatetoken)                                                                                                                                                                                                                                                            |
+| projectId                  | TMS_PROJECT_ID                    | tmsProjectId                  | ✔        | ID of project in TMS instance [How to getting project ID?](https://github.com/testit-tms/.github/tree/main/configuration#projectid)                                                                                                                                                                                                                                                    |
+| configurationId            | TMS_CONFIGURATION_ID              | tmsConfigurationId            | ✔        | ID of configuration in TMS instance [How to getting configuration ID?](https://github.com/testit-tms/.github/tree/main/configuration#configurationid)                                                                                                                                                                                                                                  |
+| testRunId                  | TMS_TEST_RUN_ID                   | tmsTestRunId                  | ❌        | ID of the created test run in TMS instance. If it is not provided, it is created automatically                                                                                                                                                                                                                                                                                         |
+| testRunName                | TMS_TEST_RUN_NAME                 | tmsTestRunName                | ❌        | Parameter for specifying the name of test run in TMS instance. If it is not provided, it is created automatically                                                                                                                                                                                                                                                                      |
+| adapterMode                | TMS_ADAPTER_MODE                  | tmsAdapterMode                | ❌        | Adapter mode. Default value - 0. The adapter supports following modes:<br/>0 - in this mode, the adapter filters tests by test run ID and configuration ID, and sends the results to the test run<br/>1 - in this mode, the adapter sends all results to the test run without filtering<br/>2 - in this mode, the adapter creates a new test run and sends results to the new test run |
+| certValidation             | TMS_CERT_VALIDATION               | tmsCertValidation             | ❌        | It enables/disables certificate validation. Default value - true                                                                                                                                                                                                                                                                                                                       |
+| automaticCreationTestCases | TMS_AUTOMATIC_CREATION_TEST_CASES | tmsAutomaticCreationTestCases | ❌        | Mode of automatic creation test cases. Default value - false. The adapter supports following modes:<br/>true - in this mode, the adapter will create a test case linked to the created autotest (not to the updated autotest)<br/>false - in this mode, the adapter will not create a test case                                                                                        |
+
 Add TestITHelper and TestITPlugin to Codecept file configuration 
 
 ```ts
@@ -63,7 +75,7 @@ declare namespace CodeceptJS {
 
 #### File
 
-1. Create .env config or file config with default name testit-adapter.config.json in the root directory of the project
+Create .env config or file config with default name testit-adapter.config.json in the root directory of the project
 
 ```json
 {
@@ -77,41 +89,6 @@ declare namespace CodeceptJS {
   "automaticCreationTestCases": AUTOMATIC_CREATION_TEST_CASES
 }
 ```
-
-2. Fill parameters with your configuration, where:  
-    * `url` - location of the TMS instance  
-      
-    * `privateToken` - API secret key
-        1. go to the https://{DOMAIN}/user-profile profile
-        2. copy the API secret key
-    
-    * `projectId` - ID of project in TMS instance.
-    
-        1. create a project
-        2. open DevTools -> network
-        3. go to the project https://{DOMAIN}/projects/{PROJECT_ID}/tests
-        4. GET-request project, Preview tab, copy id field  
-    
-    * `configurationId` - ID of configuration in TMS instance.
-    
-        1. create a project  
-        2. open DevTools -> network  
-        3. go to the project https://{DOMAIN}/projects/{PROJECT_ID}/tests  
-        4. GET-request configurations, Preview tab, copy id field  
-    
-    * `testRunId` - id of the created test run in TMS instance. `testRunId` is optional. If it is not provided, it is created automatically.  
-      
-    * `testRunName` - parameter for specifying the name of test run in TMS instance. `testRunName` is optional. If it is not provided, it is created automatically.   
-
-    * `adapterMode` - adapter mode. Default value - 0. The adapter supports following modes:
-      * 0 - in this mode, the adapter filters tests by test run ID and configuration ID, and sends the results to the test run.
-      * 1 - in this mode, the adapter sends all results to the test run without filtering.
-      * 2 - in this mode, the adapter creates a new test run and sends results to the new test run.
-
-    * `automaticCreationTestCases` - mode of automatic creation test cases. Default value - false. The adapter supports following modes:
-       * true - in this mode, the adapter will create a test case linked to the created autotest (not to the updated autotest).
-       * false - in this mode, the adapter will not create a test case.
-
 
 ### Methods
 
