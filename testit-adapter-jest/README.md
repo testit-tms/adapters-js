@@ -50,13 +50,13 @@ module.exports = {
   globalSetup: 'testit-adapter-jest/dist/globalSetup.js',
   globalTeardown: 'testit-adapter-jest/dist/globalTeardown.js',
   testEnvironmentOptions: {
-    url: 'url',
-    privateToken: 'token',
-    projectId: 'id',
-    configurationId: 'id',
-    testRunId: 'optional id',
-    adapterMode: optional integer,
-    automaticCreationTestCases: optional boolean
+    url: 'URL',
+    privateToken: 'USER_PRIVATE_TOKEN',
+    projectId: 'PROJECT_ID',
+    configurationId: 'CONFIGURATION_ID',
+    testRunId: 'TEST_RUN_ID',
+    adapterMode: ADAPTER_MODE,
+    automaticCreationTestCases: AUTOMATIC_CREATION_TEST_CASES
   },
 };
 ```
