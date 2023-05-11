@@ -67,14 +67,14 @@ declare namespace CodeceptJS {
 
 ```json
 {
-  "url": "<url>",
-  "privateToken": "<token>",
-  "projectId": "<id>",
-  "configurationId": "<id>",
-  "testRunId": "<id>",
-  "testRunName": "<optional name>",
-  "adapterMode": <optional>,
-  "automaticCreationTestCases": <optional boolean>
+  "url": "url",
+  "privateToken": "token",
+  "projectId": "id",
+  "configurationId": "id",
+  "testRunId": "id",
+  "testRunName": "optional name",
+  "adapterMode": optional integer,
+  "automaticCreationTestCases": optional boolean
 }
 ```
 

@@ -26,11 +26,11 @@ const { TestItFormatter } = require('testit-adapter-cucumber');
 module.exports = class CustomFormatter extends TestItFormatter {
   constructor(options) {
     super(options, {
-      url: '<url>',
-      privateToken: '<token>',
-      projectId: '<id>',
-      configurationId: '<id>',
-      testRunId: '<optional id>',
+      url: 'url',
+      privateToken: 'token',
+      projectId: 'id',
+      configurationId: 'id',
+      testRunId: 'optional id',
     });
   }
 };
