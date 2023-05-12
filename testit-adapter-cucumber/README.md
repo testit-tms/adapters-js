@@ -19,6 +19,14 @@ npm install testit-api-client
 
 ### Configuration
 
+| Description                                                                                                                                                                                                                                                                                                                                                                            | Property                   | Environment variable              | CLI argument                  |
+|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------|-----------------------------------|-------------------------------|
+| Location of the TMS instance                                                                                                                                                                                                                                                                                                                                                           | url                        | TMS_URL                           | tmsUrl                        |
+| API secret key [How to getting API secret key?](https://github.com/testit-tms/.github/tree/main/configuration#privatetoken)                                                                                                                                                                                                                                                            | privateToken               | TMS_PRIVATE_TOKEN                 | tmsPrivateToken               |
+| ID of project in TMS instance [How to getting project ID?](https://github.com/testit-tms/.github/tree/main/configuration#projectid)                                                                                                                                                                                                                                                    | projectId                  | TMS_PROJECT_ID                    | tmsProjectId                  |
+| ID of configuration in TMS instance [How to getting configuration ID?](https://github.com/testit-tms/.github/tree/main/configuration#configurationid)                                                                                                                                                                                                                                  | configurationId            | TMS_CONFIGURATION_ID              | tmsConfigurationId            |
+| ID of the created test run in TMS instance                                                                                                                                                                                                                                                                                              | testRunId                  | TMS_TEST_RUN_ID                   | tmsTestRunId                  |
+
 Create `testitFormatter.js` file in the root directory of the project:
 ```js
 const { TestItFormatter } = require('testit-adapter-cucumber');
@@ -26,11 +34,11 @@ const { TestItFormatter } = require('testit-adapter-cucumber');
 module.exports = class CustomFormatter extends TestItFormatter {
   constructor(options) {
     super(options, {
-      url: '<url>',
-      privateToken: '<token>',
-      projectId: '<id>',
-      configurationId: '<id>',
-      testRunId: '<optional id>',
+      url: 'URL',
+      privateToken: 'USER_PRIVATE_TOKEN',
+      projectId: 'PROJECT_ID',
+      configurationId: 'CONFIGURATION_ID',
+      testRunId: 'TEST_RUN_ID',
     });
   }
 };
