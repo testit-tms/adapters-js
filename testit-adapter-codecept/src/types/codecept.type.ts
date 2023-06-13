@@ -20,7 +20,9 @@ export namespace Codecept {
     config: any;
     inject: any;
     artifacts: any;
-    err?: { cliMessage?: () => string };
+    err?: {
+      stack: string; cliMessage?: () => string 
+};
     opts: T
   }
 }

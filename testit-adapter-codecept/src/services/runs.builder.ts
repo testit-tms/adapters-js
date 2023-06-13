@@ -40,7 +40,7 @@ export class RunsBuilder {
       duration: test.duration,
       attachments,
       parameters,
-      traces: test?.err?.cliMessage() ?? '',
+      traces: typeof test?.err?.cliMessage === "function" ? test.err.cliMessage() : test?.err?.stack,
       teardownResults,
       setupResults,
       completedOn: safetyUseISOString(test?.startedAt + test?.duration),
