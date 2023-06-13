@@ -20,16 +20,20 @@ module.exports = async function() {
     helper.metadata = {};
   })
 
+
   event.dispatcher.on(event.test.before, async (test) => {
     await strategy.beforeTest(test);
   })
 
-  event.dispatcher.on(event.suite.after, async (suite) => {
+  event.dispatcher.on(event.test.finished, async (test) => {
     recorder.add('transferTestAndRuns', async () => {
-      await strategy.transferTestsToSystem(suite);
-      await strategy.transferRunsToSystem(suite);
-    })
-  })
+        const suite = {
+          tests: [test]
+        };
+        await strategy.transferTestsToSystem(suite);
+        await strategy.transferRunsToSystem(suite);
+    });
+  });
 
   event.dispatcher.on(event.all.after, async () => {
     await strategy.teardown();

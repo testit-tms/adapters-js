@@ -5,8 +5,8 @@ export interface Strategy {
   teardown(): Promise<any>;
 
   beforeTest(test: Mocha.Test): Promise<void>;
-  transferTestsToSystem(suite: Mocha.Suite): Promise<void>;
-  transferRunsToSystem(suite: Mocha.Suite): Promise<void>;
+  transferTestsToSystem(suite: { tests: Mocha.Test[] }): Promise<void>;
+  transferRunsToSystem(suite: { tests: Mocha.Test[] }): Promise<void>;
   collect(id: string, data: Origin.TestMetadata): void;
 }
 
