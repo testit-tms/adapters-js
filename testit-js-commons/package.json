@@ -1,0 +1,31 @@
+{
+  "name": "testit-js-commons",
+  "version": "1.1.5",
+  "description": "JavaScript commons for Test IT",
+  "types": "lib/index.d.ts",
+  "source": "src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w"
+  },
+  "author": {
+    "name": "Integration team",
+    "email": "integrations@testit.software"
+  },
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/node": "^20.2.4",
+    "@types/request": "^2.48.8",
+    "@typescript-eslint/eslint-plugin": "^5.59.7",
+    "@typescript-eslint/parser": "^5.59.7",
+    "eslint": "^8.41.0",
+    "prettier": "^2.8.8"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "testit-api-client": "^3.2.0"
+  },
+  "files": [
+    "lib"
+  ]
+}

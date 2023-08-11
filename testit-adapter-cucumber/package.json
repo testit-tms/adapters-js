@@ -1,7 +1,7 @@
 {
   "name": "testit-adapter-cucumber",
-  "version": "1.1.4",
-  "description": "Adapter provides formatter for cucumber output and some additional methods to Cucumber world.",
+  "version": "1.1.5",
+  "description": "Cucumber adapter for Test IT",
   "main": "dist/formatter.js",
   "scripts": {
     "prebuild": "rimraf dist",
@@ -10,7 +10,10 @@
     "lint": "eslint . --ext=.ts"
   },
   "keywords": [],
-  "author": "Andrey Kiselev",
+  "author": {
+    "name": "Integration team",
+    "email": "integrations@testit.software"
+  },
   "license": "Apache-2.0",
   "peerDependencies": {
     "axios": "^0.22.0",

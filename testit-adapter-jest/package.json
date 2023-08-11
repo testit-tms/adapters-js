@@ -1,14 +1,17 @@
 {
   "name": "testit-adapter-jest",
-  "version": "1.1.4",
-  "description": "",
+  "version": "1.1.5",
+  "description": "Jest adapter for Test IT",
   "main": "dist/testitEnvironment.js",
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch"
   },
   "keywords": [],
-  "author": "",
+  "author": {
+    "name": "Integration team",
+    "email": "integrations@testit.software"
+  },
   "license": "ISC",
   "dependencies": {
     "debug": "^4.3.4",

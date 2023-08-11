@@ -1,8 +1,12 @@
 {
   "name": "testit-adapter-codecept",
-  "version": "1.1.4",
-  "description": "Codecept adapter for TestIT",
+  "version": "1.1.5",
+  "description": "Codecept adapter for Test IT",
   "keywords": [],
+  "author": {
+    "name": "Integration team",
+    "email": "integrations@testit.software"
+  },
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "scripts": {
