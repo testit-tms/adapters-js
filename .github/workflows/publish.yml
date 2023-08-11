@@ -14,7 +14,9 @@ jobs:
         package: [
             testit-adapter-codecept,
             testit-adapter-cucumber,
-            testit-adapter-jest
+            testit-adapter-jest,
+            testit-adapter-mocha,
+            testit-js-commons
         ]
     steps:
       - name: Get repository code [${{ matrix.package }}]
