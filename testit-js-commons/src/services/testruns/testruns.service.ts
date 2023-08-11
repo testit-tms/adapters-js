@@ -51,7 +51,9 @@ export class TestRunsService extends BaseService implements ITestRunsService {
 
   public async loadAutotests(testRunId: string, autotests: Array<AutotestResult>) {
     const autotestResults = autotests.map((test) => this._converter.toOriginAutotestResult(test));
-    await this._client.setAutoTestResultsForTestRun(testRunId, autotestResults);
+    for(const autotestResult of autotestResults) {
+      await this._client.setAutoTestResultsForTestRun(testRunId, [autotestResult]);
+    }
   }
 
   public async getAutotests(testRunId: string): Promise<AutotestResultGet[] | undefined> {
