@@ -1,5 +1,5 @@
-import { TestClient } from './testClient';
+import { Client } from "testit-js-commons";
 
 declare global {
-  var testClient: TestClient;
+  var client: Client;
 }

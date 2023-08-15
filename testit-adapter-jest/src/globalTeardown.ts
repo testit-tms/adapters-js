@@ -1,18 +1,18 @@
 import { Config } from '@jest/reporters';
-import { formatError } from './utils';
 
 export default async (
   globalConfig: Config.GlobalConfig,
   projectConfig: Config.ProjectConfig
 ) => {
-  const testRunId = projectConfig.globals['testRunId'];
+  const testRunId = projectConfig.globals['testRunId'] as string;
+
   if (!testRunId) {
-    console.error('Looks like globalSetup was not called');
-    return;
+    return console.error('Looks like globalSetup was not called');
   }
+
   try {
-    await globalThis.testClient.completeTestRun();
+    await globalThis.client.testRuns.completeTestRun(testRunId);
   } catch (err) {
-    console.error('Failed to complete test run', formatError(err));
+    console.error('Failed to complete test run');
   }
 };

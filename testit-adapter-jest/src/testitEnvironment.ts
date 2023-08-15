@@ -1,101 +1,69 @@
-import type {
-  EnvironmentContext,
-  JestEnvironmentConfig,
-} from '@jest/environment';
-import { Event, State } from 'jest-circus';
-import NodeEnvironment from 'jest-environment-node';
-import {
-  AutotestPost,
-  AutotestResultsForTestRun,
-  LinkPost,
-} from 'testit-api-client';
-import { debug } from './debug';
-import {
-  mapAttachments,
-  mapDate,
-  mapParams,
-  mapStep,
-  mapStepResult,
-} from './mappers';
-import { TestClient } from './testClient';
-import { AutotestData, AutotestResult, StepData } from './types';
-import {
-  createTempDir,
-  createTempFile,
-  excludePath,
-  formatError,
-  generateFileName,
-  getDir,
-  getFileName,
-  getHash,
-  isDefined,
-  removeTempDir,
-} from './utils';
+import type { EnvironmentContext, JestEnvironmentConfig } from "@jest/environment";
+import { Event } from "jest-circus";
+import NodeEnvironment from "jest-environment-node";
+import { AutotestPost, AutotestResult, Link, Step, Additions, Client, ConfigComposer, Utils } from "testit-js-commons";
+import { debug } from "debug";
+import { AutotestData } from "./types";
+import { excludePath, mapParams } from "./utils";
 
-const log = debug.extend('environment');
+const log = debug("tms").extend("environment");
 
-const emptyTitle = '__EMPTY__';
 const emptyAutotestData = (): AutotestData => ({
-  name: emptyTitle,
+  externalId: "",
+  name: "",
   steps: [],
   afterEach: [],
+  testSteps: [],
   beforeEach: [],
   attachments: [],
   links: [],
-  runtimeLinks: [],
   labels: [],
-  workItems: [],
 });
-const emptyStepData = (): StepData => ({
-  title: emptyTitle,
+
+const emptyStepData = (): Step => ({
+  title: "",
   attachments: [],
 });
 
 export default class TestItEnvironment extends NodeEnvironment {
   private autotestData: AutotestData = emptyAutotestData();
-  private currentStepData: StepData = emptyStepData();
-  private testClient: TestClient;
-  private beforeAllSteps: StepData[] = [];
-  private afterAllSteps: StepData[] = [];
-  private currentType:
-    | 'beforeAll'
-    | 'afterAll'
-    | 'beforeEach'
-    | 'afterEach'
-    | 'test'
-    | 'step'
-    | undefined;
+  private currentStepData: Step = emptyStepData();
+
+  private beforeAllSteps: Step[] = [];
+  private afterAllSteps: Step[] = [];
+
+  private currentType: "beforeAll" | "afterAll" | "beforeEach" | "afterEach" | "test" | "step" | undefined;
+
   private autotestResults: AutotestResult[] = [];
   private autotests: AutotestData[] = [];
-  private testPath: string;
+  private readonly testPath: string;
   private attachmentsQueue: Promise<void>[] = [];
-  private automaticCreationTestCases: boolean;
 
-  constructor(config: JestEnvironmentConfig, context: EnvironmentContext) {
-    super(config, context);
-    const testRunId = config.projectConfig.globals['testRunId'];
-    const automaticCreationTestCases = config.projectConfig.globals['automaticCreationTestCases'];
-    if (!testRunId || typeof testRunId !== 'string') {
-      throw new Error('Looks like globalSetup was not called');
+  private readonly client: Client;
+  private readonly additions: Additions;
+
+  constructor(jestConfig: JestEnvironmentConfig, jestContext: EnvironmentContext) {
+    super(jestConfig, jestContext);
+    const config = new ConfigComposer().compose(jestConfig.projectConfig.testEnvironmentOptions);
+
+    const testRunId = jestConfig.projectConfig.globals["testRunId"];
+
+    if (!testRunId || typeof testRunId !== "string") {
+      throw new Error("Looks like globalSetup was not called");
     }
-    if (!automaticCreationTestCases || typeof automaticCreationTestCases !== 'boolean') {
-      throw new Error('Looks like globalSetup was not called');
-    }
-    this.automaticCreationTestCases = automaticCreationTestCases;
-    this.testClient = new TestClient({
-      ...config.projectConfig.testEnvironmentOptions,
-      testRunId,
-    });
-    this.testPath = excludePath(context.testPath, config.globalConfig.rootDir);
+
+    this.client = new Client({ ...config, testRunId });
+    this.additions = new Additions(this.client);
+
+    this.testPath = excludePath(jestContext.testPath, jestConfig.globalConfig.rootDir);
   }
 
   async setup() {
     await super.setup();
-    createTempDir();
     this.global.testit = {
       externalId: this.setExternalId.bind(this),
       displayName: this.setDisplayName.bind(this),
-      links: this.setAutotestLinks.bind(this),
+      links: this.setLinks.bind(this),
       labels: this.setLabels.bind(this),
       workItemIds: this.setWorkItems.bind(this),
       params: this.setParams.bind(this),
@@ -103,16 +71,15 @@ export default class TestItEnvironment extends NodeEnvironment {
       title: this.setTitle.bind(this),
       description: this.setDescription.bind(this),
       addAttachments: this.addAttachments.bind(this),
-      addLinks: this.addLinks.bind(this),
-      addMessage: this.addMessage.bind(this),
-      nameSpace: this.setNameSpace.bind(this),
-      className: this.setClassName.bind(this),
+      addLinks: this.additions.addLinks.bind(this.additions),
+      addMessage: this.additions.addMessage.bind(this.additions),
+      namespace: this.setNameSpace.bind(this),
+      classname: this.setClassName.bind(this),
     };
   }
 
   async teardown() {
     await super.teardown();
-    removeTempDir();
   }
 
   getVmContext() {
@@ -123,64 +90,70 @@ export default class TestItEnvironment extends NodeEnvironment {
     return super.exportConditions();
   }
 
-  async handleTestEvent(event: Event, state: State) {
+  async handleTestEvent(event: Event) {
     switch (event.name) {
-      case 'hook_start': {
+      case "hook_start": {
         this.startHookCapture(event.hook);
         break;
       }
-      case 'hook_success':
-      case 'hook_failure': {
+      case "hook_success":
+      case "hook_failure": {
         this.finishHookCapture(event.hook);
         break;
       }
-      case 'test_fn_start': {
+      case "test_fn_start": {
         this.startTestCapture(event.test);
         break;
       }
-      case 'test_fn_success':
-      case 'test_fn_failure': {
+      case "test_fn_success":
+      case "test_fn_failure": {
         this.finishTestCapture(event.test);
         break;
       }
-      case 'test_done': {
-        this.saveResult(event.test);
+      case "test_done": {
+        await this.saveResult(event.test);
         break;
       }
-      case 'test_skip': {
+      case "test_skip": {
         this.resetTest();
         break;
       }
-      case 'run_finish': {
+      case "run_finish": {
         await this.loadResults();
         break;
       }
     }
   }
 
-  startHookCapture(hook: Extract<Event, { name: 'hook_start' }>['hook']) {
-    log('Starting hook capture %s', hook.type);
+  startHookCapture(hook: Extract<Event, { name: "hook_start" }>["hook"]) {
+    log("Starting hook capture %s", hook.type);
     this.currentType = hook.type;
     // Use the hook type as the step name
     this.currentStepData.title = hook.type;
+    this.currentStepData.startedOn = new Date();
   }
 
-  finishHookCapture(hook: Extract<Event, { name: 'hook_start' }>['hook']) {
-    log('Finishing hook capture %s', hook.type);
+  finishHookCapture(hook: Extract<Event, { name: "hook_start" }>["hook"]) {
+    log("Finishing hook capture %s", hook.type);
+
+    this.currentStepData.completedOn = new Date();
+    this.currentStepData.duration =
+      this.currentStepData.completedOn.getTime() - (this.currentStepData.startedOn as Date).getTime();
+
     switch (hook.type) {
-      case 'beforeAll': {
+      case "beforeAll": {
         this.beforeAllSteps.push(this.currentStepData);
         break;
       }
-      case 'afterAll': {
+      case "afterAll": {
         this.afterAllSteps.push(this.currentStepData);
         break;
       }
-      case 'beforeEach': {
+      case "beforeEach": {
         this.autotestData.beforeEach.push(this.currentStepData);
         break;
       }
-      case 'afterEach': {
+      case "afterEach": {
         this.autotestData.afterEach.push(this.currentStepData);
         break;
       }
@@ -188,42 +161,40 @@ export default class TestItEnvironment extends NodeEnvironment {
     this.resetStep();
   }
 
-  startTestCapture(test: Extract<Event, { name: 'test_fn_start' }>['test']) {
-    log('Starting test capture %s', test.name);
-    this.currentType = 'test';
+  startTestCapture(test: Extract<Event, { name: "test_fn_start" }>["test"]) {
+    log("Starting test capture %s", test.name);
+    this.currentType = "test";
     this.setDisplayName(test.name);
+    this.setExternalId(this.generateExternalId(test.name));
   }
 
-  finishTestCapture(test: Extract<Event, { name: 'test_fn_success' }>['test']) {
-    log('Finishing test capture %s', test.name);
-    if (this.currentStepData.title !== emptyTitle) {
-      this.autotestData.steps.push(this.currentStepData);
+  finishTestCapture(test: Extract<Event, { name: "test_fn_success" }>["test"]) {
+    log("Finishing test capture %s", test.name);
+    if (this.currentStepData.title !== "") {
+      this.autotestData.testSteps.push(this.currentStepData);
       this.resetStep();
     }
     this.currentType = undefined;
   }
 
-  saveResult(test: Extract<Event, { name: 'test_done' }>['test']) {
-    log('Saving result for %s', test.name);
-    const errorMessage =
-      test.errors.length > 0
-        ? test.errors.map((err) => err[0]?.message).join('\n')
-        : undefined;
-    const errorTraces =
-      test.errors.length > 0
-        ? test.errors.map((err) => err[0]?.stack).join('\n')
-        : undefined;
+  async saveResult(test: Extract<Event, { name: "test_done" }>["test"]) {
+    log("Saving result for %s", test.name);
+
+    await Promise.all(this.attachmentsQueue);
+
+    const errorMessage = test.errors.length > 0 ? test.errors.map((err) => err[0]?.message).join("\n") : undefined;
+
+    const errorTraces = test.errors.length > 0 ? test.errors.map((err) => err[0]?.stack).join("\n") : undefined;
 
     const result: AutotestResult = {
-      isFailed: test.errors.length > 0,
-      startedAt: test.startedAt ?? undefined,
+      autoTestExternalId: this.autotestData.externalId,
+      outcome: test.errors.length > 0 ? "Failed" : "Passed",
+      startedOn: test.startedAt ? new Date(test.startedAt) : undefined,
       duration: test.duration ?? undefined,
-      finishedAt:
-        test.startedAt && isDefined(test.duration)
-          ? test.startedAt + test.duration
-          : undefined,
-      message: errorMessage,
-      trace: errorTraces,
+      traces: errorTraces,
+      attachments: this.additions.attachments,
+      message: this.additions.messages.join("\n").concat(errorMessage ?? ""),
+      links: this.additions.links,
     };
 
     this.autotests.push(this.autotestData);
@@ -232,90 +203,66 @@ export default class TestItEnvironment extends NodeEnvironment {
   }
 
   async loadResults() {
-    log('Waiting for attachments to be uploaded');
+    log("Waiting for attachments to be uploaded");
     await Promise.all(this.attachmentsQueue);
 
-    const results: AutotestResultsForTestRun[] = [];
+    const results: AutotestResult[] = [];
     for (let i = 0; i < this.autotests.length; i++) {
       const autotest = this.autotests[i];
       const result = this.autotestResults[i];
-      log('Mapping autotest %s', autotest.name);
+      log("Mapping autotest %s", autotest.name);
 
       const setupSteps = this.beforeAllSteps.concat(autotest.beforeEach);
       const teardownSteps = autotest.afterEach.concat(this.afterAllSteps);
 
       const autotestPost: AutotestPost = {
-        projectId: this.testClient.projectId,
-        externalId:
-          autotest.externalId ?? this.generateExternalId(autotest.name),
+        externalId: autotest.externalId,
         title: autotest.title,
         name: autotest.name,
         description: autotest.description,
-        namespace: autotest.namespace ?? getDir(this.testPath),
-        classname: autotest.classname ?? getFileName(this.testPath),
-        setup: setupSteps.map(mapStep),
-        steps: autotest.steps.map(mapStep),
-        teardown: teardownSteps.map(mapStep),
         links: autotest.links,
-        labels: autotest.labels.map((label) => ({ name: label })),
-        shouldCreateWorkItem: this.automaticCreationTestCases,
+        labels: autotest.labels,
+        namespace: autotest.namespace ?? Utils.getDir(this.testPath),
+        classname: autotest.classname ?? Utils.getFileName(this.testPath),
+        setup: setupSteps,
+        steps: autotest.testSteps,
+        teardown: teardownSteps,
+        shouldCreateWorkItem: this.client.getConfig().automaticCreationTestCases,
       };
 
-      if (!result.isFailed) {
-        await this.testClient.loadPassedAutotest(autotestPost);
-      } else {
-        await this.testClient.loadAutotest(autotestPost);
-      }
+      await this.client.autoTests.loadAutotest(autotestPost, result.outcome === "Passed");
 
-      if (autotest.workItems.length > 0) {
-        const id = await this.testClient.getAutotestId(autotestPost.externalId);
-        try {
-          await Promise.all(
-            autotest.workItems.map((workItem) => {
-              return this.testClient.linkWorkItem(id, workItem);
-            })
-          );
-        } catch (err) {
-          console.error('Failed to link work items', formatError(err));
-        }
-      }
-
-      const messages = [];
-
-      if (autotest.message) {
-        messages.push(autotest.message);
-      }
-
-      if (result.message) {
-        messages.push(result.message);
+      if (Array.isArray(autotest.workItemIds) && autotest.workItemIds.length > 0) {
+        await this.client.autoTests
+          .linkToWorkItems(autotest.externalId, autotest.workItemIds)
+          .catch((err) => console.error("Failed to link work items.", err));
       }
 
       results.push({
-        autotestExternalId: autotestPost.externalId,
-        configurationId: this.testClient.configurationId,
-        outcome: result.isFailed ? 'Failed' : 'Passed',
-        startedOn: result.startedAt ? mapDate(result.startedAt) : undefined,
-        duration: result.duration ? result.duration : undefined,
-        completedOn: result.finishedAt ? mapDate(result.finishedAt) : undefined,
-        attachments: mapAttachments(autotest.attachments),
-        message: messages.length > 0 ? messages.join('\n') : undefined,
-        traces: result.trace,
-        stepResults: autotest.steps.map(mapStepResult),
-        setupResults: setupSteps.map(mapStepResult),
-        teardownResults: teardownSteps.map(mapStepResult),
-        links: autotest.runtimeLinks,
-        parameters:
-          autotest.params !== undefined
-            ? mapParams(autotest.params)
-            : undefined,
+        autoTestExternalId: autotestPost.externalId,
+        outcome: result.outcome,
+        startedOn: result.startedOn,
+        duration: result.duration,
+        attachments: result.attachments,
+        message: result.message,
+        links: result.links,
+        stepResults: autotest.testSteps,
+        traces: result.traces,
+        setupResults: setupSteps,
+        teardownResults: teardownSteps,
+        parameters: autotest.parameters !== undefined ? mapParams(autotest.parameters) : undefined,
       });
     }
-    log('Loading results');
-    await this.testClient.loadAutotestResults(results);
+    log("Loading results");
+
+    const testRunId = this.client.getConfig().testRunId;
+
+    await this.client.testRuns.loadAutotests(testRunId, results);
   }
 
   resetTest() {
     this.autotestData = emptyAutotestData();
+    this.additions.clear();
     this.currentType = undefined;
   }
 
@@ -324,31 +271,31 @@ export default class TestItEnvironment extends NodeEnvironment {
   }
 
   setExternalId(id: string): void {
-    log('Setting external id to %s', id);
+    log("Setting external id to %s", id);
     this.autotestData.externalId = id;
   }
 
   setDisplayName(name: string): void {
-    log('Setting display name to %s', name);
+    log("Setting display name to %s", name);
     this.autotestData.name = name;
   }
 
   setTitle(title: string) {
-    if (this.currentType === 'test') {
-      log('Setting autotest title to %s', title);
+    if (this.currentType === "test") {
+      log("Setting autotest title to %s", title);
       this.autotestData.title = title;
     } else {
-      log('Setting step title to %s', title);
+      log("Setting step title to %s", title);
       this.currentStepData.title = title;
     }
   }
 
   setDescription(description: string) {
-    if (this.currentType === 'test') {
-      log('Setting autotest description to %s', description);
+    if (this.currentType === "test") {
+      log("Setting autotest description to %s", description);
       this.autotestData.description = description;
     } else {
-      log('Setting step description to %s', description);
+      log("Setting step description to %s", description);
       this.currentStepData.description = description;
     }
   }
@@ -358,88 +305,64 @@ export default class TestItEnvironment extends NodeEnvironment {
   addAttachments(attachments: string[] | string, name?: string) {
     const autotest = this.autotestData;
     const step = this.currentStepData;
-    let target: string[];
-    if (this.currentType === 'test') {
-      log('Adding attachments to %s', autotest.name);
-      target = autotest.attachments;
-    } else {
-      log('Adding attachments to %s', step.title);
-      target = step.attachments;
-    }
-    let files: string[];
-    if (Array.isArray(attachments)) {
-      files = attachments;
-    } else {
-      if (!name) {
-        name = generateFileName();
-      }
-      const path = createTempFile(name, attachments);
-      files = [path];
-    }
-    const promise = this.testClient.uploadAttachments(files).then((ids) => {
-      target.push(...ids);
+    const currentType = this.currentType;
+
+    // @ts-ignore
+    const promise = this.additions.addAttachments(attachments, name).then((ids) => {
+      currentType === "test" ? autotest.attachments.push(...ids) : step.attachments?.push(...ids);
     });
+
     this.attachmentsQueue.push(promise);
     return promise;
   }
 
-  addLinks(links: LinkPost[]) {
-    log('Adding links to %s', this.autotestData.name);
-    this.autotestData.runtimeLinks.push(...links);
-  }
-
-  addMessage(message: string) {
-    log('Adding message to %s', this.autotestData.name);
-    this.autotestData.message = message;
-  }
-
-  setAutotestLinks(links: LinkPost[]) {
-    log('Setting autotest links to %s', this.autotestData.name);
+  setLinks(links: Link[]) {
+    log("Setting autotest links to %s", this.autotestData.name);
     this.autotestData.links = links;
   }
 
   setLabels(labels: string[]) {
-    log('Setting labels to %s', this.autotestData.name);
-    this.autotestData.labels = labels;
+    log("Setting labels to %s", this.autotestData.name);
+    this.autotestData.labels = labels.map((label) => ({ name: label }));
   }
 
   setWorkItems(workItems: string[]) {
-    log('Setting work items to %s', this.autotestData.name);
-    this.autotestData.workItems = workItems;
+    log("Setting work items to %s", this.autotestData.name);
+    this.autotestData.workItemIds = workItems;
   }
 
   setParams(params: any) {
-    log('Setting params to %s', this.autotestData.name);
-    this.autotestData.params = params;
+    log("Setting params to %s", this.autotestData.name);
+    this.autotestData.parameters = params;
   }
 
   setNameSpace(nameSpace: string) {
-    log('Setting nameSpace to %s', nameSpace);
+    log("Setting nameSpace to %s", nameSpace);
     this.autotestData.namespace = nameSpace;
   }
 
   setClassName(className: string) {
-    log('Setting className to %s', className);
+    log("Setting className to %s", className);
     this.autotestData.classname = className;
   }
 
   startStep(name: string, description?: string) {
-    log('Starting step %s', name);
-    if (this.currentType !== 'test' && this.currentType !== 'step') {
-      log('Step can only be started in test');
+    log("Starting step %s", name);
+    if (this.currentType !== "test" && this.currentType !== "step") {
+      log("Step can only be started in test");
       return;
     }
-    if (this.currentType === 'step') {
-      this.autotestData.steps.push(this.currentStepData);
+    if (this.currentType === "step") {
+      this.autotestData.testSteps.push(this.currentStepData);
       this.resetStep();
     }
-    this.currentType = 'step';
+    this.currentType = "step";
     this.currentStepData.title = name;
     this.currentStepData.description = description;
   }
 
   generateExternalId(testName: string) {
-    return getHash(
+    return Utils.getHash(
       JSON.stringify({
         path: this.testPath,
         name: testName,

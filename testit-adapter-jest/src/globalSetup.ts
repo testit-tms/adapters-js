@@ -1,42 +1,15 @@
-import { Config } from '@jest/reporters';
-import { TestClient } from './testClient';
-import { formatError } from './utils';
+import { Config } from "@jest/reporters";
+import { Client, ConfigComposer, StrategyFactory } from "testit-js-commons";
 
-export default async (
-  globalConfig: Config.GlobalConfig,
-  projectConfig: Config.ProjectConfig
-) => {
-  const adapterMode = projectConfig.testEnvironmentOptions?.adapterMode ?? 0;
-  const automaticCreationTestCases = projectConfig.testEnvironmentOptions?.automaticCreationTestCases ?? false;
+export default async (globalConfig: Config.GlobalConfig, projectConfig: Config.ProjectConfig) => {
+  const config = new ConfigComposer().compose(projectConfig.testEnvironmentOptions);
+  const client = new Client(config);
+  const strategy = StrategyFactory.create(client, config);
 
-  let testRunId: string;
-  try {
-    switch (adapterMode) {
-      case 0:
-      case 1: {
-        testRunId = projectConfig.testEnvironmentOptions?.testRunId as string;
-        if (!testRunId) {
-          throw new Error('testRunId is required when mode is 1');
-        }
-        globalThis.testClient = new TestClient(
-          projectConfig.testEnvironmentOptions
-        );
-        break;
-      }
-      case 2: {
-        globalThis.testClient = new TestClient(
-          projectConfig.testEnvironmentOptions
-        );
-        testRunId = await globalThis.testClient.createTestRun();
-        break;
-      }
-      default:
-        throw new Error(`Unknown adapter mode ${adapterMode}`);
-    }
-  } catch (err) {
-    console.error('Failed to setup', formatError(err));
-    process.exit(1);
-  }
-  projectConfig.globals['testRunId'] = testRunId;
-  projectConfig.globals['automaticCreationTestCases'] = automaticCreationTestCases;
+  await strategy.setup();
+  const testRunId = await strategy.testRunId;
+
+  globalThis.client = client;
+
+  projectConfig.globals["testRunId"] = testRunId;
 };
