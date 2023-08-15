@@ -1,35 +1,11 @@
-import { LinkPost } from 'testit-api-client';
+import { AutotestPost, Attachment, Step } from "testit-js-commons";
 
-export type StepData = {
-  title: string;
-  description?: string;
-  attachments: string[];
-};
+export interface AutotestData extends AutotestPost {
+  parameters?: any;
+  attachments: Array<Attachment>;
+  beforeEach: Step[];
+  afterEach: Step[];
+  testSteps: Step[];
+}
 
-export type AutotestData = {
-  name: string;
-  title?: string;
-  description?: string;
-  externalId?: string;
-  namespace?: string;
-  classname?: string;
-  attachments: string[];
-  beforeEach: StepData[];
-  steps: StepData[];
-  afterEach: StepData[];
-  links: LinkPost[];
-  runtimeLinks: LinkPost[];
-  message?: string;
-  labels: string[];
-  workItems: string[];
-  params?: any;
-};
-
-export type AutotestResult = {
-  startedAt?: number;
-  duration?: number;
-  finishedAt?: number;
-  isFailed: boolean;
-  message?: string;
-  trace?: string;
-};
+export type Parameters = Record<string, string>;
