@@ -10,13 +10,6 @@ npm install testit-adapter-codecept
 
 ## Usage
 
-### API client
-
-To use adapter you need to install `testit-api-client`:
-```
-npm install testit-api-client
-```
-
 ### Configuration
 
 | Description                                                                                                                                                                                                                                                                                                                                                                            | Property                   | Environment variable              | CLI argument                  |
@@ -102,8 +95,8 @@ Description of metadata methods:
 - `description` - description in the autotest card
 - `labels` - tags in the work item
 - `link` - links in the autotest card
-- `nameSpace` - directory in the TMS system
-- `className` - subdirectory in the TMS system
+- `namespace` - directory in the TMS system
+- `classname` - subdirectory in the TMS system
 
 Description of methods:
 - `addLinks` - links in the autotest result
@@ -131,7 +124,7 @@ Scenario(
         hasInfo: true
       }
     ],
-    workitemIds: ['1140']
+    workItemIds: ['1140']
   },
   ({ I }) => {
     I.amOnPage('https://github.com');
