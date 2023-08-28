@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "mocha": "^10.2.0",
-    "testit-js-commons": "^1.1.6"
+    "testit-js-commons": "^1.1.5"
   },
   "files": [
     "lib"
