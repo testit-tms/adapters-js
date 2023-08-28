@@ -138,7 +138,7 @@ module.exports = class extends Reporter {
 
     this.autotestsForTestRun.push({
       autoTestExternalId: autotestPost.externalId,
-      outcome: test.isFailed() ? "Failed" : "Passed",
+      outcome: test.isFailed() ? "Failed" : this.currentTest.outcome,
       startedOn: this.currentTest.startedOn,
       completedOn: new Date(),
       duration: test.duration ?? Date.now() - (this.currentTest.startedOn as Date).getTime(),
@@ -203,6 +203,7 @@ module.exports = class extends Reporter {
       this.currentStep.outcome = "Passed";
     } catch (err) {
       this.currentStep.outcome = "Failed";
+      this.currentTest.outcome = "Failed";
       console.log("Step failed. \n", err);
     }
 
