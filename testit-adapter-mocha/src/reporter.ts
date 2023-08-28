@@ -200,6 +200,7 @@ module.exports = class extends Reporter {
 
     try {
       stepConstructor?.(step);
+      this.currentStep.outcome = "Passed";
     } catch (err) {
       this.currentStep.outcome = "Failed";
       console.log("Step failed. \n", err);
@@ -208,7 +209,6 @@ module.exports = class extends Reporter {
     this.currentStep.title = step.title;
     this.currentStep.description = step.description;
     this.currentStep.parameters = step.parameters;
-    this.currentStep.outcome = "Passed";
     this.currentStep.startedOn = start;
     this.currentStep.completedOn = new Date();
     this.currentStep.duration = Date.now() - start.getTime();
