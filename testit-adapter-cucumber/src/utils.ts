@@ -1,6 +1,6 @@
-import { Tag } from '@cucumber/messages';
-import { Link, OutcomeType, TestResultGet } from 'testit-api-client';
-import { ParsedTags, tags, TagType } from './types/tags';
+import { Link, Outcome } from "testit-js-commons";
+import { Tag } from "@cucumber/messages";
+import { ParsedTags, tags, TagType } from "./types";
 
 export function getTagType(tag: string): TagType {
   if (new RegExp(`^@${tags.externalId}=.+$`).test(tag)) {
@@ -8,7 +8,7 @@ export function getTagType(tag: string): TagType {
   }
   if (new RegExp(`^@${tags.links}=.+$`).test(tag)) {
     // Check if it is JSON
-    if (tag.endsWith('}')) {
+    if (tag.endsWith("}")) {
       return TagType.Link;
     }
     return TagType.LinkUrl;
@@ -16,7 +16,7 @@ export function getTagType(tag: string): TagType {
   if (new RegExp(`^@${tags.title}=.+$`).test(tag)) {
     return TagType.Title;
   }
-  if (new RegExp(`^@${tags.workItemId}=.+$`).test(tag)) {
+  if (new RegExp(`^@${tags.workItemIds}=.+$`).test(tag)) {
     return TagType.WorkItemId;
   }
   if (new RegExp(`^@${tags.name}=.+$`).test(tag)) {
@@ -38,55 +38,58 @@ export function getTagType(tag: string): TagType {
 }
 
 export function getExternalId(tag: string): string {
-  return tag.replace(new RegExp(`^@${tags.externalId}=`), '');
+  return tag.replace(new RegExp(`^@${tags.externalId}=`), "");
 }
 
 export function getLinkUrl(tag: string): string {
-  return tag.replace(new RegExp(`^@${tags.links}=`), '');
+  return tag.replace(new RegExp(`^@${tags.links}=`), "");
 }
 
-export function getLink(tag: string): Omit<Link, 'id'> {
-  const linkData: Omit<Link, 'id'> = JSON.parse(getLinkUrl(tag));
-  return linkData;
+export function getLink(tag: string): Link {
+  return JSON.parse(getLinkUrl(tag));
 }
 
 export function getTitle(tag: string): string {
-  return tag.replace(new RegExp(`^@${tags.title}=`), '');
+  return tag.replace(new RegExp(`^@${tags.title}=`), "");
 }
 
 export function getWorkItemId(tag: string): string {
-  return tag.replace(new RegExp(`^@${tags.workItemId}=`), '');
+  return tag.replace(new RegExp(`^@${tags.workItemIds}=`), "");
 }
 
 export function getName(tag: string): string {
-  return tag.replace(new RegExp(`^@${tags.name}=`), '');
+  return tag.replace(new RegExp(`^@${tags.name}=`), "");
 }
 
 export function getDescription(tag: string): string {
-  return tag.replace(new RegExp(`^@${tags.description}=`), '');
+  return tag.replace(new RegExp(`^@${tags.description}=`), "");
 }
 
-export function getLabel(tag: string): string {
-  return tag.replace(new RegExp(`^@${tags.labels}=`), '');
+export function getLabel(tag: string): string[] {
+  return tag
+    .replace(new RegExp(`^@${tags.labels}=`), "")
+    .split(",")
+    .map((label) => label.trim());
 }
 
 export function getNameSpace(tag: string): string {
-  return tag.replace(new RegExp(`^@${tags.nameSpace}=`), '');
+  return tag.replace(new RegExp(`^@${tags.nameSpace}=`), "");
 }
 
 export function getClassName(tag: string): string {
-  return tag.replace(new RegExp(`^@${tags.className}=`), '');
+  return tag.replace(new RegExp(`^@${tags.className}=`), "");
 }
 
-export function parseTags(tags: readonly Pick<Tag, 'name'>[]): ParsedTags {
-  const parsedTags: ParsedTags = { links: [], labels: [] };
+export function parseTags(tags: readonly Pick<Tag, "name">[]): ParsedTags {
+  const parsedTags: ParsedTags = { links: [], labels: [], workItemIds: [] };
   for (const tag of tags) {
     switch (getTagType(tag.name)) {
       case TagType.ExternalId:
         parsedTags.externalId = getExternalId(tag.name);
         continue;
       case TagType.LinkUrl: {
-        parsedTags.links?.push({ url: getLinkUrl(tag.name) });
+        const url = getLinkUrl(tag.name);
+        parsedTags.links?.push({ url, title: url });
         continue;
       }
       case TagType.Link: {
@@ -98,7 +101,7 @@ export function parseTags(tags: readonly Pick<Tag, 'name'>[]): ParsedTags {
         continue;
       }
       case TagType.WorkItemId: {
-        parsedTags.workItemId = getWorkItemId(tag.name);
+        parsedTags.workItemIds?.push(getWorkItemId(tag.name));
         continue;
       }
       case TagType.Name: {
@@ -110,7 +113,7 @@ export function parseTags(tags: readonly Pick<Tag, 'name'>[]): ParsedTags {
         continue;
       }
       case TagType.Label: {
-        parsedTags.labels?.push(getLabel(tag.name));
+        parsedTags.labels?.push(...getLabel(tag.name));
         continue;
       }
       case TagType.NameSpace: {
@@ -124,39 +127,24 @@ export function parseTags(tags: readonly Pick<Tag, 'name'>[]): ParsedTags {
       case TagType.Unknown:
         continue;
       default:
-        throw new Error('Unknown tag type');
+        throw new Error("Unknown tag type");
     }
   }
   return parsedTags;
 }
 
-export function calculateResultOutcome(
-  outcomes: (OutcomeType | undefined)[]
-): OutcomeType {
-  if (outcomes.some((outcome) => outcome === 'Failed')) {
-    return 'Failed';
+export function calculateResultOutcome(outcomes: Outcome[]): Outcome {
+  if (outcomes.some((outcome) => outcome === "Failed")) {
+    return "Failed";
   }
-  if (outcomes.some((outcome) => outcome === 'Blocked')) {
-    return 'Blocked';
+  if (outcomes.some((outcome) => outcome === "Blocked")) {
+    return "Blocked";
   }
-  if (outcomes.some((outcome) => outcome === 'Skipped')) {
-    return 'Skipped';
+  if (outcomes.some((outcome) => outcome === "Skipped")) {
+    return "Skipped";
   }
-  if (outcomes.every((outcome) => outcome === 'Passed')) {
-    return 'Passed';
+  if (outcomes.every((outcome) => outcome === "Passed")) {
+    return "Passed";
   }
-  throw new Error('Cannot calculate result outcome');
-}
-
-export function parsedAutotests(
-  autotests: Array<TestResultGet>,
-  configurationId: string
-): Array<string | undefined> {
-  var resolvedAutotests = [];
-  for (const autotest of autotests) {
-      if (configurationId === autotest.configurationId) {
-          resolvedAutotests.push(autotest.autoTest!.externalId);
-      }
-  }
-  return resolvedAutotests;
+  throw new Error("Cannot calculate result outcome");
 }
