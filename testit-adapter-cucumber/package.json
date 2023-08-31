@@ -1,6 +1,6 @@
 {
   "name": "testit-adapter-cucumber",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "Cucumber adapter for Test IT",
   "main": "dist/formatter.js",
   "scripts": {
@@ -22,7 +22,6 @@
   "dependencies": {
     "@cucumber/cucumber": "^7.3.1",
     "@cucumber/messages": "^17.1.1",
-    "testit-api-client": "^1.0.8",
     "testit-js-commons": "^1.1.5"
   },
   "devDependencies": {
@@ -49,5 +48,8 @@
     "type": "git",
     "url": "git+https://github.com/testit-tms/adapters-js.git"
   },
-  "types": "./dist\\formatter.d.ts"
+  "types": "./dist\\formatter.d.ts",
+  "files": [
+    "dist"
+  ]
 }
