@@ -1,10 +1,10 @@
-import { Link } from 'testit-api-client';
+import { Link } from "testit-js-commons";
 
 export type ParsedTags = {
   externalId?: string;
-  links: Omit<Link, 'id'>[];
+  links: Link[];
   title?: string;
-  workItemId?: string;
+  workItemIds?: string[];
   name?: string;
   description?: string;
   labels: string[];
@@ -27,13 +27,13 @@ export enum TagType {
 }
 
 export const tags: Record<keyof ParsedTags, string> = {
-  externalId: 'ExternalId',
-  links: 'Link',
-  title: 'Title',
-  name: 'DisplayName',
-  workItemId: 'WorkItemId',
-  description: 'Description',
-  labels: 'Label',
-  nameSpace: 'NameSpace',
-  className: 'ClassName'
+  externalId: "ExternalId",
+  links: "Links",
+  title: "Title",
+  name: "DisplayName",
+  workItemIds: "WorkItemIds",
+  description: "Description",
+  labels: "Labels",
+  nameSpace: "NameSpace",
+  className: "ClassName",
 };
