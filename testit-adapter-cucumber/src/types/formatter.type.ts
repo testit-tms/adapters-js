@@ -10,7 +10,6 @@ import {
 } from "@cucumber/messages";
 
 export interface IFormatter {
-  onMeta(): void;
   onGherkinDocument(document: GherkinDocument): void;
   onPickle(pickle: Pickle): void;
   onTestCase(testCase: TestCase): void;

@@ -21,7 +21,6 @@ export default class TestItFormatter extends Formatter implements IFormatter {
   private readonly storage: IStorage;
 
   private currentTestCaseId: string | undefined;
-  private resolvedAutotests: Array<string> | undefined;
   private attachmentsQueue: Promise<void>[] = [];
 
   constructor(options: IFormatterOptions) {
@@ -32,23 +31,26 @@ export default class TestItFormatter extends Formatter implements IFormatter {
     this.storage = new Storage();
     this.strategy = StrategyFactory.create(this.client, config);
 
-    options.eventBroadcaster.on("envelope", (envelope: Envelope) => {
-      if (envelope.meta) {
-        return this.onMeta();
-      }
+    options.eventBroadcaster.on("envelope", async (envelope: Envelope) => {
       if (envelope.gherkinDocument) {
         return this.onGherkinDocument(envelope.gherkinDocument);
       }
       if (envelope.pickle) {
-        if (this.resolvedAutotests !== undefined) {
-          if (this.resolvedAutotests.length > 0) {
-            const tags = parseTags(envelope.pickle.tags);
-            for (const externalId of this.resolvedAutotests) {
-              if (externalId === tags.externalId) {
-                return this.onPickle(envelope.pickle);
-              }
+        const testsInRun = await this.strategy.testsInRun;
+
+        const resolvedAutotests = testsInRun
+          ?.map((test) => test.autoTest?.externalId)
+          .filter((id): id is string => id !== undefined);
+
+        if (resolvedAutotests !== undefined) {
+          const tags = parseTags(envelope.pickle.tags);
+
+          for (const externalId of resolvedAutotests) {
+            if (externalId === tags.externalId) {
+              return this.onPickle(envelope.pickle);
             }
           }
+
           envelope.pickle = undefined;
         } else {
           return this.onPickle(envelope.pickle);
@@ -77,14 +79,6 @@ export default class TestItFormatter extends Formatter implements IFormatter {
     options.supportCodeLibrary.World.prototype.addMessage = this.addMessage.bind(this);
     options.supportCodeLibrary.World.prototype.addLinks = this.addLinks.bind(this);
     options.supportCodeLibrary.World.prototype.addAttachments = this.addAttachments.bind(this);
-  }
-
-  async onMeta(): Promise<void> {
-    const autotestsInRun = await this.strategy.testsInRun;
-
-    this.resolvedAutotests = autotestsInRun
-      ?.map((test) => test.autoTest?.externalId)
-      .filter((id): id is string => id !== undefined);
   }
 
   onGherkinDocument(document: GherkinDocument): void {
