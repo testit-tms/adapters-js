@@ -117,30 +117,27 @@ export default class TestItFormatter extends Formatter implements IFormatter {
     this.storage.saveTestCaseFinished(testCaseFinished);
   }
 
-  onTestRunFinished(_testRunFinished: TestRunFinished): void {
-    Promise.all([this.strategy.testRunId, Promise.all(this.attachmentsQueue)])
-      .then(async () => {
-        const results = this.storage.getTestRunResults();
-        const autotests = this.storage.getAutotests();
+  async onTestRunFinished(_testRunFinished: TestRunFinished): Promise<void> {
+    await this.strategy.testRunId;
 
-        await Promise.all(
-          autotests.map((autotestPost) => {
-            const result = results.find((result) => result.autoTestExternalId === autotestPost.externalId);
+    await Promise.all(this.attachmentsQueue);
 
-            if (result !== undefined) {
-              this.strategy.loadAutotest(autotestPost, result.outcome === "Passed");
-            }
-          })
-        );
+    const results = this.storage.getTestRunResults();
+    const autotests = this.storage.getAutotests();
 
-        await this.strategy.loadTestRun(results);
+    await Promise.all(
+      autotests.map((autotestPost) => {
+        const result = results.find((result) => result.autoTestExternalId === autotestPost.externalId);
+
+        if (result !== undefined) {
+          return this.strategy.loadAutotest(autotestPost, result.outcome === "Passed");
+        }
       })
-      .catch((err) => {
-        console.error(err);
-      })
-      .finally(() => {
-        this.strategy.teardown();
-      });
+    );
+
+    await this.strategy.loadTestRun(results);
+
+    await this.strategy.teardown();
   }
 
   addMessage(message: string): void {
