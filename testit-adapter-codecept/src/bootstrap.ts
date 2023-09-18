@@ -3,10 +3,10 @@ import { Client, ConfigComposer } from "testit-js-commons";
 import { Logger } from "./common/classes";
 import { StrategyFactory } from "./strategies";
 
-module.exports = async function () {
+module.exports = async function (options) {
   const config = new ConfigComposer().compose();
   const client = new Client(config);
-  const logger = new Logger(true);
+  const logger = new Logger(options.__DEV ?? false);
 
   const strategy = StrategyFactory.create(client, logger, config);
   const helper = container.helpers("TestITHelper");
@@ -35,9 +35,4 @@ module.exports = async function () {
   event.dispatcher.on(event.all.after, async () => {
     await strategy.teardown();
   });
-
-  // Почему вто1рой раз хз
-  // event.dispatcher.on(event.all.after, async () => {
-  //   await strategy.teardown();
-  // });
 };
