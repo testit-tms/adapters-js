@@ -29,9 +29,8 @@ export class PartialStrategy extends BaseStrategy implements Strategy {
   }
 
   private async getTestsIdsInRun() {
-    return await this.testsInRun.then((tests) => {
-      return tests?.map((test) => test.autoTest.externalId);
-    });
+    const tests = await this.testsInRun;
+    return tests?.map((test) => test.autoTest.externalId);
   }
 
   public async beforeTest(test: Codecept.Test) {
