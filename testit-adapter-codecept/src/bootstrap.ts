@@ -22,11 +22,9 @@ module.exports = async function (options) {
     await strategy.beforeTest(test);
   });
 
-  event.dispatcher.on(event.test.finished, async (test) => {
+  event.dispatcher.on(event.test.finished, (test) => {
     recorder.add("transferTestAndRuns", async () => {
-      const suite = {
-        tests: [test],
-      };
+      const suite = { tests: [test] };
       await strategy.transferTestsToSystem(suite);
       await strategy.transferRunsToSystem(suite);
     });
