@@ -43,7 +43,9 @@ export const config: CodeceptJS.MainConfig = {
   plugins: {
     TestITPlugin: {
       require: 'testit-adapter-codecept/build/bootstrap.js',
-      enabled: true
+      enabled: true,
+      // logging
+      __DEV: false
     }
   },
   include: {},
@@ -78,8 +80,8 @@ Create .env config or file config with default name testit-adapter.config.json i
   "configurationId": "CONFIGURATION_ID",
   "testRunId": "TEST_RUN_ID",
   "testRunName": "TEST_RUN_NAME",
-  "adapterMode": ADAPTER_MODE,
-  "automaticCreationTestCases": AUTOMATIC_CREATION_TEST_CASES
+  "adapterMode": "ADAPTER_MODE",
+  "automaticCreationTestCases": "AUTOMATIC_CREATION_TEST_CASES"
 }
 ```
 
