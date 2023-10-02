@@ -1,4 +1,5 @@
-import { Formatter, IFormatterOptions } from '@cucumber/cucumber';
+import { AdapterConfig, Client, ConfigComposer, IClient, IStrategy, Link, StrategyFactory } from "testit-js-commons";
+import { Formatter, IFormatterOptions } from "@cucumber/cucumber";
 import {
   Envelope,
   GherkinDocument,
@@ -9,62 +10,53 @@ import {
   TestCaseStarted,
   TestCaseFinished,
   TestStepStarted,
-  Meta,
-  TestRunStarted,
-} from '@cucumber/messages';
-import {
-  Client,
-  ClientConfigWithFile,
-  IClient,
-  LinkPost,
-} from 'testit-api-client';
-import { IStorage } from './types/storage';
-import { Storage } from './storage';
-import { IFormatter } from './types/formatter';
-import { AutotestPostWithWorkItemId } from './mappers';
-import { AxiosError } from 'axios';
-import { parseTags, parsedAutotests } from './utils';
+} from "@cucumber/messages";
+import { IStorage, IFormatter } from "./types";
+import { Storage } from "./storage";
+import { parseTags } from "./utils";
 
-export class TestItFormatter extends Formatter implements IFormatter {
-  client: IClient;
-  storage: IStorage = new Storage();
-  currentTestCaseId: string | undefined;
-  resolvedAutotests: Array<string | undefined> | undefined;
+export default class TestItFormatter extends Formatter implements IFormatter {
+  private readonly client: IClient;
+  private readonly strategy: IStrategy;
+  private readonly storage: IStorage;
 
-  constructor(
-    options: IFormatterOptions,
-    config: Partial<ClientConfigWithFile>
-  ) {
+  private currentTestCaseId: string | undefined;
+  private attachmentsQueue: Promise<void>[] = [];
+
+  constructor(options: IFormatterOptions) {
     super(options);
+    const config = new ConfigComposer().compose(options.parsedArgvOptions as AdapterConfig);
+
     this.client = new Client(config);
-    options.eventBroadcaster.on('envelope', (envelope: Envelope) => {
-      if (envelope.meta) {
-        return this.onMeta(envelope.meta);
-      }
+    this.storage = new Storage();
+    this.strategy = StrategyFactory.create(this.client, config);
+
+    options.eventBroadcaster.on("envelope", async (envelope: Envelope) => {
       if (envelope.gherkinDocument) {
         return this.onGherkinDocument(envelope.gherkinDocument);
       }
       if (envelope.pickle) {
-        if (this.resolvedAutotests !== undefined) {
-          if (this.resolvedAutotests.length > 0) {
-              const tags = parseTags(envelope.pickle.tags);
-              for (const externalId of this.resolvedAutotests) {
-                  if (externalId === tags.externalId) {
-                      return this.onPickle(envelope.pickle);
-                  }
-              }
-          }
-          envelope.pickle = undefined;
-      }
-      else {
-          return this.onPickle(envelope.pickle);
-      }
+        const testsInRun = await this.strategy.testsInRun;
 
+        const resolvedAutotests = testsInRun
+          ?.map((test) => test.autoTest?.externalId)
+          .filter((id): id is string => id !== undefined);
+
+        if (resolvedAutotests !== undefined) {
+          const tags = parseTags(envelope.pickle.tags);
+
+          for (const externalId of resolvedAutotests) {
+            if (externalId === tags.externalId) {
+              return this.onPickle(envelope.pickle);
+            }
+          }
+
+          envelope.pickle = undefined;
+        } else {
+          return this.onPickle(envelope.pickle);
+        }
       }
       if (envelope.testCase) {
-        if (this.testRunId === undefined && this.storage.isResolvedTestCase(envelope.testCase)) {
-          this.createTestRun();
-        }
         return this.onTestCase(envelope.testCase);
       }
       if (envelope.testCaseStarted) {
@@ -83,25 +75,10 @@ export class TestItFormatter extends Formatter implements IFormatter {
         return this.onTestRunFinished(envelope.testRunFinished);
       }
     });
-    options.supportCodeLibrary.World.prototype.addMessage =
-      this.addMessage.bind(this);
-    options.supportCodeLibrary.World.prototype.addLinks =
-      this.addLinks.bind(this);
-    options.supportCodeLibrary.World.prototype.addAttachments =
-      this.addAttachments.bind(this);
-  }
 
-  private testRunId: Promise<string> | undefined;
-  private testRunStarted: Promise<void> | undefined;
-  private attachmentsQueue: Promise<void>[] = [];
-
-  onMeta(_meta: Meta): void {
-    const { testRunId, configurationId } = this.client.getConfig();
-    if (testRunId !== undefined) {
-        this.testRunId = Promise.resolve(testRunId);
-        const responce = this.client.getTestRun(testRunId);
-        this.resolvedAutotests = parsedAutotests(responce.testResults!, configurationId);
-    }
+    options.supportCodeLibrary.World.prototype.addMessage = this.addMessage.bind(this);
+    options.supportCodeLibrary.World.prototype.addLinks = this.addLinks.bind(this);
+    options.supportCodeLibrary.World.prototype.addAttachments = this.addAttachments.bind(this);
   }
 
   onGherkinDocument(document: GherkinDocument): void {
@@ -134,152 +111,61 @@ export class TestItFormatter extends Formatter implements IFormatter {
     this.storage.saveTestCaseFinished(testCaseFinished);
   }
 
-  onTestRunFinished(_testRunFinished: TestRunFinished): void {
-    const { configurationId } = this.client.getConfig();
-    const results = this.storage.getTestRunResults(configurationId);
-    if (this.testRunId !== undefined && results.length > 0) {
-      Promise.all([
-        this.testRunId,
-        Promise.all(this.attachmentsQueue),
-      ])
-      .then(async ([id]) => {
-        const autotests = this.storage.getAutotests(this.client.getConfig().projectId);
-        await Promise.all(autotests.map((autotestPost) => {
-          const result = results.find((result) => result.autotestExternalId === autotestPost.externalId);
-          if (result !== undefined) {
-            if (result.outcome !== 'Passed') {
-                return this.loadAutotest(autotestPost);
-            }
-            return this.loadPassedAutotest(autotestPost);
-          }
-        }));
-        await Promise.all(results.map((result) => {
-            return this.client.loadTestRunResults(id, [result]);
-        }));
+  async onTestRunFinished(_testRunFinished: TestRunFinished): Promise<void> {
+    await this.strategy.testRunId;
+
+    await Promise.all(this.attachmentsQueue);
+
+    const results = this.storage.getTestRunResults();
+    const autotests = this.storage.getAutotests();
+
+    await Promise.all(
+      autotests.map((autotestPost) => {
+        const result = results.find((result) => result.autoTestExternalId === autotestPost.externalId);
+
+        if (result !== undefined) {
+          return this.strategy.loadAutotest(autotestPost, result.outcome === "Passed");
+        }
       })
-      .catch((err) => {
-        console.error(err);
-        this.testRunId?.then((id) => this.client.completeTestRun(id));
-      });
-    }
-  }
+    );
 
-  async loadAutotest(autotestPost: AutotestPostWithWorkItemId): Promise<void> {
-    try {
-      await this.createNewAutotest(autotestPost);
-    } catch (err) {
-      const axiosError = err as AxiosError;
+    await this.strategy.loadTestRun(results);
 
-      if (axiosError.response?.status === 409) {
-        const [autotest] = await this.client.getAutotest({
-          projectId: this.client.getConfig().projectId,
-          externalId: autotestPost.externalId,
-        });
-        await this.updateAutotest({
-          ...autotest,
-          links: autotestPost.links,
-        });
-      } else {
-        this.logError(axiosError);
-      }
-    }
-  }
-
-  async loadPassedAutotest(
-    autotestPost: AutotestPostWithWorkItemId
-  ): Promise<void> {
-    try {
-      await this.createNewAutotest(autotestPost);
-    } catch (err) {
-      const axiosError = err as AxiosError;
-      if (axiosError.response?.status === 409) {
-        await this.updateAutotest(autotestPost);
-      } else {
-        this.logError(axiosError);
-      }
-    }
-
-    if (autotestPost.workItemId !== undefined) {
-      this.linkWorkItem(autotestPost.externalId, autotestPost.workItemId);
-    }
-  }
-
-  createTestRun() {
-    const { projectId } = this.client.getConfig();
-    this.testRunId = this.client
-        .createTestRun({
-        projectId,
-    })
-        .then((testRun) => testRun.id);
-  }
-
-  async createNewAutotest(
-    autotestPost: AutotestPostWithWorkItemId
-  ): Promise<void> {
-    autotestPost.shouldCreateWorkItem = this.client.getConfig().automaticCreationTestCases;
-    await this.client.createAutotest(autotestPost);
-  }
-
-  async updateAutotest(
-    autotestPost: AutotestPostWithWorkItemId
-  ): Promise<void> {
-    await this.client.updateAutotest(autotestPost).catch(this.logError);
-  }
-
-  async linkWorkItem(externalId: string, workItemId: string): Promise<void> {
-    const [autotest] = await this.client
-      .getAutotest({
-        projectId: this.client.getConfig().projectId,
-        externalId: externalId,
-      })
-      .catch(() => []);
-    if (autotest?.id !== undefined) {
-      await this.client.linkToWorkItem(autotest.id, {
-        id: workItemId,
-      });
-    }
+    await this.strategy.teardown();
   }
 
   addMessage(message: string): void {
     if (this.currentTestCaseId === undefined) {
-      throw new Error('CurrentTestCaseId is not set');
+      throw new Error("CurrentTestCaseId is not set");
     }
+
     this.storage.addMessage(this.currentTestCaseId, message);
   }
 
-  addLinks(links: LinkPost[]): void {
+  addLinks(links: Link[]): void {
     if (this.currentTestCaseId === undefined) {
-      throw new Error('CurrentTestCaseId is not set');
+      throw new Error("CurrentTestCaseId is not set");
     }
+
     this.storage.addLinks(this.currentTestCaseId, links);
   }
 
   addAttachments(attachments: string[]): void {
     if (this.currentTestCaseId === undefined) {
-      throw new Error('CurrentTestCaseId is not set');
+      throw new Error("CurrentTestCaseId is not a set");
     }
+
     const currentTestCaseId = this.currentTestCaseId;
-    this.attachmentsQueue.push(
-      ...attachments.map(async (attachment) => {
-        const { id } = await this.client.loadAttachment(attachment);
-        if (id === undefined) {
-          // NOTE: Why?
-          console.warn('Attachment id is not returned');
-          return;
-        }
-        this.storage.addAttachment(currentTestCaseId, id);
+
+    const promise = this.client.attachments
+      .uploadAttachments(attachments)
+      .then((ids) => {
+        this.storage.addAttachments(currentTestCaseId, ids);
       })
-    );
-  }
+      .catch((err) => {
+        console.log("Error load attachments: \n", attachments, "\n", err);
+      });
 
-  private logError(err: AxiosError): void {
-    console.error(
-      err.response?.status,
-      err.config.method,
-      err.config.url,
-      err.response?.data
-    );
+    this.attachmentsQueue.push(promise);
   }
-
-  // TODO: add stopping run on error
 }

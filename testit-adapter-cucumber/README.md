@@ -10,13 +10,6 @@ npm install testit-adapter-cucumber
 
 ## Usage
 
-### API client
-
-To use adapter you need to install `testit-api-client`:
-```
-npm install testit-api-client
-```
-
 ### Configuration
 
 | Description                                                                                                                                                                                                                                                                                                                                                                            | Property                   | Environment variable              | CLI argument                  |
@@ -27,21 +20,17 @@ npm install testit-api-client
 | ID of configuration in TMS instance [How to getting configuration ID?](https://github.com/testit-tms/.github/tree/main/configuration#configurationid)                                                                                                                                                                                                                                  | configurationId            | TMS_CONFIGURATION_ID              | tmsConfigurationId            |
 | ID of the created test run in TMS instance                                                                                                                                                                                                                                                                                              | testRunId                  | TMS_TEST_RUN_ID                   | tmsTestRunId                  |
 
-Create `testitFormatter.js` file in the root directory of the project:
-```js
-const { TestItFormatter } = require('testit-adapter-cucumber');
-
-module.exports = class CustomFormatter extends TestItFormatter {
-  constructor(options) {
-    super(options, {
-      url: 'URL',
-      privateToken: 'USER_PRIVATE_TOKEN',
-      projectId: 'PROJECT_ID',
-      configurationId: 'CONFIGURATION_ID',
-      testRunId: 'TEST_RUN_ID',
-    });
-  }
-};
+Create `tms.config.json` file in the root directory of the project:
+```json
+{
+  "url": "Url",
+  "privateToken": "Private_token",
+  "projectId": "Project_id",
+  "configurationId": "Configuration_id",
+  "testRunName": "Test_run_name",
+  "adapterMode": 2,
+  "automaticCreationTestCases": false
+}
 ```
 
 And fill object with your configuration. Formatter sends results to Test IT.
@@ -53,7 +42,7 @@ Add to `cucumber.js` file
 ```js
 module.exports = {
   default:
-    '-f ./testitFormatter.js',
+    '-f testit-adapter-cucumber',
 };
 ```
 
@@ -92,9 +81,9 @@ Cucumber tags can be used to specify information about autotest.
 - `@Title` - Title that is displayed on autotest page
 - `@DisplayName` - Name that is displayed in autotests table
 - `@Description` - Autotest description
-- `@Link` - can be specified either in JSON (`@Link={"url":"http://google.com","hasInfo":true,"description":"GoogleDescription","title":"Google","type":"Defect"}`) or in text (`@Link=http://google.com`)
-- `@Label` - Label that is going to be linked to autotest
-- `@WorkItemId` - Work item's ID to which autotest is going to be linked
+- `@Links` - can be specified either in JSON (`@Link={"url":"http://google.com","hasInfo":true,"description":"GoogleDescription","title":"Google","type":"Defect"}`) or in text (`@Link=http://google.com`)
+- `@Labels` - Label that is going to be linked to autotest
+- `@WorkItemIds` - Work item's ID to which autotest is going to be linked
 - `@NameSpace` - directory in the TMS system
 - `@ClassName` - subdirectory in the TMS system
 
@@ -106,16 +95,16 @@ Feature: Tags
   @DisplayName=GoogiliGoogle
   @Description=Cannot_Write_With_Spaces
   @ExternalId=344
-  @Link=http://google.com
-  @Link=http://vk.com
-  @Label=Maths
-  @Label=School
+  @Links=http://google.com
+  @Links=http://vk.com
+  @Labels=Maths
+  @Labels=School
   Scenario: Scenario with links
     When 2+2
     Then Result is 4
   @Title=LINKS
   @ExternalId=343
-  @Link={"url":"http://google.com","hasInfo":true,"description":"GoogleDescription","title":"Google","type":"Defect"}
+  @Links={"url":"http://google.com","hasInfo":true,"description":"GoogleDescription","title":"Google","type":"Defect"}
   Scenario: Scenario with link obj
     When 2+2
     Then Result is 4
