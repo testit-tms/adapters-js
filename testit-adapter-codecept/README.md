@@ -10,13 +10,6 @@ npm install testit-adapter-codecept
 
 ## Usage
 
-### API client
-
-To use adapter you need to install `testit-api-client`:
-```
-npm install testit-api-client
-```
-
 ### Configuration
 
 | Description                                                                                                                                                                                                                                                                                                                                                                            | Property                   | Environment variable              | CLI argument                  |
@@ -50,7 +43,9 @@ export const config: CodeceptJS.MainConfig = {
   plugins: {
     TestITPlugin: {
       require: 'testit-adapter-codecept/build/bootstrap.js',
-      enabled: true
+      enabled: true,
+      // logging
+      __DEV: false
     }
   },
   include: {},
@@ -85,8 +80,8 @@ Create .env config or file config with default name testit-adapter.config.json i
   "configurationId": "CONFIGURATION_ID",
   "testRunId": "TEST_RUN_ID",
   "testRunName": "TEST_RUN_NAME",
-  "adapterMode": ADAPTER_MODE,
-  "automaticCreationTestCases": AUTOMATIC_CREATION_TEST_CASES
+  "adapterMode": "ADAPTER_MODE",
+  "automaticCreationTestCases": "AUTOMATIC_CREATION_TEST_CASES"
 }
 ```
 
@@ -102,8 +97,8 @@ Description of metadata methods:
 - `description` - description in the autotest card
 - `labels` - tags in the work item
 - `link` - links in the autotest card
-- `nameSpace` - directory in the TMS system
-- `className` - subdirectory in the TMS system
+- `namespace` - directory in the TMS system
+- `classname` - subdirectory in the TMS system
 
 Description of methods:
 - `addLinks` - links in the autotest result
@@ -131,7 +126,7 @@ Scenario(
         hasInfo: true
       }
     ],
-    workitemIds: ['1140']
+    workItemIds: ['1140']
   },
   ({ I }) => {
     I.amOnPage('https://github.com');

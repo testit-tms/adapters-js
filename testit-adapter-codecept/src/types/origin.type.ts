@@ -1,15 +1,16 @@
-import { LinkPost } from 'testit-api-client';
-import { AdapterMode } from '../strategies/strategy.factory';
+import { Link } from "testit-js-commons";
 
 export namespace Origin {
   export interface TestConfig {
-    title?: string,
-    displayName?: string,
-    description?: string,
-    externalId?: string,
-    links: LinkPost[],
-    labels?: string[],
-    workitemIds?: []
+    title?: string;
+    displayName?: string;
+    description?: string;
+    externalId?: string;
+    links: Link[];
+    labels?: string[];
+    workItemIds?: [];
+    classname?: string;
+    namespace?: string;
   }
 
   export interface TestText {
@@ -18,34 +19,9 @@ export namespace Origin {
   }
 
   export interface TestMetadata {
-    links?: LinkPost[];
+    links?: Link[];
     attachments?: string[];
     message?: string;
-    text?: TestText
+    text?: TestText;
   }
-
-  export interface Config {
-    url?: string
-    privateToken?: string,
-    projectId?: string,
-    configurationId?: string,
-    testRunId?: string,
-    testRunName?: string,
-    adapterMode?: AdapterMode;
-    automaticCreationTestCases?: boolean;
-    configFile?: string,
-    __DEV?: boolean
-  }
-
-  export type EnvironmentsConfig = Partial<{
-    TMS_URL: string,
-    TMS_PRIVATE_TOKEN: string,
-    TMS_PROJECT_ID: string,
-    TMS_CONFIGURATION_ID: string,
-    TMS_TEST_RUN_ID: string,
-    TMS_TEST_RUN_NAME: string,
-    TMS_ADAPTER_MODE: AdapterMode,
-    TMS_AUTOMATIC_CREATION_TEST_CASES: boolean,
-    TMS_CONFIG_FILE: string,
-  }>
 }
