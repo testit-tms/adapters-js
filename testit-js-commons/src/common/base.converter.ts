@@ -55,7 +55,6 @@ export class BaseConverter implements IBaseConverter {
       title: link.title ?? link.url,
       description: link.description ?? undefined,
       type: link.type ? this.toLocalLinkType(link.type) : undefined,
-      hasInfo: link.hasInfo,
     };
   }
 

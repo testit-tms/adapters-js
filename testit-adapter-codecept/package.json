@@ -14,7 +14,7 @@
     "watch": "tsc -p tsconfig.json -w"
   },
   "dependencies": {
-    "testit-js-commons": "^1.1.5"
+    "testit-js-commons": "^2.0.0"
   },
   "devDependencies": {
     "@codeceptjs/configure": "^0.10.0",

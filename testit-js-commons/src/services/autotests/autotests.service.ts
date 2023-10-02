@@ -71,19 +71,23 @@ export class AutotestsService extends BaseService implements IAutotestService {
   }
 
   public async getAutotestByExternalId(externalId: string): Promise<AutotestGet | null> {
-    return await this._client
-      .getAllAutoTests(
-        this.config.projectId,
-        externalId,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        false
-      )
+    const filterModel = {
+      externalIds: [externalId],
+      projectIds: [this.config.projectId],
+      isDeleted: false,
+    };
+    const requestModel = {
+        filter: filterModel,
+        includes: undefined
+    };
+
+    return await this._client.apiV2AutoTestsSearchPost(
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      requestModel)
       .then(({ body }) => body[0])
       .then((autotest: AutoTestModel | undefined) => {
         return autotest ? this._converter.toLocalAutotest(autotest) : null;
