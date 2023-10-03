@@ -6,8 +6,7 @@ on:
 
 jobs:
   publish_commons:
-    build:
-      runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
         - name: Get repository code [testit-js-commons]
           uses: actions/checkout@v3
@@ -29,18 +28,17 @@ jobs:
 
   publish_adapters:
     needs: publish_commons
-    build:
-      runs-on: ${{ matrix.os }}
-      strategy:
-        matrix:
-          os: [ubuntu-latest]
-          node-version: [18]
-          package: [
-              testit-adapter-codecept,
-              testit-adapter-cucumber,
-              testit-adapter-jest,
-              testit-adapter-mocha
-          ]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        node-version: [18]
+        package: [
+            testit-adapter-codecept,
+            testit-adapter-cucumber,
+            testit-adapter-jest,
+            testit-adapter-mocha
+        ]
     steps:
       - name: Get repository code [${{ matrix.package }}]
         uses: actions/checkout@v3
