@@ -78,13 +78,13 @@ You can also specify options via cli arguments `jest --testEnvironment testit-ad
 Methods can be used to specify information about autotest.
 
 Description of metadata methods:
-- `testit.workItemIds` - linking an autotest to a test case
-- `testit.displayName` - name of the autotest in the Test IT system (can be replaced with documentation strings)
-- `testit.externalId` - ID of the autotest within the project in the Test IT System
-- `testit.title` - title in the autotest card
-- `testit.description` - description in the autotest card
-- `testit.labels` - tags in the work item
-- `testit.link` - links in the autotest card
+- `testit.workItemIds` - a method that links autotests with manual tests. Receives the array of manual tests' IDs
+- `testit.displayName` - internal autotest name (used in Test IT)
+- `testit.externalId` - unique internal autotest ID (used in Test IT)
+- `testit.title` - autotest name specified in the autotest card. If not specified, the name from the displayName method is used
+- `testit.description` - autotest description specified in the autotest card
+- `testit.labels` - tags listed in the autotest card
+- `testit.link` - links listed in the autotest card
 - `testit.namespace` - directory in the TMS system (default - directory's name of test)
 - `testit.classname` - subdirectory in the TMS system (default - file's name of test)
 
@@ -92,6 +92,7 @@ Description of methods:
 - `testit.addLinks` - links in the autotest result
 - `testit.addAttachments` - uploading files in the autotest result
 - `testit.addMessage` - information about autotest in the autotest result
+- `testit.step` - add step of autotest
 
 ### Examples
 
