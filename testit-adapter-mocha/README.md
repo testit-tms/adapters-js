@@ -96,13 +96,13 @@ Methods and properties can be used to specify information about autotest.
 ### Properties
 
 Description of metadata properties:
-- `this.workItemsIds` - linking an autotest to a test case
-- `this.displayName` - name of the autotest in the Test IT system
-- `this.externalId` - External ID of the autotest within the project in the Test IT system
-- `this.title` - title in the autotest card
-- `this.description` - description in the autotest card
-- `this.labels` - labels in the autotest card
-- `this.links` - links in the autotest card
+- `this.workItemsIds` - a method that links autotests with manual tests. Receives the array of manual tests' IDs
+- `this.displayName` - internal autotest name (used in Test IT)
+- `this.externalId` - unique internal autotest ID (used in Test IT)
+- `this.title` - autotest name specified in the autotest card. If not specified, the name from the displayName method is used
+- `this.description` - autotest description specified in the autotest card
+- `this.labels` - tags listed in the autotest card
+- `this.links` - links listed in the autotest card
 - `this.nameSpace` - directory in the TMS system (default - directory's name of test)
 - `this.className` - subdirectory in the TMS system (default - file's name of test)
 
