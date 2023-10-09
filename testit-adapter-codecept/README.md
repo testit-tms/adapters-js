@@ -90,13 +90,13 @@ Create .env config or file config with default name testit-adapter.config.json i
 Methods can be used to specify information about autotest.
 
 Description of metadata methods:
-- `workItemIds` - linking an autotest to a test case
-- `displayName` - name of the autotest in the Test IT system (can be replaced with documentation strings)
-- `externalId` - ID of the autotest within the project in the Test IT System
-- `title` - title in the autotest card
-- `description` - description in the autotest card
-- `labels` - tags in the work item
-- `link` - links in the autotest card
+- `workItemIds` - a method that links autotests with manual tests. Receives the array of manual tests' IDs
+- `displayName` - internal autotest name (used in Test IT)
+- `externalId` - unique internal autotest ID (used in Test IT)
+- `title` - autotest name specified in the autotest card. If not specified, the name from the displayName method is used
+- `description` - autotest description specified in the autotest card
+- `labels` - tags listed in the autotest card
+- `link` - links listed in the autotest card
 - `namespace` - directory in the TMS system
 - `classname` - subdirectory in the TMS system
 
