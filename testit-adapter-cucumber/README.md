@@ -77,13 +77,13 @@ Cucumber tags can be used to specify information about autotest.
 
 > Only those specified above the `Scenario` are taken into account
 
-- `@ExternalId` - Unique identifier of autotest (Required)
-- `@Title` - Title that is displayed on autotest page
-- `@DisplayName` - Name that is displayed in autotests table
-- `@Description` - Autotest description
-- `@Links` - can be specified either in JSON (`@Link={"url":"http://google.com","hasInfo":true,"description":"GoogleDescription","title":"Google","type":"Defect"}`) or in text (`@Link=http://google.com`)
-- `@Labels` - Label that is going to be linked to autotest
-- `@WorkItemIds` - Work item's ID to which autotest is going to be linked
+- `@ExternalId` - unique internal autotest ID (used in Test IT)
+- `@Title` - autotest name specified in the autotest card. If not specified, the name from the displayName method is used
+- `@DisplayName` - internal autotest name (used in Test IT)
+- `@Description` - autotest description specified in the autotest card
+- `@Links` - links listed in the autotest card (`@Link={"url":"http://google.com","hasInfo":true,"description":"GoogleDescription","title":"Google","type":"Defect"}`) or in text (`@Link=http://google.com`)
+- `@Labels` - tags listed in the autotest card
+- `@WorkItemIds` - a method that links autotests with manual tests. Receives the array of manual tests' IDs
 - `@NameSpace` - directory in the TMS system
 - `@ClassName` - subdirectory in the TMS system
 
