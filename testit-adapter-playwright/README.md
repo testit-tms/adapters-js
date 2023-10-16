@@ -40,7 +40,7 @@ export default config;
 
 #### File
 
-Create .env config or file config with default name testit-adapter.config.json in the root directory of the project
+Create .env config or file config with default name tms.config.json in the root directory of the project
 
 ```json
 {
