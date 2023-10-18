@@ -19,73 +19,31 @@ enum Status {
 }
 
 export class Converter {
-    static convertTestCaseToAutotestPost(
-        test: TestCase,
-        result: TestResult
-    ): AutotestPost {
-      const tmsTest: AutotestPost = {
-        externalId: Utils.getHash(test.title),
-        name: test.title,
+    static convertTestCaseToAutotestPost(autotestData: MetadataMessage): AutotestPost {
+      return {
+        externalId: autotestData.externalId!,
+        name: autotestData.displayName!,
+        title: autotestData.title,
+        description: autotestData.description,
+        labels: autotestData.labels,
+        links: autotestData.links,
+        namespace: autotestData.namespace,
+        classname: autotestData.classname,
       };
-    
-      for (const attachment of result.attachments) {
-        if (!attachment.body && !attachment.path) {
-          continue;
-        }
-    
-        if (attachment.contentType === "application/vnd.tms.metadata+json") {
-          if (!attachment.body) {
-            continue;
-          }
-
-          const metadata: MetadataMessage = JSON.parse(attachment.body.toString());
-
-          if (metadata.externalId) {
-            tmsTest.externalId = metadata.externalId;
-          }
-
-          if (metadata.displayName) {
-            tmsTest.name = metadata.displayName;
-          }
-
-          if (metadata.title) {
-            tmsTest.title = metadata.title;
-          }
-
-          if (metadata.description) {
-            tmsTest.description = metadata.description;
-          }
-
-          if (metadata.labels) {
-            tmsTest.labels = metadata.labels;
-          }
-
-          if (metadata.links) {
-            tmsTest.links = metadata.links;
-          }
-
-          if (metadata.namespace) {
-            tmsTest.namespace = metadata.namespace;
-          }
-
-          if (metadata.classname) {
-            tmsTest.classname = metadata.classname;
-          }
-        }
-      }
-
-      return tmsTest;
     }
 
     static convertAutotestPostToAutotestResult(
-      autotestPost: AutotestPost,
+      autotestData: MetadataMessage,
       test: TestCase,
       result: TestResult): AutotestResult {
       const autotestResult: AutotestResult = {
-        autoTestExternalId: autotestPost.externalId,
+        autoTestExternalId: autotestData.externalId!,
         outcome: this.convertStatus(result.status, test.expectedStatus),
-        links: autotestPost.links,
+        links: autotestData.addLinks,
         duration: result.duration,
+        parameters: autotestData.params,
+        attachments: autotestData.addAttachments,
+        message: autotestData.addMessage,
       };
 
       if (result.error) {

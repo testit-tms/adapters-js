@@ -55,6 +55,28 @@ Create .env config or file config with default name tms.config.json in the root 
 }
 ```
 
+#### Parallel run
+To create and complete TestRun you can use the Test IT CLI:
+
+```
+$ export TMS_TOKEN=<YOUR_TOKEN>
+$ testit \
+  --mode create
+  --url https://tms.testit.software \
+  --project-id 5236eb3f-7c05-46f9-a609-dc0278896464 \
+  --testrun-name "New test run" \
+  --output tmp/output.txt
+
+$ export TMS_TEST_RUN_ID=$(cat output.txt)  
+
+$ npx playwright test
+
+$ testit \
+  --mode finish
+  --url https://tms.testit.software \
+  --testrun-id $(cat tmp/output.txt) 
+```
+
 ### Methods
 
 Methods can be used to specify information about autotest.
@@ -99,8 +121,7 @@ test('All annotations', async () => {
     },
   ]);
 
-  testit.addAttachments([join(__dirname, 'attachment1.txt')]);
-  testit.addAttachments('This is a custom attachment', 'custom.txt');
+  testit.addAttachment('file01.txt', 'Content', {contentType: "text/markdown",});
 });
 ```
 

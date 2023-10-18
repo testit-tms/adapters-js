@@ -1,5 +1,5 @@
 import test from "@playwright/test";
-import { Link, Label } from "testit-js-commons";
+import { Link, Label, Attachment } from "testit-js-commons";
 
 export interface MetadataMessage {
   workItemIds?: string[];
@@ -12,15 +12,9 @@ export interface MetadataMessage {
   namespace?: string;
   classname?: string;
   addLinks?: Link[];
-  addAttachments?: AttachmentMetadata[];
+  addAttachments?: Attachment[];
   addMessage?: string;
-}
-
-interface AttachmentMetadata {
-  name: string;
-  type: string;
-  content: string;
-  encoding: BufferEncoding;
+  params?: Parameters;
 }
 
 interface AttachmentOptions {
@@ -45,6 +39,8 @@ enum ContentType {
   MP4 = "video/mp4",
 }
 
+type Parameters = Record<string, string>;
+
 export class testit {
   static async addAttachment(
     name: string,
@@ -58,11 +54,31 @@ export class testit {
     });
   }
 
-  static async addMetadataAttachment(metadata: MetadataMessage) {
+  private static async addMetadataAttachment(metadata: MetadataMessage) {
     await test.info().attach("tms-metadata.json", {
       contentType: "application/vnd.tms.metadata+json",
       body: Buffer.from(JSON.stringify(metadata), "utf8"),
     });
+  }
+
+  private static async mapParams(params: any) {
+    switch (typeof params) {
+      case 'string':
+      case 'bigint':
+      case 'number':
+      case 'boolean':
+        return { value: params.toString() };
+      case 'object':
+        if (params === null) {
+          return {};
+        }
+        return Object.keys(params).reduce((acc, key) => {
+          acc[key] = params[key].toString();
+          return acc;
+        }, {} as Parameters);
+      default:
+        return {};
+    }
   }
 
   static async workItemIds(value: string[]) {
@@ -95,9 +111,9 @@ export class testit {
     });
   }
 
-  static async labels(value: Label[]) {
+  static async labels(value: string[]) {
     await this.addMetadataAttachment({
-      labels: value,
+      labels: value.map((label) => ({ name: label })),
     });
   }
 
@@ -128,6 +144,12 @@ export class testit {
   static async addMessage(value: string) {
     await this.addMetadataAttachment({
       addMessage: value,
+    });
+  }
+
+  static async params(value: any) {
+    await this.addMetadataAttachment({
+      params: await this.mapParams(value),
     });
   }
 }
