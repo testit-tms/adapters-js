@@ -1,11 +1,11 @@
-# Test IT TMS adapters for Codecept
+# Test IT TMS adapters for Playwright
 ![Test IT](https://raw.githubusercontent.com/testit-tms/adapters-js/master/images/banner.png)
 
 ## Getting Started
 
 ### Installation
 ```
-npm install testit-adapter-codecept
+npm install testit-adapter-playwright
 ```
 
 ## Usage
@@ -24,53 +24,23 @@ npm install testit-adapter-codecept
 | It enables/disables certificate validation (**It's optional**). Default value - true                                                                                                                                                                                                                                                                                                   | certValidation             | TMS_CERT_VALIDATION               | tmsCertValidation             |
 | Mode of automatic creation test cases (**It's optional**). Default value - false. The adapter supports following modes:<br/>true - in this mode, the adapter will create a test case linked to the created autotest (not to the updated autotest)<br/>false - in this mode, the adapter will not create a test case                                                                    | automaticCreationTestCases | TMS_AUTOMATIC_CREATION_TEST_CASES | tmsAutomaticCreationTestCases |
 
-Add TestITHelper and TestITPlugin to Codecept file configuration 
+Add Adapter to Playwright file configuration:
 
 ```ts
-export const config: CodeceptJS.MainConfig = {
-  tests: './**/*_test.ts',
-  output: './output',
-  helpers: {
-    Playwright: {
-      url: 'http://localhost',
-      show: false,
-      browser: 'chromium'
-    },
-    TestITHelper: {
-      require: 'testit-adapter-codecept/build/helper.js'
-    }
-  },
-  plugins: {
-    TestITPlugin: {
-      require: 'testit-adapter-codecept/build/bootstrap.js',
-      enabled: true,
-      // logging
-      __DEV: false
-    }
-  },
-  include: {},
-  name: 'codecept-test-it-testing'
-}
-```
+import { PlaywrightTestConfig } from '@playwright/test';
 
-Create step.d.ts file and import TestMetadataHelper
+const config: PlaywrightTestConfig = {
+  reporter: [
+    ['testit-adapter-playwright']
+  ],
+};
 
-```ts
-type TestITHelper = import('testit-adapter-codecept/build/helper').TestMetadataHelper;
-
-declare namespace CodeceptJS {
-  interface SupportObject { I: I, current: any }
-  interface Methods extends Playwright, TestITHelper {}
-  interface I extends WithTranslation<Methods>{}
-  namespace Translation {
-    interface Actions {}
-  }
-}
+export default config;
 ```
 
 #### File
 
-Create .env config or file config with default name testit-adapter.config.json in the root directory of the project
+Create .env config or file config with default name tms.config.json in the root directory of the project
 
 ```json
 {
@@ -99,7 +69,7 @@ $ testit \
 
 $ export TMS_TEST_RUN_ID=$(cat output.txt)  
 
-$ npx codeceptjs run
+$ npx playwright test
 
 $ testit \
   --mode finish
@@ -112,73 +82,57 @@ $ testit \
 Methods can be used to specify information about autotest.
 
 Description of metadata methods:
-- `workItemIds` - a method that links autotests with manual tests. Receives the array of manual tests' IDs
-- `displayName` - internal autotest name (used in Test IT)
-- `externalId` - unique internal autotest ID (used in Test IT)
-- `title` - autotest name specified in the autotest card. If not specified, the name from the displayName method is used
-- `description` - autotest description specified in the autotest card
-- `labels` - tags listed in the autotest card
-- `link` - links listed in the autotest card
-- `namespace` - directory in the TMS system
-- `classname` - subdirectory in the TMS system
+- `testit.workItemIds` - linking an autotest to a test case
+- `testit.displayName` - name of the autotest in the Test IT system (can be replaced with documentation strings)
+- `testit.externalId` - ID of the autotest within the project in the Test IT System
+- `testit.title` - title in the autotest card
+- `testit.description` - description in the autotest card
+- `testit.labels` - tags in the work item
+- `testit.links` - links in the autotest card
+- `testit.namespace` - directory in the TMS system (default - directory's name of test)
+- `testit.classname` - subdirectory in the TMS system (default - file's name of test)
 
 Description of methods:
-- `addLinks` - links in the autotest result
-- `addAttachments` - uploading files in the autotest result
-- `addMessage` - information about autotest in the autotest result
+- `testit.addLinks` - links in the autotest result
+- `testit.addAttachments` - uploading files in the autotest result
+- `testit.addMessage` - information about autotest in the autotest result
 
 ### Examples
 
 #### Simple test
-```ts
-Scenario(
-  'Scenario name',
-  {
-    externalId: '1',
-    displayName: 'Name',
-    title: 'Title',
-    description: 'Description',
-    labels: ['Custom label'],
-    links: [
-      {
-        title: 'Google about this error',
-        description: 'Google documents',
-        url: 'https://google.com',
-        type: 'Requirement',
-        hasInfo: true
-      }
-    ],
-    workItemIds: ['1140']
-  },
-  ({ I }) => {
-    I.amOnPage('https://github.com');
-    I.addLinks([
-      {
-        title: 'Github page',
-        description: 'Github SPA page',
-        url: 'https://github.com',
-        type: 'Repository',
-        hasInfo: true
-      }
-    ])
-    I.addMessage('Hello');
-    I.see('GitHub');
-  });
+```js
+import { test } from "@playwright/test";
+import { testit } from "testit-adapter-playwright";
 
+test('All annotations', async () => {
+  testit.externalId('all_annotations');
+  testit.displayName('All annotations');
+  testit.title('All annotations title');
+  testit.description('Test with all annotations');
+  testit.labels(['label1', 'label2']);
+
+  testit.addMessage('This is a message');
+  testit.addLinks([
+    {
+      url: 'https://www.google.com',
+      title: 'Google',
+      description: 'This is a link to Google',
+      type: 'Related',
+    },
+  ]);
+
+  testit.addAttachment('file01.txt', 'Content', {contentType: "text/markdown",});
+});
 ```
 
 #### Parameterized test
-```ts
-const data = new DataTable(['target', 'element']);
-
-data.add(['https://mail.google.com', '//a[contains(., "Почта")]']);
-data.add(['https://www.wikipedia.org', '//input']);
-data.add(['https://google.com', '//a[contains(., "Google")]']);
-
-Data(data).Scenario('Should render main page for all users', ({ I, current }) => {
-  I.amOnPage(current.target);
-  I.seeElement(current.element);
-})
+```js
+const people = ['Alice', 'Bob'];
+for (const name of people) {
+  test(`testing with ${name}`, async () => {
+    testit.params(people);
+  });
+}
 ```
 
 
