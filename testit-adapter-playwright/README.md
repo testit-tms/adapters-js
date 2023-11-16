@@ -96,6 +96,7 @@ Description of methods:
 - `testit.addLinks` - links in the autotest result
 - `testit.addAttachments` - uploading files in the autotest result
 - `testit.addMessage` - information about autotest in the autotest result
+- `this.step` - information about step in the autotest result
 
 ### Examples
 
@@ -122,6 +123,9 @@ test('All annotations', async () => {
   ]);
 
   testit.addAttachment('file01.txt', 'Content', {contentType: "text/markdown",});
+
+  testit.step("step with title", async () => {
+  });
 });
 ```
 
