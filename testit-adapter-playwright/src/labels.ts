@@ -43,18 +43,6 @@ enum ContentType {
 type Parameters = Record<string, string>;
 
 export class testit {
-  static async addAttachment(
-    name: string,
-    content: Buffer | string,
-    options: ContentType | string | Pick<AttachmentOptions, "contentType">,
-  ) {
-    const contentType = typeof options === "string" ? options : options.contentType;
-    await test.info().attach(name, {
-      body: content,
-      contentType,
-    });
-  }
-
   private static async addMetadataAttachment(metadata: MetadataMessage) {
     await test.info().attach("tms-metadata.json", {
       contentType: "application/vnd.tms.metadata+json",
@@ -62,7 +50,7 @@ export class testit {
     });
   }
 
-  static async attachment(
+  static async addAttachment(
     name: string,
     content: Buffer | string,
     options: ContentType | string | Pick<AttachmentOptions, "contentType">,
