@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import test from "@playwright/test";
 import { Link, Label, Attachment } from "testit-js-commons";
 
@@ -42,22 +43,26 @@ enum ContentType {
 type Parameters = Record<string, string>;
 
 export class testit {
+  private static async addMetadataAttachment(metadata: MetadataMessage) {
+    await test.info().attach("tms-metadata.json", {
+      contentType: "application/vnd.tms.metadata+json",
+      body: Buffer.from(JSON.stringify(metadata), "utf8"),
+    });
+  }
+
   static async addAttachment(
     name: string,
     content: Buffer | string,
     options: ContentType | string | Pick<AttachmentOptions, "contentType">,
   ) {
-    const contentType = typeof options === "string" ? options : options.contentType;
-    await test.info().attach(name, {
-      body: content,
-      contentType,
-    });
-  }
+    const stepName = `stepattach_${randomUUID()}_${name}`;
 
-  private static async addMetadataAttachment(metadata: MetadataMessage) {
-    await test.info().attach("tms-metadata.json", {
-      contentType: "application/vnd.tms.metadata+json",
-      body: Buffer.from(JSON.stringify(metadata), "utf8"),
+    const contentType = typeof options === "string" ? options : options.contentType;
+    await this.step(stepName, async () => {
+      await test.info().attach(stepName, {
+        body: content,
+        contentType,
+      });
     });
   }
 
@@ -151,5 +156,9 @@ export class testit {
     await this.addMetadataAttachment({
       params: await this.mapParams(value),
     });
+  }
+
+  static step<T>(name: string, body: () => Promise<T>): Promise<T> {
+    return test.step(name, body);
   }
 }

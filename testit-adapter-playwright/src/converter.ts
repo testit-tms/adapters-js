@@ -1,5 +1,6 @@
 import {
     TestCase,
+    TestStep,
     TestError,
     TestResult,
 } from "@playwright/test/reporter";
@@ -7,7 +8,9 @@ import { TestStatus } from "@playwright/test";
 import {
     AutotestPost,
     AutotestResult,
-    Utils
+    ShortStep,
+    Step,
+    Attachment
 } from "testit-js-commons";
 import { MetadataMessage } from "./labels";
 
@@ -54,6 +57,30 @@ export class Converter {
       }
 
       return autotestResult;
+    }
+
+    static convertTestStepsToShortSteps(steps: TestStep[]): ShortStep[] {
+      return steps.map(step => {
+        return this.convertTestStepToShortStep(step);
+      });
+    }
+
+    static convertTestStepToShortStep(step: TestStep): ShortStep {
+      return {
+        title: step.title,
+      };
+    }
+
+    static convertTestStepsToSteps(steps: TestStep[], attachmentsMap: Map<Attachment, TestStep>): Step[] {
+      return steps.map(step => this.convertTestStepToStep(step, attachmentsMap));
+    }
+
+    static convertTestStepToStep(step: TestStep, attachmentsMap: Map<Attachment, TestStep>): Step {
+      return {
+        title: step.title,
+        outcome: step.error ? Status.FAILED : Status.PASSED,
+        attachments: [...attachmentsMap.keys()].filter((attachmentId: Attachment) => attachmentsMap.get(attachmentId) === step),
+      };
     }
 
     static convertStatus(status: TestStatus, expectedStatus: TestStatus): Status {

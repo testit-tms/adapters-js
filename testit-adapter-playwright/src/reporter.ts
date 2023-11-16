@@ -4,10 +4,13 @@ import {
   Suite,
   TestCase,
   TestResult,
+  TestStep,
 } from "@playwright/test/reporter";
-import { ConfigComposer, Client, StrategyFactory, IStrategy, Utils, Additions } from "testit-js-commons";
+import { ConfigComposer, Client, StrategyFactory, IStrategy, Utils, Additions, Attachment } from "testit-js-commons";
 import { Converter } from "./converter";
 import { MetadataMessage } from "./labels";
+
+const stepAttachRegexp = /^stepattach_(\w{8}-\w{4}-\w{4}-\w{4}-\w{12})_/i;
 
 export type ReporterOptions = {
   detail?: boolean;
@@ -24,6 +27,8 @@ class TmsReporter implements Reporter {
   strategy: IStrategy;
   private readonly additions: Additions;
   private testCache = new Array<TestCase>();
+  private stepCache = new Map<TestStep, TestCase>();
+  private attachmentSteps = new Map<Attachment, TestStep>();
   private globalStartTime = new Date();
 
   constructor(options: ReporterOptions) {
@@ -45,14 +50,35 @@ class TmsReporter implements Reporter {
 
   async onTestEnd(test: TestCase, result: TestResult): Promise<void> {
     const autotest = Converter.convertTestCaseToAutotestPost(await this.getAutotestData(test, result));
+    const steps = [...this.stepCache.keys()].filter((step: TestStep) => this.stepCache.get(step) === test);
+
+    autotest.steps = Converter.convertTestStepsToShortSteps(steps);
 
     await this.strategy.loadAutotest(
       autotest,
       Converter.convertStatus(result.status, test.expectedStatus) == "Passed");
-    await this.strategy.loadTestRun([Converter.convertAutotestPostToAutotestResult(
+
+    const autotestResult = Converter.convertAutotestPostToAutotestResult(
       await this.getAutotestData(test, result),
       test,
-      result)]);
+      result);
+
+    autotestResult.stepResults = Converter.convertTestStepsToSteps(steps, this.attachmentSteps);
+
+    await this.strategy.loadTestRun([autotestResult]);
+  }
+
+  onStepBegin(test: TestCase, _result: TestResult, step: TestStep): void {
+    if (!this.testCache.includes(test)) {
+      return;
+    }
+    if (step.category !== "test.step") {
+      return;
+    }
+    if (this.stepCache.get(step)) {
+      return;
+    }
+    this.stepCache.set(step, test);
   }
 
   onEnd(): void {
@@ -96,7 +122,7 @@ class TmsReporter implements Reporter {
     };
 
     for (const attachment of result.attachments) {
-      if (!attachment.body || !attachment.path) {
+      if (!attachment.body) {
         continue;
       }
   
@@ -150,9 +176,21 @@ class TmsReporter implements Reporter {
         continue;
       }
 
-      await this.additions.addAttachments(attachment.body.toString(), attachment.name).then((ids) => {
-        autotestData.addAttachments?.push(...ids);
-      });
+      if (attachment.name.match(stepAttachRegexp)) {
+        const step = [...this.stepCache.keys()].find((step: TestStep) => step.title === attachment.name);
+
+        if (step) {
+          this.stepCache.delete(step);
+        }
+
+        await this.additions.addAttachments(attachment.body.toString(), attachment.name.replace(stepAttachRegexp, "")).then((ids) => {
+          if (step?.parent) {
+            this.attachmentSteps.set(ids[0], step.parent);
+            return;
+          }
+          autotestData.addAttachments?.push(...ids);
+        });
+      }
     }
 
     return autotestData;
