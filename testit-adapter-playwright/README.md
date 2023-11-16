@@ -96,7 +96,7 @@ Description of methods:
 - `testit.addLinks` - links in the autotest result
 - `testit.addAttachments` - uploading files in the autotest result
 - `testit.addMessage` - information about autotest in the autotest result
-- `this.step` - information about step in the autotest result
+- `testit.step` - information about step in the autotest result
 
 ### Examples
 
