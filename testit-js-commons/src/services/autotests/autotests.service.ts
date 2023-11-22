@@ -1,4 +1,10 @@
-import { AutoTestModel, AutoTestsApi, AutoTestsApiApiKeys } from "testit-api-client";
+import {
+  ApiV2AutoTestsSearchPostRequest,
+  AutoTestModel,
+  AutoTestsApi,
+  AutoTestsApiApiKeys,
+  AutotestFilterModel,
+  AutotestsSelectModelIncludes } from "testit-api-client";
 import { AdapterConfig } from "../../common";
 import { BaseService } from "../base.service";
 import { AutotestGet, AutotestPost, type IAutotestService } from "./autotests.type";
@@ -71,14 +77,19 @@ export class AutotestsService extends BaseService implements IAutotestService {
   }
 
   public async getAutotestByExternalId(externalId: string): Promise<AutotestGet | null> {
-    const filterModel = {
+    const filterModel: AutotestFilterModel = {
       externalIds: [externalId],
       projectIds: [this.config.projectId],
       isDeleted: false,
     };
-    const requestModel = {
+    const includesModel: AutotestsSelectModelIncludes = {
+      includeSteps: false,
+      includeLinks: false,
+      includeLabels: false
+    };
+    const requestModel: ApiV2AutoTestsSearchPostRequest = {
         filter: filterModel,
-        includes: undefined
+        includes: includesModel
     };
 
     return await this._client.apiV2AutoTestsSearchPost(

@@ -46,6 +46,7 @@ export class BaseConverter implements IBaseConverter {
     return {
       ...link,
       type: link.type ? this.toOriginLinkType(link.type) : undefined,
+      hasInfo: true,
     };
   }
 
