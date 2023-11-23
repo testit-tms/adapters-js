@@ -124,7 +124,7 @@ test('All annotations', async () => {
 
   testit.addAttachment('file01.txt', 'Content', {contentType: "text/markdown",});
 
-  testit.step("step with title", async () => {
+  await testit.step("step with title", async () => {
   });
 });
 ```
