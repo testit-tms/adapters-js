@@ -1,6 +1,6 @@
 {
   "name": "testit-adapter-codecept",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "description": "Codecept adapter for Test IT",
   "keywords": [],
   "author": {
@@ -14,7 +14,7 @@
     "watch": "tsc -p tsconfig.json -w"
   },
   "dependencies": {
-    "testit-js-commons": "^2.0.2"
+    "testit-js-commons": "^2.1.0"
   },
   "devDependencies": {
     "@codeceptjs/configure": "^0.10.0",
