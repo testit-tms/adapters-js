@@ -1,6 +1,6 @@
 {
   "name": "testit-adapter-mocha",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "description": "Mocha adapter for Test IT",
   "main": "lib/reporter.js",
   "types": "lib/types.d.ts",
@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "mocha": "^10.2.0",
-    "testit-js-commons": "^2.0.2"
+    "testit-js-commons": "^2.1.0"
   },
   "files": [
     "lib"
