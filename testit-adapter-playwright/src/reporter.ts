@@ -30,6 +30,7 @@ class TmsReporter implements Reporter {
   private stepCache = new Map<TestStep, TestCase>();
   private attachmentSteps = new Map<Attachment, TestStep>();
   private globalStartTime = new Date();
+  private loadTestPromises = new Array<Promise<void>>();
 
   constructor(options: ReporterOptions) {
     this.options = { suiteTitle: true, detail: true, ...options };
@@ -48,24 +49,10 @@ class TmsReporter implements Reporter {
     this.testCache.push(test);
   }
 
-  async onTestEnd(test: TestCase, result: TestResult): Promise<void> {
-    const autotest = Converter.convertTestCaseToAutotestPost(await this.getAutotestData(test, result));
-    const steps = [...this.stepCache.keys()].filter((step: TestStep) => this.stepCache.get(step) === test);
-
-    autotest.steps = Converter.convertTestStepsToShortSteps(steps);
-
-    await this.strategy.loadAutotest(
-      autotest,
-      Converter.convertStatus(result.status, test.expectedStatus) == "Passed");
-
-    const autotestResult = Converter.convertAutotestPostToAutotestResult(
-      await this.getAutotestData(test, result),
-      test,
-      result);
-
-    autotestResult.stepResults = Converter.convertTestStepsToSteps(steps, this.attachmentSteps);
-
-    await this.strategy.loadTestRun([autotestResult]);
+  onTestEnd(test: TestCase, result: TestResult): void {
+    this.loadTestPromises.push(
+      this.loadTest(test, result)
+    );
   }
 
   onStepBegin(test: TestCase, _result: TestResult, step: TestStep): void {
@@ -81,7 +68,8 @@ class TmsReporter implements Reporter {
     this.stepCache.set(step, test);
   }
 
-  onEnd(): void {
+  async onEnd(): Promise<void> {
+    await Promise.all(this.loadTestPromises);
     this.addSkippedResults();
   }
 
@@ -194,6 +182,26 @@ class TmsReporter implements Reporter {
     }
 
     return autotestData;
+  }
+
+  private async loadTest(test: TestCase, result: TestResult): Promise<void> {
+    const autotest = Converter.convertTestCaseToAutotestPost(await this.getAutotestData(test, result));
+    const steps = [...this.stepCache.keys()].filter((step: TestStep) => this.stepCache.get(step) === test);
+
+    autotest.steps = Converter.convertTestStepsToShortSteps(steps);
+
+    await this.strategy.loadAutotest(
+      autotest,
+      Converter.convertStatus(result.status, test.expectedStatus) == "Passed");
+
+    const autotestResult = Converter.convertAutotestPostToAutotestResult(
+      await this.getAutotestData(test, result),
+      test,
+      result);
+
+    autotestResult.stepResults = Converter.convertTestStepsToSteps(steps, this.attachmentSteps);
+
+    await this.strategy.loadTestRun([autotestResult]);
   }
 }
 
