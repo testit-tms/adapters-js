@@ -4,6 +4,7 @@
   "description": "Jest adapter for Test IT",
   "main": "dist/testitEnvironment.js",
   "scripts": {
+    "prebuild": "npm install ../testit-js-commons --no-save && npm install",
     "build": "tsc",
     "dev": "tsc --watch"
   },
@@ -15,7 +16,7 @@
   "license": "ISC",
   "dependencies": {
     "debug": "^4.3.4",
-    "testit-js-commons": "workspace:*"
+    "testit-js-commons": "^2.1.2"
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",

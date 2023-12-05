@@ -1,8 +1,0 @@
-{
-  "name": "adapters-js",
-  "private": true,
-  "version": "2.1.2",
-  "workspaces": [
-    "./testit-*"
-  ]
-}
