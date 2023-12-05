@@ -5,7 +5,7 @@
   "main": "dist/formatter.js",
   "scripts": {
     "clean": "rimraf dist",
-    "prebuild": "npm link ../testit-js-commons",
+    "prebuild": "npm --prefix ../testit-js-commons run build && npm link ../testit-js-commons",
     "build": "tsc",
     "start": "npm run build && cd demo && npm run test",
     "lint": "eslint . --ext=.ts"

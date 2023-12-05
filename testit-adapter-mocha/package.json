@@ -5,7 +5,7 @@
   "main": "lib/reporter.js",
   "types": "lib/types.d.ts",
   "scripts": {
-    "prebuild": "npm link ../testit-js-commons",
+    "prebuild": "npm --prefix ../testit-js-commons run build && npm link ../testit-js-commons",
     "build": "tsc",
     "watch": "tsc -w"
   },
