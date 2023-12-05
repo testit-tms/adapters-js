@@ -4,7 +4,7 @@
   "description": "Jest adapter for Test IT",
   "main": "dist/testitEnvironment.js",
   "scripts": {
-    "prebuild": "npm install ../testit-js-commons --no-save && npm install",
+    "prebuild": "npm link ../testit-js-commons",
     "build": "tsc",
     "dev": "tsc --watch"
   },
