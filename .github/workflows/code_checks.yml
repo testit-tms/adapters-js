@@ -86,9 +86,6 @@ jobs:
         with:
           path: ~/.npm
           key: node-modules-${{ hashFiles('**/package-lock.json') }}
-      - name: Install dependecies
-        working-directory: ${{ matrix.package }}
-        run: npm install
       - name: Build application ${{ matrix.package }}
         working-directory: ${{ matrix.package }}
         run: npm run build
