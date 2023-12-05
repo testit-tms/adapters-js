@@ -61,7 +61,7 @@ jobs:
       #   run: npm run lint
 
   build:
-    needs: [lint, test]
+    # needs: [lint, test]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
