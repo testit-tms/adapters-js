@@ -25,9 +25,9 @@ jobs:
         with:
           path: ~/.npm
           key: node-modules-${{ hashFiles('**/package-lock.json') }}
-      - name: Install dependecies
+      - name: Build application ${{ matrix.package }}
         working-directory: ${{ matrix.package }}
-        run: npm install
+        run: npm run build
       # - name: Test application
       #   run: npm run test
       #   working-directory: ${{ matrix.package }}
@@ -53,9 +53,9 @@ jobs:
         with:
           path: ~/.npm
           key: node-modules-${{ hashFiles('**/package-lock.json') }}
-      - name: Install dependecies
+      - name: Build application ${{ matrix.package }}
         working-directory: ${{ matrix.package }}
-        run: npm install
+        run: npm run build
       # - name: Lint application ${{ matrix.package }}
       #   working-directory: ${{ matrix.package }}
       #   run: npm run lint
