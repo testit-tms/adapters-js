@@ -4,7 +4,29 @@ on:
   pull_request
 
 jobs:
+  build_commons:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: [14,16,18]
+    steps:
+      - name: Get repository code [testit-js-commons]
+        uses: actions/checkout@v3
+      - name: Cache deps
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: node-modules-${{ hashFiles('**/package-lock.json') }}
+      - name: Build application testit-js-commons
+        working-directory: testit-js-commons
+        run: npm run build
+      # - name: Test application
+      #   run: npm run test
+      #   working-directory: ${{ matrix.package }}
+
   test:
+    needs: build_commons
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -33,6 +55,7 @@ jobs:
       #   working-directory: ${{ matrix.package }}
 
   lint:
+    needs: build_commons
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -61,7 +84,7 @@ jobs:
       #   run: npm run lint
 
   build:
-    needs: [lint, test]
+    needs: [build_commons, lint, test]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
