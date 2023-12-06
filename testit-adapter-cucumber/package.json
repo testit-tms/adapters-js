@@ -4,7 +4,8 @@
   "description": "Cucumber adapter for Test IT",
   "main": "dist/formatter.js",
   "scripts": {
-    "prebuild": "rimraf dist",
+    "clean": "rimraf dist",
+    "prebuild": "npm --prefix ../testit-js-commons run build && npm link ../testit-js-commons",
     "build": "tsc",
     "start": "npm run build && cd demo && npm run test",
     "lint": "eslint . --ext=.ts"

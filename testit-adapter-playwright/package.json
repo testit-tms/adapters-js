@@ -16,6 +16,7 @@
   "types": "./dist/reporter.d.ts",
   "scripts": {
     "clean": "rimraf ./dist ./out",
+    "prebuild": "npm --prefix ../testit-js-commons run build && npm link ../testit-js-commons",
     "build": "tsc -p tsconfig.json"
   },
   "devDependencies": {
