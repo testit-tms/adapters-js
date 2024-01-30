@@ -81,7 +81,7 @@ jobs:
       - name: Setup environment
         run: |        
           cd js-examples/${{ matrix.project_name }}
-          npm --prefix testit-tms/${{ matrix.adapter_name }} run build && npm link testit-tms/${{ matrix.adapter_name }}
+          npm --prefix testit-tms/adapters-js/${{ matrix.adapter_name }} run build && npm link testit-tms/adapters-js/${{ matrix.adapter_name }}
           dotnet build --configuration Release --property WarningLevel=0 api-validator-dotnet
           pip install testit-cli
       - name: Create TestRun
