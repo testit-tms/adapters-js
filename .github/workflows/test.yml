@@ -1,0 +1,96 @@
+name: Test
+run-name: "#${{ github.run_number }} test by ${{ github.triggering_actor }}"
+on:
+  pull_request:
+    paths:
+      - "testit-js-commons/**"
+      - "testit-adapter-codecept/**"
+      - "testit-adapter-cucumber/**"
+      - "testit-adapter-jest/**"
+      - "testit-adapter-mocha/**"
+      - "testit-adapter-playwright/**"
+  workflow_dispatch:
+env:
+  DOTNET_VERSION: 8
+  GITHUB_PAT: ${{ secrets.SERVICE_ACCOUNT_TOKEN }}
+  NODE_VERSION: 21
+  PYTHON_VERSION: 3.12
+  TEMP_FILE: tmp/output.txt
+  TMS_ADAPTER_MODE: 1
+  TMS_CERT_VALIDATION: false
+  TMS_PRIVATE_TOKEN: ${{ secrets.TESTIT_PRIVATE_TOKEN }}
+  TMS_URL: ${{ secrets.TESTIT_URL }}
+jobs:
+  test:
+    name: ${{ matrix.project_name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - adapter_name: testit-adapter-codecept
+            configuration_id: CODECEPT_CONFIGURATION_ID
+            project_id: CODECEPT_PROJECT_ID
+            project_name: codecept
+          - adapter_name: testit-adapter-cucumber
+            configuration_id: CUCUMBER_CONFIGURATION_ID
+            project_id: CUCUMBER_PROJECT_ID
+            project_name: cucumber
+          - adapter_name: testit-adapter-jest
+            configuration_id: JEST_CONFIGURATION_ID
+            project_id: JEST_PROJECT_ID
+            project_name: jest
+          - adapter_name: testit-adapter-mocha
+            configuration_id: MOCHA_CONFIGURATION_ID
+            project_id: MOCHA_PROJECT_ID
+            project_name: mocha
+          - adapter_name: testit-adapter-playwright
+            configuration_id: PLAYWRIGHT_CONFIGURATION_ID
+            project_id: PLAYWRIGHT_PROJECT_ID
+            project_name: playwright
+    env:
+      TMS_CONFIGURATION_ID: ${{ secrets[matrix.configuration_id] }}
+      TMS_PROJECT_ID: ${{ secrets[matrix.project_id] }}
+      TMS_TEST_RUN_NAME: ${{ matrix.project_name }} TestRun
+    steps:
+      - name: Checkout adapters-js
+        uses: actions/checkout@v4
+      - name: Checkout api-validator-dotnet
+        uses: actions/checkout@v4
+        with:
+          repository: testit-tms/api-validator-dotnet
+          token: ${{ env.GITHUB_PAT }}
+          path: api-validator-dotnet
+      - name: Checkout js-examples
+        uses: actions/checkout@v4
+        with:
+          repository: testit-tms/js-examples
+          path: js-examples
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Setup environment
+        run: |        
+          cd js-examples/${{ matrix.project_name }}
+          npm --prefix testit-tms/${{ matrix.adapter_name }} run build && npm link testit-tms/${{ matrix.adapter_name }}
+          dotnet build --configuration Release --property WarningLevel=0 api-validator-dotnet
+          pip install testit-cli
+      - name: Create TestRun
+        run: |
+          testit testrun create --token ${{ env.TMS_PRIVATE_TOKEN }} --output ${{ env.TEMP_FILE }}
+          echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> $GITHUB_ENV
+      - name: Test
+        run: |
+          npm run test
+      - name: Validate
+        run: |
+          dotnet test --configuration Release --no-build --logger:"console;verbosity=detailed" api-validator-dotnet
