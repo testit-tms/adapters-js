@@ -92,9 +92,10 @@ jobs:
           testit testrun create --token ${{ env.TMS_PRIVATE_TOKEN }} --output ${{ env.TEMP_FILE }}
           echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> $GITHUB_ENV
           echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> .env
-          echo "{{ $(cat output.txt) }}"
+          echo "{{ $(cat .env) }}"
           echo "${{ env.TMS_TEST_RUN_ID }}"
           echo "${{ env.TMS_URL }}"
+          echo "${{ env.TMS_ADAPTER_MODE }}"
       - name: Test
         run: |
           cd js-examples/${{ matrix.project_name }}
