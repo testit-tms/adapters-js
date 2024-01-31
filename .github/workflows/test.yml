@@ -82,10 +82,10 @@ jobs:
         run: |        
           dotnet build --configuration Release --property WarningLevel=0 api-validator-dotnet
           pip install testit-cli
-          cd ${{ matrix.project_name }}
+          cd ${{ matrix.adapter_name }}
           npm run build && npm link
           cd ../js-examples/${{ matrix.project_name }}
-          npm link ${{ matrix.project_name }}
+          npm link ${{ matrix.adapter_name }}
           ls
       #    ls ./${{ matrix.adapter_name }}
       #    cd adapters-js/${{ matrix.adapter_name }} && ls
