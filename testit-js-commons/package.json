@@ -6,8 +6,8 @@
   "types": "lib/index.d.ts",
   "source": "src/index.ts",
   "scripts": {
-    "prebuild": "npm install && pwd",
-    "build": "pwd && tsc && ls",
+    "prebuild": "npm install",
+    "build": "tsc",
     "watch": "tsc -w"
   },
   "author": {
