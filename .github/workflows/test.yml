@@ -95,6 +95,7 @@ jobs:
       - name: Test
         run: |
           cd js-examples/${{ matrix.project_name }}
+          npm install
           npm run test || exit 0
       - name: Validate
         run: |
