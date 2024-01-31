@@ -2,9 +2,9 @@
   "name": "testit-adapter-cucumber",
   "version": "2.1.1",
   "description": "Cucumber adapter for Test IT",
-  "main": "dist/formatter.js",
+  "main": "lib/formatter.js",
   "scripts": {
-    "clean": "rimraf dist",
+    "clean": "rimraf lib",
     "prebuild": "npm --prefix ../testit-js-commons run build && npm link ../testit-js-commons",
     "build": "tsc",
     "start": "npm run build && cd demo && npm run test",
@@ -49,8 +49,8 @@
     "type": "git",
     "url": "git+https://github.com/testit-tms/adapters-js.git"
   },
-  "types": "./dist\\formatter.d.ts",
+  "types": "./lib\\formatter.d.ts",
   "files": [
-    "dist"
+    "lib"
   ]
 }
