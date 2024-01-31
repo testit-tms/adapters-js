@@ -16,8 +16,8 @@
   "types": "./lib/reporter.d.ts",
   "scripts": {
     "clean": "rimraf ./lib ./out",
-    "prebuild": "npm --prefix ../testit-js-commons run build && npm link ../testit-js-commons",
-    "build": "tsc -p tsconfig.json"
+    "prebuild": "npm --prefix ../testit-js-commons run build && npm link ../testit-js-commons && pwd && ls",
+    "build": "tsc -p tsconfig.json && ls"
   },
   "devDependencies": {
     "@playwright/test": "^1.34.1",
