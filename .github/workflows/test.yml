@@ -65,6 +65,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: testit-tms/js-examples
+          ref: examples_for_tests
           path: js-examples
       - name: Setup dotnet
         uses: actions/setup-dotnet@v4
