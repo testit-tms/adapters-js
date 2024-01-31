@@ -82,8 +82,9 @@ jobs:
         run: |        
           dotnet build --configuration Release --property WarningLevel=0 api-validator-dotnet
           pip install testit-cli
-          npm --prefix adapters-js/${{ matrix.adapter_name }} run build
-          cd adapters-js/${{ matrix.adapter_name }} && ls
+          ls
+      #    npm --prefix adapters-js/${{ matrix.adapter_name }} run build
+      #    cd adapters-js/${{ matrix.adapter_name }} && ls
       #    cd js-examples/${{ matrix.project_name }}
       #    npm link ../${{ matrix.adapter_name }}
       # - name: Create TestRun
