@@ -97,6 +97,7 @@ jobs:
           echo "${{ env.TMS_TEST_RUN_ID }}"
           echo "${{ env.TMS_URL }}"
           echo "${{ env.TMS_ADAPTER_MODE }}"
+          echo "$GITHUB_ENV"
       - name: Test
         run: |
           cd js-examples/${{ matrix.project_name }}
