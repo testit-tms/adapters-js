@@ -80,10 +80,10 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Setup environment
         run: |        
-          cd js-examples/${{ matrix.project_name }}
-          npm --prefix ../../${{ matrix.adapter_name }} run build && npm link ../../${{ matrix.adapter_name }}
           dotnet build --configuration Release --property WarningLevel=0 api-validator-dotnet
           pip install testit-cli
+          cd js-examples/${{ matrix.project_name }}
+          npm --prefix ../../${{ matrix.adapter_name }} run build && npm link ../../${{ matrix.adapter_name }}
       - name: Create TestRun
         run: |
           testit testrun create --token ${{ env.TMS_PRIVATE_TOKEN }} --output ${{ env.TEMP_FILE }}
