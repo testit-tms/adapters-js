@@ -82,8 +82,9 @@ jobs:
         run: |        
           dotnet build --configuration Release --property WarningLevel=0 api-validator-dotnet
           pip install testit-cli
+          npm --prefix ./${{ matrix.adapter_name }} run build
           cd js-examples/${{ matrix.project_name }}
-          npm --prefix ../${{ matrix.adapter_name }} run build && npm link ../${{ matrix.adapter_name }}
+          npm link ../${{ matrix.adapter_name }}
       # - name: Create TestRun
       #   run: |
       #     testit testrun create --token ${{ env.TMS_PRIVATE_TOKEN }} --output ${{ env.TEMP_FILE }}
