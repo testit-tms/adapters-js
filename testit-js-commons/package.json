@@ -7,7 +7,7 @@
   "source": "src/index.ts",
   "scripts": {
     "prebuild": "npm install && pwd",
-    "build": "tsc",
+    "build": "pwd && tsc && ls",
     "watch": "tsc -w"
   },
   "author": {
