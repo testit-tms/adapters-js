@@ -86,18 +86,13 @@ jobs:
           npm run build && npm link
           cd ../js-examples/${{ matrix.project_name }}
           npm link ${{ matrix.adapter_name }}
-          ls
-      #    ls ./${{ matrix.adapter_name }}
-      #    cd adapters-js/${{ matrix.adapter_name }} && ls
-      #    cd js-examples/${{ matrix.project_name }}
-      #    npm link ../${{ matrix.adapter_name }}
-      # - name: Create TestRun
-      #   run: |
-      #     testit testrun create --token ${{ env.TMS_PRIVATE_TOKEN }} --output ${{ env.TEMP_FILE }}
-      #     echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> $GITHUB_ENV
-      # - name: Test
-      #   run: |
-      #     npm run test
-      # - name: Validate
-      #   run: |
-      #     dotnet test --configuration Release --no-build --logger:"console;verbosity=detailed" api-validator-dotnet
+      - name: Create TestRun
+        run: |
+          testit testrun create --token ${{ env.TMS_PRIVATE_TOKEN }} --output ${{ env.TEMP_FILE }}
+          echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> $GITHUB_ENV
+      - name: Test
+        run: |
+          npm run test
+      - name: Validate
+        run: |
+          dotnet test --configuration Release --no-build --logger:"console;verbosity=detailed" api-validator-dotnet
