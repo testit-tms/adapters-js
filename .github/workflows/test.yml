@@ -92,6 +92,7 @@ jobs:
           echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> $GITHUB_ENV
       - name: Test
         run: |
+          cd js-examples/${{ matrix.project_name }}
           npm run test
       - name: Validate
         run: |
