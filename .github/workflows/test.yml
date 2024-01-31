@@ -91,6 +91,8 @@ jobs:
         run: |
           testit testrun create --token ${{ env.TMS_PRIVATE_TOKEN }} --output ${{ env.TEMP_FILE }}
           echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> .env
+          echo "${{ env.TMS_TEST_RUN_ID }}"
+          echo "${{ env.TMS_URL }}"
         #  echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> $GITHUB_ENV
       - name: Test
         run: |
