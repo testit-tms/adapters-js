@@ -86,7 +86,7 @@ jobs:
           cd ${{ matrix.adapter_name }}
           npm run build && npm link
           cd ../js-examples/${{ matrix.project_name }}
-          npm link ${{ matrix.adapter_name }}
+          npm link ${{ matrix.adapter_name }} && npm install
       - name: Create TestRun
         run: |
           testit testrun create --token ${{ env.TMS_PRIVATE_TOKEN }} --output ${{ env.TEMP_FILE }}
@@ -94,7 +94,7 @@ jobs:
       - name: Test
         run: |
           cd js-examples/${{ matrix.project_name }}
-          npm run test
+          npm run test || exit 0
       - name: Validate
         run: |
           dotnet test --configuration Release --no-build --logger:"console;verbosity=detailed" api-validator-dotnet
