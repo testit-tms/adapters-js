@@ -11,7 +11,7 @@
     "types": ["codeceptjs", "node"],
     "declaration": true,
     "skipLibCheck": true,
-    "outDir": "lib"
+    "outDir": "build"
   },
   "exclude": ["node_modules"]
 }

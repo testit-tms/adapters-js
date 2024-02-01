@@ -2,7 +2,7 @@
   "name": "testit-adapter-jest",
   "version": "2.1.1",
   "description": "Jest adapter for Test IT",
-  "main": "lib/testitEnvironment.js",
+  "main": "dist/testitEnvironment.js",
   "scripts": {
     "prebuild": "npm --prefix ../testit-js-commons run build && npm link ../testit-js-commons",
     "build": "tsc",
@@ -36,7 +36,7 @@
     "url": "git+https://github.com/testit-tms/adapters-js.git"
   },
   "files": [
-    "lib",
+    "dist",
     "types.d.ts"
   ]
 }
