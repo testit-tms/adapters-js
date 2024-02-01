@@ -65,6 +65,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: testit-tms/js-examples
+          ref: examples_for_tests
           path: js-examples
       - name: Setup dotnet
         uses: actions/setup-dotnet@v4
@@ -82,16 +83,26 @@ jobs:
         run: |        
           dotnet build --configuration Release --property WarningLevel=0 api-validator-dotnet
           pip install testit-cli
-      #    cd ./${{ matrix.adapter_name }} && npm install && npm run build && ls
+          cd ${{ matrix.adapter_name }}
+          npm run build && npm link
+          cd ../js-examples/${{ matrix.project_name }}
+          npm link ${{ matrix.adapter_name }} && npm install
+      - name: Create TestRun
+        run: |
+          testit testrun create --token ${{ env.TMS_PRIVATE_TOKEN }} --output ${{ env.TEMP_FILE }}
+          echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> $GITHUB_ENV
+          echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> .env
+          export TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})
+          echo "{{ $(cat .env) }}"
+          echo "${{ env.TMS_TEST_RUN_ID }}"
+          echo "${{ env.TMS_URL }}"
+          echo "${{ env.TMS_ADAPTER_MODE }}"
+          echo "$GITHUB_ENV"
+      - name: Test
+        run: |
           cd js-examples/${{ matrix.project_name }}
-          npm --prefix ../${{ matrix.adapter_name }} run build && npm link ../${{ matrix.adapter_name }}
-      # - name: Create TestRun
-      #   run: |
-      #     testit testrun create --token ${{ env.TMS_PRIVATE_TOKEN }} --output ${{ env.TEMP_FILE }}
-      #     echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> $GITHUB_ENV
-      # - name: Test
-      #   run: |
-      #     npm run test
-      # - name: Validate
-      #   run: |
-      #     dotnet test --configuration Release --no-build --logger:"console;verbosity=detailed" api-validator-dotnet
+          npm install
+          npm run test || exit 0
+      - name: Validate
+        run: |
+          dotnet test --configuration Release --no-build --logger:"console;verbosity=detailed" api-validator-dotnet
