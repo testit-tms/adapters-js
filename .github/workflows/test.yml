@@ -94,6 +94,7 @@ jobs:
           echo "TMS_CERT_VALIDATION=${{ env.TMS_CERT_VALIDATION }}" >> .env
           echo "TMS_PRIVATE_TOKEN=${{ env.TMS_PRIVATE_TOKEN }}" >> .env
           echo "TMS_URL=${{ env.TMS_URL }}" >> .env
+          ls && ls ./node_modules
       - name: Create TestRun
         run: |
           testit testrun create --token ${{ env.TMS_PRIVATE_TOKEN }} --output ${{ env.TEMP_FILE }}
