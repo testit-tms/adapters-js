@@ -1,12 +1,12 @@
 import * as dotenv from "dotenv";
-import { Utils, AdapterConfig, EnvironmentOptions } from "../../common";
+import { Utils, AdapterConfig, ProcessEnv } from "../../common";
 import { IConfigComposer } from "./config.type";
 
 export const DEFAULT_CONFIG_FILE = "tms.config.json";
 
 export class ConfigComposer implements IConfigComposer {
   public compose(base?: Partial<AdapterConfig>): AdapterConfig {
-    const environment: Partial<EnvironmentOptions> | undefined = parseEnvConfig();
+    const environment: ProcessEnv | undefined = parseEnvConfig();
     const content: string = Utils.readFile(environment?.TMS_CONFIG_FILE ?? DEFAULT_CONFIG_FILE);
     const config: AdapterConfig = JSON.parse(content);
 
@@ -20,11 +20,7 @@ export class ConfigComposer implements IConfigComposer {
     return this.merge(config, environment, base);
   }
 
-  public merge(file: AdapterConfig, env?: Partial<EnvironmentOptions>, base?: Partial<AdapterConfig>): AdapterConfig {
-    console.log(`Env is full: ${env ? true : false}`);
-    console.log(`Test-run: ${env?.TMS_TEST_RUN_NAME}`);
-    console.log(`process.Env is full: ${process.env ? true : false}`);
-    console.log(`Test-run: ${process.env?.TMS_TEST_RUN_NAME}`);
+  public merge(file: AdapterConfig, env?: ProcessEnv, base?: Partial<AdapterConfig>): AdapterConfig {
     return {
       url: base?.url ?? env?.TMS_URL ?? file.url,
       projectId: base?.projectId ?? env?.TMS_PROJECT_ID ?? file.projectId,
@@ -42,6 +38,6 @@ export class ConfigComposer implements IConfigComposer {
   }
 }
 
-function parseEnvConfig(): Partial<EnvironmentOptions> | undefined {
+function parseEnvConfig(): ProcessEnv | undefined {
   return dotenv.config().parsed;
 }
