@@ -43,5 +43,5 @@ export class ConfigComposer implements IConfigComposer {
 }
 
 function parseEnvConfig(): Partial<EnvironmentOptions> | undefined {
-  return dotenv.config({ path: ".env" }).parsed;
+  return dotenv.config().parsed;
 }
