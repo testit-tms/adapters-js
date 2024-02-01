@@ -87,10 +87,17 @@ jobs:
           npm run build && npm link
           cd ../js-examples/${{ matrix.project_name }}
           npm link ${{ matrix.adapter_name }} && npm install
+          echo "TMS_CONFIGURATION_ID=${{ env.TMS_CONFIGURATION_ID }}" >> .env
+          echo "TMS_PROJECT_ID=${{ env.TMS_PROJECT_ID }}" >> .env
+          echo "TMS_TEST_RUN_NAME=${{ env.TMS_TEST_RUN_NAME }}" >> .env
+          echo "TMS_ADAPTER_MODE=${{ env.TMS_ADAPTER_MODE }}" >> .env
+          echo "TMS_CERT_VALIDATION=${{ env.TMS_CERT_VALIDATION }}" >> .env
+          echo "TMS_PRIVATE_TOKEN=${{ env.TMS_PRIVATE_TOKEN }}" >> .env
+          echo "TMS_URL=${{ env.TMS_URL }}" >> .env
       - name: Create TestRun
         run: |
           testit testrun create --token ${{ env.TMS_PRIVATE_TOKEN }} --output ${{ env.TEMP_FILE }}
-          echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> $GITHUB_ENV
+          echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> js-examples/.env
       - name: Test
         run: |
           cd js-examples/${{ matrix.project_name }}
