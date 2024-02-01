@@ -23,6 +23,8 @@ export class ConfigComposer implements IConfigComposer {
   public merge(file: AdapterConfig, env?: Partial<EnvironmentOptions>, base?: Partial<AdapterConfig>): AdapterConfig {
     console.log(`Env is full: ${env ? true : false}`);
     console.log(`Test-run: ${env?.TMS_TEST_RUN_NAME}`);
+    console.log(`process.Env is full: ${process.env ? true : false}`);
+    console.log(`Test-run: ${process.env?.TMS_TEST_RUN_NAME}`);
     return {
       url: base?.url ?? env?.TMS_URL ?? file.url,
       projectId: base?.projectId ?? env?.TMS_PROJECT_ID ?? file.projectId,
