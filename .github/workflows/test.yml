@@ -103,7 +103,7 @@ jobs:
       - name: Create TestRun
         run: |
           testit testrun create --token ${{ env.TMS_PRIVATE_TOKEN }} --output ${{ env.TEMP_FILE }}
-          echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> js-examples/.env
+          echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> js-examples/${{ matrix.project_name }}/.env
       - name: Test
         run: |
           cd js-examples/${{ matrix.project_name }}
