@@ -86,7 +86,12 @@ jobs:
           cd ${{ matrix.adapter_name }}
           npm run build && npm link
           cd ../js-examples/${{ matrix.project_name }}
-          npm link ${{ matrix.adapter_name }} && npm install
+          npm link ${{ matrix.adapter_name }}
+          echo "link adapter"
+          ls && ls ./node_modules
+          npm install
+          echo "Install depends"
+          ls && ls ./node_modules
           echo "TMS_CONFIGURATION_ID=${{ env.TMS_CONFIGURATION_ID }}" >> .env
           echo "TMS_PROJECT_ID=${{ env.TMS_PROJECT_ID }}" >> .env
           echo "TMS_TEST_RUN_NAME=${{ env.TMS_TEST_RUN_NAME }}" >> .env
