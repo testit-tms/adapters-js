@@ -12,10 +12,10 @@
     "url": "git+https://github.com/testit-tms/adapters-js.git"
   },
   "keywords": [],
-  "main": "./dist/reporter.js",
-  "types": "./dist/reporter.d.ts",
+  "main": "./lib/reporter.js",
+  "types": "./lib/reporter.d.ts",
   "scripts": {
-    "clean": "rimraf ./dist ./out",
+    "clean": "rimraf ./lib ./out",
     "prebuild": "npm --prefix ../testit-js-commons run build && npm link ../testit-js-commons",
     "build": "tsc -p tsconfig.json"
   },
@@ -43,6 +43,6 @@
     "testit-js-commons": "^2.1.1"
   },
   "files": [
-    "dist"
+    "lib"
   ]
 }
