@@ -84,9 +84,10 @@ jobs:
           dotnet build --configuration Release --property WarningLevel=0 api-validator-dotnet
           pip install testit-cli
           cd ${{ matrix.adapter_name }}
-          npm run build
+          npm run build && npm pack
           cd ../js-examples/${{ matrix.project_name }}
-          npm install ../../${{ matrix.adapter_name }}
+          echo "../../${{ find ../../${{ matrix.adapter_name }} -type f -name "*.tgz" }}"
+          npm install ../../${{ find ../../${{ matrix.adapter_name }} -type f -name "*.tgz" }}
           echo "TMS_CONFIGURATION_ID=${{ env.TMS_CONFIGURATION_ID }}" >> .env
           echo "TMS_PROJECT_ID=${{ env.TMS_PROJECT_ID }}" >> .env
           echo "TMS_TEST_RUN_NAME=${{ env.TMS_TEST_RUN_NAME }}" >> .env
