@@ -86,7 +86,7 @@ jobs:
           cd ${{ matrix.adapter_name }}
           npm run build && npm pack
           cd ../js-examples/${{ matrix.project_name }}
-          npm install "../../${{ matrix.adapter_name }}/${{ matrix.adapter_name }}-${{ npm view ../../${{ matrix.adapter_name }} version }}.tgz"
+          npm install "../../${{ matrix.adapter_name }}/${{ matrix.adapter_name }}-$(npm view ../../${{ matrix.adapter_name }} version).tgz"
           echo "TMS_CONFIGURATION_ID=${{ env.TMS_CONFIGURATION_ID }}" >> .env
           echo "TMS_PROJECT_ID=${{ env.TMS_PROJECT_ID }}" >> .env
           echo "TMS_TEST_RUN_NAME=${{ env.TMS_TEST_RUN_NAME }}" >> .env
