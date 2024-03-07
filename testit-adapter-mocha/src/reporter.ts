@@ -12,6 +12,7 @@ import {
   Utils,
   IStrategy,
   StrategyFactory,
+  Outcome,
 } from "testit-js-commons";
 import { ReporterOptions, Context, Test, Hook } from "./types";
 import { ITestStep, TestStep } from "./step";
@@ -34,6 +35,12 @@ const emptyStep = (): Step => ({
   steps: [],
   attachments: [],
 });
+
+const StateConstants = {
+  STATE_FAILED: 'failed',
+  STATE_PASSED: 'passed',
+  STATE_PENDING: 'pending',
+}
 
 module.exports = class extends Reporter {
   private readonly strategy: IStrategy;
@@ -60,8 +67,8 @@ module.exports = class extends Reporter {
     this.runner.on(Events.EVENT_RUN_BEGIN, () => this.onStartRun());
     this.runner.on(Events.EVENT_RUN_END, () => this.onEndRun());
 
-    this.runner.once(Events.EVENT_TEST_BEGIN, (test: Test) => this.addMethods(test.ctx));
-    this.runner.once(Events.EVENT_HOOK_BEGIN, (hook: Hook) => this.addMethods(hook.ctx));
+    this.runner.on(Events.EVENT_TEST_BEGIN, (test: Test) => this.addMethods(test.ctx));
+    this.runner.on(Events.EVENT_HOOK_BEGIN, (hook: Hook) => this.addMethods(hook.ctx));
 
     this.runner.on(Events.EVENT_TEST_BEGIN, () => this.onStartTest());
     this.runner.on(Events.EVENT_TEST_END, (test) => this.onEndTest(test));
@@ -133,15 +140,17 @@ module.exports = class extends Reporter {
       workItemIds: test.ctx?.workItemsIds,
     };
 
-    const promise = this.strategy.loadAutotest(autotestPost, test.isPassed());
+    const promise = this.strategy.loadAutotest(
+      autotestPost,
+      test.state == StateConstants.STATE_PASSED);
     this.autotestsQueue.push(promise);
 
     this.autotestsForTestRun.push({
       autoTestExternalId: autotestPost.externalId,
-      outcome: test.isFailed() ? "Failed" : this.currentTest.outcome,
+      outcome: this._getOutcome(test.state),
       startedOn: this.currentTest.startedOn,
       completedOn: new Date(),
-      duration: test.duration ?? Date.now() - (this.currentTest.startedOn as Date).getTime(),
+      duration: this._getDuration(test.duration),
       stepResults: this.currentTest.stepResults,
       setupResults: setup,
       teardownResults: teardown,
@@ -226,5 +235,22 @@ module.exports = class extends Reporter {
 
   private _getClassName(path?: string): string | undefined {
     return path && Utils.getFileName(path);
+  }
+
+  private _getOutcome(state: string | undefined): Outcome {
+      switch(state){
+        case StateConstants.STATE_FAILED:
+          return "Failed";
+        case StateConstants.STATE_PENDING:
+          return "Skipped";
+        default:
+          return this.currentTest.outcome;
+      }
+  }
+
+  private _getDuration(duration: number | undefined): number {
+    return duration ?? this.currentTest.startedOn
+      ? Date.now() - (this.currentTest.startedOn as Date).getTime()
+      : 0;
   }
 };
