@@ -25,7 +25,9 @@ export class ConfigComposer implements IConfigComposer {
       url: this.resolveProperty(file.url, env?.TMS_URL, base?.url),
       projectId: this.resolveProperty(file.projectId, env?.TMS_PROJECT_ID, base?.projectId),
       testRunId: this.resolveProperty(file.testRunId, env?.TMS_TEST_RUN_ID, base?.testRunId),
-      testRunName: this.resolveProperty(file.testRunName, env?.TMS_TEST_RUN_NAME, base?.testRunName),
+      testRunName: this.resolveProperty(file.testRunName, env?.TMS_TEST_RUN_NAME, base?.testRunName) == ""
+        ? undefined
+        : this.resolveProperty(file.testRunName, env?.TMS_TEST_RUN_NAME, base?.testRunName),
       privateToken: this.resolveProperty(file.privateToken, env?.TMS_PRIVATE_TOKEN, base?.privateToken),
       adapterMode: base?.adapterMode ?? env?.TMS_ADAPTER_MODE ?? file.adapterMode ?? 0,
       configurationId: this.resolveProperty(file.configurationId, env?.TMS_CONFIGURATION_ID, base?.configurationId),
@@ -37,7 +39,7 @@ export class ConfigComposer implements IConfigComposer {
     };
   }
 
-  private resolveProperty(file?: string, env?: string, base?: string) : string | undefined {
+  private resolveProperty(file?: string, env?: string, base?: string) : string {
     if (base && base.trim()) {
       return base;
     }
@@ -48,7 +50,7 @@ export class ConfigComposer implements IConfigComposer {
       return file;
     }
     else {
-      return undefined;
+      return "";
     }
   }
 }
