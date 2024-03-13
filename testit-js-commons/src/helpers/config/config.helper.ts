@@ -22,19 +22,36 @@ export class ConfigComposer implements IConfigComposer {
 
   public merge(file: AdapterConfig, env?: Partial<EnvironmentOptions>, base?: Partial<AdapterConfig>): AdapterConfig {
     return {
-      url: base?.url ?? env?.TMS_URL ?? file.url,
-      projectId: base?.projectId ?? env?.TMS_PROJECT_ID ?? file.projectId,
-      testRunId: base?.testRunId ?? env?.TMS_TEST_RUN_ID ?? file.testRunId,
-      testRunName: base?.testRunName ?? env?.TMS_TEST_RUN_NAME ?? file.testRunName,
-      privateToken: base?.privateToken ?? env?.TMS_PRIVATE_TOKEN ?? file.privateToken,
+      url: this.resolveProperty(file.url, env?.TMS_URL, base?.url),
+      projectId: this.resolveProperty(file.projectId, env?.TMS_PROJECT_ID, base?.projectId),
+      testRunId: this.resolveProperty(file.testRunId, env?.TMS_TEST_RUN_ID, base?.testRunId),
+      testRunName: this.resolveProperty(file.testRunName, env?.TMS_TEST_RUN_NAME, base?.testRunName) == ""
+        ? undefined
+        : this.resolveProperty(file.testRunName, env?.TMS_TEST_RUN_NAME, base?.testRunName),
+      privateToken: this.resolveProperty(file.privateToken, env?.TMS_PRIVATE_TOKEN, base?.privateToken),
       adapterMode: base?.adapterMode ?? env?.TMS_ADAPTER_MODE ?? file.adapterMode ?? 0,
-      configurationId: base?.configurationId ?? env?.TMS_CONFIGURATION_ID ?? file.configurationId,
+      configurationId: this.resolveProperty(file.configurationId, env?.TMS_CONFIGURATION_ID, base?.configurationId),
       automaticCreationTestCases:
         base?.automaticCreationTestCases ??
         env?.TMS_AUTOMATIC_CREATION_TEST_CASES ??
         file.automaticCreationTestCases ??
         false,
     };
+  }
+
+  private resolveProperty(file?: string, env?: string, base?: string) : string {
+    if (base && base.trim()) {
+      return base;
+    }
+    else if (env && env.trim()) {
+      return env;
+    }
+    else if (file && file.trim()) {
+      return file;
+    }
+    else {
+      return "";
+    }
   }
 }
 
