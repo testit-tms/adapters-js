@@ -37,7 +37,7 @@ export class ConfigComposer implements IConfigComposer {
     };
   }
 
-  private resolveProperty(file?: string, env?: string, base?: string) : string {
+  private resolveProperty(file?: string, env?: string, base?: string) : string | undefined {
     if (base && base.trim()) {
       return base;
     }
@@ -48,7 +48,7 @@ export class ConfigComposer implements IConfigComposer {
       return file;
     }
     else {
-      return "";
+      return undefined;
     }
   }
 }

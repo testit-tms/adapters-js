@@ -25,11 +25,11 @@ export interface EnvironmentOptions {
 }
 
 export interface AdapterConfig {
-  url: string;
-  privateToken: string;
-  projectId: string;
-  configurationId: string;
-  testRunId: string;
+  url?: string;
+  privateToken?: string;
+  projectId?: string;
+  configurationId?: string;
+  testRunId?: string;
   testRunName?: string;
   adapterMode?: AdapterMode;
   automaticCreationTestCases?: boolean;
