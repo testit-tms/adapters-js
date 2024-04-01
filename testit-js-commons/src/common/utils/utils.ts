@@ -29,7 +29,15 @@ export namespace Utils {
   }
 
   export function readFile(path: string): string {
-    return fs.readFileSync(path).toString();
+    let fileContents;
+
+    try {
+      fileContents = fs.readFileSync(path).toString();
+    } catch (err) {
+      fileContents = "";
+    }
+
+    return fileContents;
   }
 
   export function writeFile(path: string, content: string): void {
