@@ -1,6 +1,6 @@
 {
   "name": "testit-adapter-cucumber",
-  "version": "2.1.3",
+  "version": "2.1.4",
   "description": "Cucumber adapter for Test IT",
   "main": "dist/formatter.js",
   "scripts": {
