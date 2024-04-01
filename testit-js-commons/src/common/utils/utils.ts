@@ -34,7 +34,7 @@ export namespace Utils {
     try {
       fileContents = fs.readFileSync(path).toString();
     } catch (err) {
-      fileContents = ""
+      fileContents = "";
     }
 
     return fileContents;
