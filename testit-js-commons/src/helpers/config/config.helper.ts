@@ -34,6 +34,7 @@ export class ConfigComposer implements IConfigComposer {
       adapterMode: file.adapterMode ?? env?.TMS_ADAPTER_MODE ?? base?.adapterMode ?? 0,
       configurationId: this.resolveAllProperties(file.configurationId, env?.TMS_CONFIGURATION_ID, base?.configurationId),
       automaticCreationTestCases: file.automaticCreationTestCases ?? env?.TMS_AUTOMATIC_CREATION_TEST_CASES ?? base?.automaticCreationTestCases ?? false,
+      certValidation: file.certValidation ?? env?.TMS_CERT_VALIDATION ?? base?.certValidation ?? true
     };
   }
 
@@ -47,6 +48,7 @@ export class ConfigComposer implements IConfigComposer {
       adapterMode: base?.adapterMode ?? env?.TMS_ADAPTER_MODE ?? 0,
       configurationId: this.resolveProperties(env?.TMS_CONFIGURATION_ID, base?.configurationId),
       automaticCreationTestCases: env?.TMS_AUTOMATIC_CREATION_TEST_CASES ?? base?.automaticCreationTestCases ?? false,
+      certValidation: env?.TMS_CERT_VALIDATION ?? base?.certValidation ?? true
     };
   }
 
