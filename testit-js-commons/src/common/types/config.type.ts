@@ -22,6 +22,7 @@ export interface EnvironmentOptions {
   TMS_ADAPTER_MODE: AdapterMode;
   TMS_CONFIG_FILE: string;
   TMS_AUTOMATIC_CREATION_TEST_CASES: boolean;
+  TMS_CERT_VALIDATION: boolean;
 }
 
 export interface AdapterConfig {
@@ -33,4 +34,5 @@ export interface AdapterConfig {
   testRunName?: string;
   adapterMode?: AdapterMode;
   automaticCreationTestCases?: boolean;
+  certValidation?: boolean;
 }
