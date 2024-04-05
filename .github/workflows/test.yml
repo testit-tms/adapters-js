@@ -9,6 +9,7 @@ on:
       - "testit-adapter-jest/**"
       - "testit-adapter-mocha/**"
       - "testit-adapter-playwright/**"
+      - ".github/**/test.yml"
   workflow_dispatch:
 env:
   DOTNET_VERSION: 8
@@ -81,7 +82,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Setup environment
         run: |        
-          dotnet build --configuration Release --property WarningLevel=0 api-validator-dotnet
+          dotnet build --configuration Debug --property WarningLevel=0 api-validator-dotnet
           pip install testit-cli
           cd ${{ matrix.adapter_name }}
           npm run build && npm link
@@ -105,4 +106,4 @@ jobs:
           npm run test || exit 0
       - name: Validate
         run: |
-          dotnet test --configuration Release --no-build --logger:"console;verbosity=detailed" api-validator-dotnet
+          dotnet test --configuration Debug --no-build --logger:"console;verbosity=detailed" api-validator-dotnet
