@@ -100,8 +100,7 @@ $ export TMS_TEST_RUN_ID=$(cat tmp/output.txt)
 
 $ npx codeceptjs run
 
-$ testit \
-  --mode finish
+$ testit testrun complete
   --url https://tms.testit.software \
   --testrun-id $(cat tmp/output.txt) 
 ```
