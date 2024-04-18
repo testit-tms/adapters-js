@@ -30,7 +30,7 @@ module.exports = async function (options) {
     });
   });
 
-  event.dispatcher.on(event.all.after, async () => {
+  event.dispatcher.on(event.workers.after, async () => {
     await strategy.teardown();
   });
 };
