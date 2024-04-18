@@ -24,7 +24,7 @@ npm install testit-adapter-codecept
 | It enables/disables certificate validation (**It's optional**). Default value - true                                                                                                                                                                                                                                                                                                   | certValidation             | TMS_CERT_VALIDATION               | tmsCertValidation             |
 | Mode of automatic creation test cases (**It's optional**). Default value - false. The adapter supports following modes:<br/>true - in this mode, the adapter will create a test case linked to the created autotest (not to the updated autotest)<br/>false - in this mode, the adapter will not create a test case                                                                    | automaticCreationTestCases | TMS_AUTOMATIC_CREATION_TEST_CASES | tmsAutomaticCreationTestCases |
 
-Add TestITHelper and TestITPlugin to Codecept file configuration 
+Add TestITHelper and TestITPlugin to Codecept file configuration
 
 ```ts
 export const config: CodeceptJS.MainConfig = {
@@ -70,7 +70,7 @@ declare namespace CodeceptJS {
 
 #### File
 
-Create .env config or file config with default name testit-adapter.config.json in the root directory of the project
+Create .env config or file config with default name tms.config.json in the root directory of the project
 
 ```json
 {
@@ -96,13 +96,13 @@ $ testit testrun create
   --testrun-name "New test run" \
   --output tmp/output.txt
 
-$ export TMS_TEST_RUN_ID=$(cat tmp/output.txt)  
+$ export TMS_TEST_RUN_ID=$(cat tmp/output.txt)
 
 $ npx codeceptjs run
 
 $ testit testrun complete
   --url https://tms.testit.software \
-  --testrun-id $(cat tmp/output.txt) 
+  --testrun-id $(cat tmp/output.txt)
 ```
 
 ### Methods
@@ -192,4 +192,3 @@ You can help to develop the project. Any contributions are **greatly appreciated
 # License
 
 Distributed under the Apache-2.0 License. See [LICENSE](https://github.com/testit-tms/adapters-js/blob/master/LICENSE.md) for more information.
-
