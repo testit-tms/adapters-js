@@ -10,20 +10,25 @@ export class ConfigComposer implements IConfigComposer {
     const dotEnvironment: Partial<EnvironmentOptions> | undefined = parseDotEnvConfig();
     const environment: Partial<EnvironmentOptions> = this.mergeEnv(dotEnvironment, processEnvironment);
     const content: string = Utils.readFile(dotEnvironment?.TMS_CONFIG_FILE ?? processEnvironment.TMS_CONFIG_FILE ?? DEFAULT_CONFIG_FILE);
+    let config: AdapterConfig;
 
     if (content !== "") {
-      const config: AdapterConfig = JSON.parse(content);
+      const fileConfig: AdapterConfig = JSON.parse(content);
 
-      if (config.privateToken) {
+      if (fileConfig.privateToken) {
         console.warn(`
         The configuration file specifies a private token. It is not safe. 
         Use TMS_PRIVATE_TOKEN environment variable`);
       }
 
-      return this.mergeAll(config, environment, base);
+      config = this.mergeAll(fileConfig, environment, base);
+    } else {
+      config = this.merge(environment, base);
     }
 
-    return this.merge(environment, base);
+    this.validateConfig(config);
+
+    return config;
   }
 
   public mergeAll(file: AdapterConfig, env?: Partial<EnvironmentOptions>, base?: Partial<AdapterConfig>): AdapterConfig {
@@ -43,7 +48,7 @@ export class ConfigComposer implements IConfigComposer {
   public merge(env?: Partial<EnvironmentOptions>, base?: Partial<AdapterConfig>): AdapterConfig {
     return {
       url: this.resolveProperties(env?.TMS_URL, base?.url),
-      projectId: this.resolveProperties( env?.TMS_PROJECT_ID, base?.projectId),
+      projectId: this.resolveProperties(env?.TMS_PROJECT_ID, base?.projectId),
       testRunId: this.resolveProperties(env?.TMS_TEST_RUN_ID, base?.testRunId),
       testRunName: this.resolveProperties(env?.TMS_TEST_RUN_NAME, base?.testRunName) == "" ? undefined : this.resolveProperties(env?.TMS_TEST_RUN_NAME, base?.testRunName),
       privateToken: this.resolveProperties(env?.TMS_PRIVATE_TOKEN, base?.privateToken),
@@ -57,7 +62,7 @@ export class ConfigComposer implements IConfigComposer {
   public mergeEnv(dotEnv?: Partial<EnvironmentOptions>, processEnv?: Partial<EnvironmentOptions>): Partial<EnvironmentOptions> {
     return {
       TMS_URL: this.resolveProperties(dotEnv?.TMS_URL, processEnv?.TMS_URL),
-      TMS_PROJECT_ID: this.resolveProperties( dotEnv?.TMS_PROJECT_ID, processEnv?.TMS_PROJECT_ID),
+      TMS_PROJECT_ID: this.resolveProperties(dotEnv?.TMS_PROJECT_ID, processEnv?.TMS_PROJECT_ID),
       TMS_TEST_RUN_ID: this.resolveProperties(dotEnv?.TMS_TEST_RUN_ID, processEnv?.TMS_TEST_RUN_ID),
       TMS_TEST_RUN_NAME: this.resolveProperties(dotEnv?.TMS_TEST_RUN_NAME, processEnv?.TMS_TEST_RUN_NAME),
       TMS_PRIVATE_TOKEN: this.resolveProperties(dotEnv?.TMS_PRIVATE_TOKEN, processEnv?.TMS_PRIVATE_TOKEN),
@@ -68,30 +73,59 @@ export class ConfigComposer implements IConfigComposer {
     };
   }
 
-  private resolveAllProperties(file?: string, env?: string, base?: string) : string {
+  private resolveAllProperties(file?: string, env?: string, base?: string): string {
     if (base && base.trim()) {
       return base;
-    }
-    else if (env && env.trim()) {
+    } else if (env && env.trim()) {
       return env;
-    }
-    else if (file && file.trim()) {
+    } else if (file && file.trim()) {
       return file;
-    }
-    else {
+    } else {
       return "";
     }
   }
 
-  private resolveProperties(env?: string, base?: string) : string {
+  private resolveProperties(env?: string, base?: string): string {
     if (base && base.trim()) {
       return base;
-    }
-    else if (env && env.trim()) {
+    } else if (env && env.trim()) {
       return env;
-    }
-    else {
+    } else {
       return "";
+    }
+  }
+
+  private validateConfig(config: AdapterConfig) {
+    try {
+      new URL(config.url);
+    } catch (err) {
+      console.error(`Url is invalid`);
+    }
+
+    if (!config.privateToken) {
+      console.error(`Private Token is invalid`);
+    }
+
+    if (config.projectId.match('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$') === null) {
+      console.error(`Project ID is invalid`);
+    }
+
+    if (config.configurationId.match('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$') === null) {
+      console.error(`Configuration ID is invalid`);
+    }
+
+    if (config.adapterMode == 2) {
+      if (config.testRunId.match('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$') !== null) {
+        console.error(`Adapter works in mode 2. Config should not contains test run id.`);
+      }
+    } else if (config.adapterMode == 1) {
+      if (config.testRunId.match('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$') === null) {
+        console.error(`Adapter works in mode 1. Config should contains valid test run id.`);
+      }
+    } else {
+      if (config.testRunId.match('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$') === null) {
+        console.error(`Adapter works in mode 0. Config should contains valid test run id.`);
+      }
     }
   }
 }
@@ -129,5 +163,5 @@ function stringToAdapterMode(str: string): AdapterMode | undefined {
 }
 
 function stringToBoolean(str: string): boolean {
-  return (str?.toLowerCase() === "true") ? true : false;
+  return (str?.toLowerCase() === "true");
 }
