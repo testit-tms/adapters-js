@@ -1,6 +1,6 @@
 {
   "name": "testit-adapter-jest",
-  "version": "2.1.6",
+  "version": "2.1.7",
   "description": "Jest adapter for Test IT",
   "main": "dist/testitEnvironment.js",
   "scripts": {
