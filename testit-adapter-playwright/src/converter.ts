@@ -32,6 +32,7 @@ export class Converter {
         links: autotestData.links,
         namespace: autotestData.namespace,
         classname: autotestData.classname,
+        workItemIds: autotestData.workItemIds,
       };
     }
 

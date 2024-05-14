@@ -62,14 +62,14 @@ export class AutotestsService extends BaseService implements IAutotestService {
     isPassed ? await this.loadPassedAutotest(autotest) : await this.loadFailedAutotest(autotest);
   }
 
-  public async linkToWorkItems(externalId: string, workItemsIds: Array<string>) {
+  public async linkToWorkItems(externalId: string, workItemIds: Array<string>) {
     const internalId = await this.getAutotestByExternalId(externalId).then((test) => test?.id);
 
     if (internalId === undefined) {
       throw new Error(`Autotest with external id ${externalId} not found`);
     }
 
-    const promises = workItemsIds.map((workItemId) =>
+    const promises = workItemIds.map((workItemId) =>
       this._client.linkAutoTestToWorkItem(internalId, { id: workItemId })
     );
 

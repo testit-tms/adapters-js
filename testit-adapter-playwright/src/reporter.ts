@@ -161,6 +161,10 @@ class TmsReporter implements Reporter {
           autotestData.params = metadata.params;
         }
 
+        if (metadata.workItemIds) {
+          autotestData.workItemIds = metadata.workItemIds;
+        }
+
         continue;
       }
 

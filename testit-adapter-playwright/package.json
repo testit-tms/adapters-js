@@ -40,7 +40,7 @@
     "prettier": "^3.0.1"
   },
   "dependencies": {
-    "testit-js-commons": "~2.1.6"
+    "testit-js-commons": "~2.1.7"
   },
   "files": [
     "dist"
