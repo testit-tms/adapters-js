@@ -1,6 +1,6 @@
 {
   "name": "testit-adapter-playwright",
-  "version": "2.1.8",
+  "version": "2.2.0",
   "description": "Playwright adapter for Test IT",
   "license": "Apache-2.0",
   "author": {

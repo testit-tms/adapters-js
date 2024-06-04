@@ -1,15 +1,15 @@
 import {
-  ApiV2AutoTestsSearchPostRequest,
   AutoTestModel,
   AutoTestsApi,
   AutoTestsApiApiKeys,
-  AutotestFilterModel,
-  AutotestsSelectModelIncludes } from "testit-api-client";
+  AutotestFilterModel } from "testit-api-client";
 import { AdapterConfig } from "../../common";
 import { BaseService } from "../base.service";
 import { AutotestGet, AutotestPost, type IAutotestService } from "./autotests.type";
 import { AutotestConverter, type IAutotestConverter } from "./autotests.converter";
 import { handleHttpError } from "./autotests.handler";
+import { AutotestsSelectModel } from "testit-api-client/dist/model/autotestsSelectModel";
+import { SearchAutoTestsQueryIncludesModel } from "testit-api-client/dist/model/searchAutoTestsQueryIncludesModel";
 
 const autotestApiKey = AutoTestsApiApiKeys["Bearer or PrivateToken"];
 
@@ -82,12 +82,12 @@ export class AutotestsService extends BaseService implements IAutotestService {
       projectIds: [this.config.projectId],
       isDeleted: false,
     };
-    const includesModel: AutotestsSelectModelIncludes = {
+    const includesModel: SearchAutoTestsQueryIncludesModel = {
       includeSteps: false,
       includeLinks: false,
       includeLabels: false
     };
-    const requestModel: ApiV2AutoTestsSearchPostRequest = {
+    const requestModel: AutotestsSelectModel = {
         filter: filterModel,
         includes: includesModel
     };
