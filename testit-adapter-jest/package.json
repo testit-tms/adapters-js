@@ -16,7 +16,7 @@
   "license": "ISC",
   "dependencies": {
     "debug": "^4.3.4",
-    "testit-js-commons": "~2.1.8"
+    "testit-js-commons": ">=2.1.8"
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",
