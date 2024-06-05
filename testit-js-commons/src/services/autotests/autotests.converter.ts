@@ -1,4 +1,4 @@
-import { AutoTestModelV2GetModel, AutoTestPostModel, CreateAutoTestRequest } from "testit-api-client";
+import { AutoTestModelV2GetModel, AutoTestPostModel } from "testit-api-client";
 import { BaseConverter, AdapterConfig } from "../../common";
 import { AutotestGet, AutotestPost } from "./autotests.type";
 
@@ -12,7 +12,7 @@ export class AutotestConverter extends BaseConverter implements IAutotestConvert
     super(config);
   }
 
-  public toOriginAutotest(autotest: AutotestPost): CreateAutoTestRequest {
+  public toOriginAutotest(autotest: AutotestPost): AutoTestPostModel {
     return {
       ...autotest,
       projectId: this.config.projectId,
