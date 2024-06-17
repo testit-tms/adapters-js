@@ -1,4 +1,5 @@
 import { reporters, Runner } from "mocha";
+import deasyncPromise from 'deasync-promise';
 import {
   Additions,
   Attachment,
@@ -16,9 +17,9 @@ import {
 } from "testit-js-commons";
 import { ReporterOptions, Context, Test, Hook } from "./types";
 import { ITestStep, TestStep } from "./step";
-import { extractHooks } from "./utils";
+import { extractHooks, resolveParallelModeSetupFile } from "./utils";
 
-const Reporter = reporters.List;
+const Reporter = reporters.Base;
 const Events = Runner.constants;
 
 const emptyTest = (): AutotestResult => ({
@@ -42,7 +43,7 @@ const StateConstants = {
   STATE_PENDING: 'pending',
 }
 
-module.exports = class extends Reporter {
+export class TmsReporter extends Reporter {
   private readonly strategy: IStrategy;
   private readonly additions: IAdditions;
 
@@ -55,7 +56,7 @@ module.exports = class extends Reporter {
   private currentTest: AutotestResult = emptyTest();
   private currentStep: Step = emptyStep();
 
-  constructor(runner: Runner, options?: ReporterOptions) {
+  constructor(runner: Runner, options: ReporterOptions) {
     super(runner, options);
 
     const config = new ConfigComposer().compose(options?.tmsOptions);
@@ -64,6 +65,14 @@ module.exports = class extends Reporter {
     this.strategy = StrategyFactory.create(client, config);
     this.additions = new Additions(client);
 
+    if (options.parallel) {
+      options.require = [...(options.require ?? []), resolveParallelModeSetupFile()];
+    } else {
+      this.applyListeners();
+    }
+  }
+
+  private applyListeners = () => {
     this.runner.on(Events.EVENT_RUN_BEGIN, () => this.onStartRun());
     this.runner.on(Events.EVENT_RUN_END, () => this.onEndRun());
 
@@ -72,13 +81,17 @@ module.exports = class extends Reporter {
 
     this.runner.on(Events.EVENT_TEST_BEGIN, () => this.onStartTest());
     this.runner.on(Events.EVENT_TEST_END, (test) => this.onEndTest(test));
-  }
+  };
 
-  onStartRun = async () => {
+  onStartRun = () => {
     this.strategy.setup();
   };
 
-  onEndRun = async () => {
+  onEndRun = () => {
+    deasyncPromise(this.teardown());
+  };
+
+  private async teardown(): Promise<void> {
     await Promise.all(this.attachmentsQueue).catch((err) => {
       console.log("Error loading attachments. \n", err.body);
     });
@@ -90,7 +103,7 @@ module.exports = class extends Reporter {
     });
 
     await this.strategy.teardown();
-  };
+  }
 
   clearContext(ctx: Context) {
     ctx.externalId = undefined;

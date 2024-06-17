@@ -1,6 +1,7 @@
 import { Step } from "testit-js-commons";
 import { Suite } from "mocha";
 import { Hook } from "./types";
+import { extname, join } from "path";
 
 export function hookToStep(hook: Hook): Step {
   return {
@@ -29,3 +30,5 @@ export function extractHooks(suite?: Suite): {
     beforeEach: [...hooks.beforeEach, ..._beforeEach.map(hookToStep)],
   };
 }
+
+export const resolveParallelModeSetupFile = () => join(__dirname, `setupTmsMochaParallel${extname(__filename)}`);
