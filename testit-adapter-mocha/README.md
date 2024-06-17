@@ -21,7 +21,7 @@ module.exports = {
 
 ## Configuration
 
-| Description                                                                                                                                                | Property                   | Environment variable              |
+| Description                                                                                                                                                | File property              | Environment variable              |
 |------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------|-----------------------------------|
 | Location of the TMS instance                                                                                                                               | url                        | TMS_URL                           |
 | API secret key <br/>[How to getting API secret key?](https://github.com/testit-tms/.github/tree/main/configuration#privatetoken)                           | privateToken               | TMS_PRIVATE_TOKEN                 |
