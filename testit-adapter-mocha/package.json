@@ -1,8 +1,8 @@
 {
   "name": "testit-adapter-mocha",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Mocha adapter for Test IT",
-  "main": "lib/reporter.js",
+  "main": "lib/index.js",
   "types": "lib/types.d.ts",
   "scripts": {
     "prebuild": "npm --prefix ../testit-js-commons run build && npm link ../testit-js-commons",
@@ -15,6 +15,7 @@
   },
   "license": "Apache-2.0",
   "devDependencies": {
+    "@types/deasync-promise": "^1.0.2",
     "@types/mocha": "^10.0.1",
     "@types/node": "^20.2.4",
     "@types/request": "^2.48.8",
@@ -25,7 +26,8 @@
   },
   "dependencies": {
     "mocha": "^10.2.0",
-    "testit-js-commons": "~2.2.0"
+    "deasync-promise": "^1.0.1",
+    "testit-js-commons": "~2.2.1"
   },
   "files": [
     "lib"

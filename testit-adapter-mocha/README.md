@@ -89,6 +89,26 @@ TMS_CONFIG_FILE=pathToAnotherConfigFile; #optional
 TMS_AUTOMATIC_CREATION_TEST_CASES=false; # or true, optional
 ```
 
+#### Parallel run
+To create and complete TestRun you can use the Test IT CLI (use adapterMode 1 for parallel run):
+
+```
+$ export TMS_TOKEN=<YOUR_TOKEN>
+$ testit testrun create
+  --url https://tms.testit.software \
+  --project-id 5236eb3f-7c05-46f9-a609-dc0278896464 \
+  --testrun-name "New test run" \
+  --output tmp/output.txt
+
+$ export TMS_TEST_RUN_ID=$(cat tmp/output.txt)
+
+$ npx mocha --parallel
+
+$ testit testrun complete
+  --url https://tms.testit.software \
+  --testrun-id $(cat tmp/output.txt)
+```
+
 ## Usage
 
 Methods and properties can be used to specify information about autotest.

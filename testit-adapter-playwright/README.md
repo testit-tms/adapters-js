@@ -56,7 +56,7 @@ Create .env config or file config with default name tms.config.json in the root 
 ```
 
 #### Parallel run
-To create and complete TestRun you can use the Test IT CLI:
+To create and complete TestRun you can use the Test IT CLI (use adapterMode 1 for parallel run):
 
 ```
 $ export TMS_TOKEN=<YOUR_TOKEN>
