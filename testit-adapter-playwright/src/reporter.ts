@@ -154,7 +154,7 @@ class TmsReporter implements Reporter {
         }
 
         if (metadata.addMessage) {
-          autotestData.classname = metadata.addMessage;
+          autotestData.addMessage = metadata.addMessage;
         }
 
         if (metadata.params) {
