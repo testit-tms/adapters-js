@@ -137,9 +137,9 @@ test.meta({
   workItemIds: ['123', '321'],
   labels: ['label1', 'label2'],
 })('test', async t => {
-  testit.addMessage(t, "Message");
-  testit.addAttachments(t, paths);
-  testit.addLinks(t, links);
+  adapter.addMessage(t, "Message");
+  adapter.addAttachments(t, paths);
+  adapter.addLinks(t, links);
 });
 ```
 
