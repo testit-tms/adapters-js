@@ -38,7 +38,8 @@ jobs:
             testit-adapter-cucumber,
             testit-adapter-jest,
             testit-adapter-mocha,
-            testit-adapter-playwright
+            testit-adapter-playwright,
+            testcafe-reporter-testit
         ]
     steps:
       - name: Get repository code [${{ matrix.package }}]
