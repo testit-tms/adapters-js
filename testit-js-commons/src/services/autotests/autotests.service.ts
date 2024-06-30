@@ -2,7 +2,8 @@ import {
   AutoTestModel,
   AutoTestsApi,
   AutoTestsApiApiKeys,
-  AutotestFilterModel } from "testit-api-client";
+  AutotestFilterModel, 
+  WorkItemIdentifierModel} from "testit-api-client";
 import { AdapterConfig } from "../../common";
 import { BaseService } from "../base.service";
 import { AutotestGet, AutotestPost, type IAutotestService } from "./autotests.type";
@@ -16,6 +17,8 @@ const autotestApiKey = AutoTestsApiApiKeys["Bearer or PrivateToken"];
 export class AutotestsService extends BaseService implements IAutotestService {
   protected _client: AutoTestsApi;
   protected _converter: IAutotestConverter;
+  private MAX_TRIES: number = 10;
+  private WAITING_TIME: number = 100;
 
   constructor(protected readonly config: AdapterConfig) {
     super(config);
@@ -62,18 +65,47 @@ export class AutotestsService extends BaseService implements IAutotestService {
     isPassed ? await this.loadPassedAutotest(autotest) : await this.loadFailedAutotest(autotest);
   }
 
-  public async linkToWorkItems(externalId: string, workItemIds: Array<string>) {
-    const internalId = await this.getAutotestByExternalId(externalId).then((test) => test?.id);
-
-    if (internalId === undefined) {
-      throw new Error(`Autotest with external id ${externalId} not found`);
-    }
-
-    const promises = workItemIds.map((workItemId) =>
-      this._client.linkAutoTestToWorkItem(internalId, { id: workItemId })
-    );
+  public async linkToWorkItems(internalId: string, workItemIds: Array<string>) {
+    const promises = workItemIds.map(async (workItemId) => {
+      for (var attempts = 0; attempts < this.MAX_TRIES; attempts++) {
+        try {
+          await this._client.linkAutoTestToWorkItem(internalId, { id: workItemId });
+          console.log(`Link autotest ${internalId} to workitem ${workItemId} is successfully`);
+  
+          return;
+        } catch (e) {
+          console.log(`Cannot link autotest ${internalId} to work item ${workItemId}: ${e}`);
+  
+          await new Promise(f => setTimeout(f, this.WAITING_TIME));
+        }
+      }
+    });
 
     await Promise.all(promises).catch((err) => handleHttpError(err, "Failed link work item"));
+  }
+
+  public async unlinkToWorkItem(internalId: string, workItemId: string): Promise<void> {
+    for (var attempts = 0; attempts < this.MAX_TRIES; attempts++) {
+      try {
+        await this._client.deleteAutoTestLinkFromWorkItem(internalId, workItemId);
+        console.log(`Unlink autotest ${internalId} from workitem ${workItemId} is successfully`);
+
+        return;
+      } catch (e) {
+        console.log(`Cannot unlink autotest ${internalId} to work item ${workItemId}: ${e}`);
+
+        await new Promise(f => setTimeout(f, this.WAITING_TIME));
+      }
+    }
+  }
+
+  public async getWorkItemsLinkedToAutoTest(internalId: string): Promise<Array<WorkItemIdentifierModel>> {
+    return await this._client.getWorkItemsLinkedToAutoTest(internalId).then((res) => res.body)
+    .catch((e) => {
+      console.log(`Cannot get linked workitems to autotest ${internalId}: ${e}`);
+
+      return [];
+    });
   }
 
   public async getAutotestByExternalId(externalId: string): Promise<AutotestGet | null> {
