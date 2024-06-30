@@ -21,25 +21,17 @@ module.exports = {
 
 ## Configuration
 
-| Description                                                                                                                                                | File property              | Environment variable              |
-|------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------|-----------------------------------|
-| Location of the TMS instance                                                                                                                               | url                        | TMS_URL                           |
-| API secret key <br/>[How to getting API secret key?](https://github.com/testit-tms/.github/tree/main/configuration#privatetoken)                           | privateToken               | TMS_PRIVATE_TOKEN                 |
-| ID of project in TMS instance <br/>[How to getting project ID?](https://github.com/testit-tms/.github/tree/main/configuration#projectid)                   | projectId                  | TMS_PROJECT_ID                    |
-| ID of configuration in TMS instance <br/>[How to getting configuration ID?](https://github.com/testit-tms/.github/tree/main/configuration#configurationid) | configurationId            | TMS_CONFIGURATION_ID              |
-| ID of the created test run in TMS instance.<br/>It's necessary for **adapterMode** 0 or 1                                                                  | testRunId                  | TMS_TEST_RUN_ID                   |
-| Parameter for specifying the name of test run in TMS instance (**It's optional**). <br/>If it is not provided, it is created automatically                 | testRunName                | TMS_TEST_RUN_NAME                 |
-| Adapter mode *                                                                                                                                             | adapterMode                | TMS_ADAPTER_MODE                  |
-| Mode of automatic creation test cases ** (**It's optional**).                                                                                              | automaticCreationTestCases | TMS_AUTOMATIC_CREATION_TEST_CASES |
-
-*The adapter supports following modes:
-* 0 - in this mode, the adapter filters tests by external id and sends the results to the test run. **Default value**.
-* 1 - in this mode, the adapter sends all results to the test run without filtering
-* 2 - in this mode, the adapter creates a new test run and sends results to the new test run
-
-**The adapter supports following modes:
-* true - in this mode, the adapter will create a test case linked to the created autotest (not to the updated autotest)
-* false - in this mode, the adapter will not create a test case. **Default value**.
+| Description                                                                                                                                                                                                                                                                                                                                                                            | File property                     | Environment variable                       |
+|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------|--------------------------------------------|
+| Location of the TMS instance                                                                                                                                                                                                                                                                                                                                                           | url                               | TMS_URL                                    |
+| API secret key <br/>[How to getting API secret key?](https://github.com/testit-tms/.github/tree/main/configuration#privatetoken)                                                                                                                                                                                                                                                       | privateToken                      | TMS_PRIVATE_TOKEN                          |
+| ID of project in TMS instance <br/>[How to getting project ID?](https://github.com/testit-tms/.github/tree/main/configuration#projectid)                                                                                                                                                                                                                                               | projectId                         | TMS_PROJECT_ID                             |
+| ID of configuration in TMS instance <br/>[How to getting configuration ID?](https://github.com/testit-tms/.github/tree/main/configuration#configurationid)                                                                                                                                                                                                                             | configurationId                   | TMS_CONFIGURATION_ID                       |
+| ID of the created test run in TMS instance.<br/>It's necessary for **adapterMode** 0 or 1                                                                                                                                                                                                                                                                                              | testRunId                         | TMS_TEST_RUN_ID                            |
+| Parameter for specifying the name of test run in TMS instance (**It's optional**). <br/>If it is not provided, it is created automatically                                                                                                                                                                                                                                             | testRunName                       | TMS_TEST_RUN_NAME                          |
+| Adapter mode. Default value - 0. The adapter supports following modes:<br/>0 - in this mode, the adapter filters tests by test run ID and configuration ID, and sends the results to the test run<br/>1 - in this mode, the adapter sends all results to the test run without filtering<br/>2 - in this mode, the adapter creates a new test run and sends results to the new test run | adapterMode                       | TMS_ADAPTER_MODE                           |
+| Mode of automatic creation test cases (**It's optional**). Default value - false. The adapter supports following modes:<br/>true - in this mode, the adapter will create a test case linked to the created autotest (not to the updated autotest)<br/>false - in this mode, the adapter will not create a test case                                                                    | automaticCreationTestCases        | TMS_AUTOMATIC_CREATION_TEST_CASES          |
+| Mode of automatic updation links to test cases (**It's optional**). Default value - false. The adapter supports following modes:<br/>true - in this mode, the adapter will update links to test cases<br/>false - in this mode, the adapter will not update link to test cases                                                                                                         | automaticUpdationLinksToTestCases | TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES |
 
 ### File
 
@@ -54,6 +46,7 @@ module.exports = {
   "testRunId": "TEST_RUN_ID",
   "adapterMode": 0,
   "automaticCreationTestCases": false
+  "automaticUpdationLinksToTestCases": false
 }
 ```
 
@@ -69,7 +62,8 @@ module.exports = {
     configurationId: 'CONFIGURATION_ID',
     testRunId: 'TEST_RUN_ID',
     adapterMode: ADAPTER_MODE,
-    automaticCreationTestCases: AUTOMATIC_CREATION_TEST_CASES
+    automaticCreationTestCases: AUTOMATIC_CREATION_TEST_CASES,
+    automaticUpdationLinksToTestCases: AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES,
   },
   // ... other mocha options
 };
@@ -87,6 +81,7 @@ TMS_TEST_RUN_NAME=TestRunName; # optional
 TMS_ADAPTER_MODE=0; # or 1, or 2
 TMS_CONFIG_FILE=pathToAnotherConfigFile; #optional
 TMS_AUTOMATIC_CREATION_TEST_CASES=false; # or true, optional
+TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES=false; # or true, optional
 ```
 
 #### Parallel run

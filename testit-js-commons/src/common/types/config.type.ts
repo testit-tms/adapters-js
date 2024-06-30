@@ -10,6 +10,7 @@ export interface CliOptions {
   tmsAdapterMode: AdapterMode;
   tmsConfigFile: string;
   tmsAutomaticCreationTestCases: boolean;
+  tmsAutomaticUpdationLinksToTestCases: boolean;
 }
 
 export interface EnvironmentOptions {
@@ -22,6 +23,7 @@ export interface EnvironmentOptions {
   TMS_ADAPTER_MODE: AdapterMode;
   TMS_CONFIG_FILE: string;
   TMS_AUTOMATIC_CREATION_TEST_CASES: boolean;
+  TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES: boolean;
   TMS_CERT_VALIDATION: boolean;
 }
 
@@ -35,6 +37,7 @@ export interface ProcessEnvOptions {
   TMS_ADAPTER_MODE?: AdapterMode;
   TMS_CONFIG_FILE?: string;
   TMS_AUTOMATIC_CREATION_TEST_CASES?: boolean;
+  TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES?: boolean;
   TMS_CERT_VALIDATION?: boolean;
 }
 
@@ -47,5 +50,6 @@ export interface AdapterConfig {
   testRunName?: string;
   adapterMode?: AdapterMode;
   automaticCreationTestCases?: boolean;
+  automaticUpdationLinksToTestCases?: boolean;
   certValidation?: boolean;
 }
