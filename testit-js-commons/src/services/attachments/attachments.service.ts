@@ -15,9 +15,9 @@ export class AttachmentsService extends BaseService implements IAttachmentsServi
     this._client.setApiKey(apiKey, `PrivateToken ${config.privateToken}`);
   }
 
-  public async uploadTextAttachment(content: string, filename?: string): Promise<Attachment[]> {
+  public async uploadTextAttachment(content: string | Buffer, filename?: string): Promise<Attachment[]> {
     const request: RequestDetailedFile = {
-      value: Buffer.from(content, "utf-8"),
+      value: typeof content === "string" ? Buffer.from(content, "utf-8") : content,
       options: { filename: filename ?? Utils.generateFileName() },
     };
 

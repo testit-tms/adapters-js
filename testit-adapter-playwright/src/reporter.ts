@@ -175,7 +175,7 @@ class TmsReporter implements Reporter {
           this.stepCache.delete(step);
         }
 
-        await this.additions.addAttachments(attachment.body.toString(), attachment.name.replace(stepAttachRegexp, "")).then((ids) => {
+        await this.additions.addAttachments(attachment.body, attachment.name.replace(stepAttachRegexp, "")).then((ids) => {
           if (step?.parent) {
             this.attachmentSteps.set(ids[0], step.parent);
             return;

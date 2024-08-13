@@ -10,8 +10,8 @@ export class Additions implements IAdditions {
   constructor(private client: IClient) {}
 
   async addAttachments(paths: string[]): Promise<Attachment[]>;
-  async addAttachments(content: string, fileName?: string): Promise<Attachment[]>;
-  async addAttachments(pathsOrContent: string[] | string, fileName?: string): Promise<Attachment[]> {
+  async addAttachments(content: string | Buffer, fileName?: string): Promise<Attachment[]>;
+  async addAttachments(pathsOrContent: string[] | string | Buffer, fileName?: string): Promise<Attachment[]> {
     const ids = Array.isArray(pathsOrContent)
       ? await this.client.attachments.uploadAttachments(pathsOrContent)
       : await this.client.attachments.uploadTextAttachment(pathsOrContent, fileName);
