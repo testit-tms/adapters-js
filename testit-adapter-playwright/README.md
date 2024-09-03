@@ -77,6 +77,26 @@ $ testit testrun complete
   --testrun-id $(cat tmp/output.txt) 
 ```
 
+#### Launch using GitLab repository
+To run your Playwright test's from GitLab to TestIT or in reverse order using "testit-adapter-playwright", you can take this .gitlab-ci.yml file example:
+
+```
+image: node:latest
+
+stages:
+  - run
+
+first-job:
+  stage: run
+  script:
+    - npm install
+    - npx playwright test
+  artifacts:
+    paths:
+      - node_modules/
+```
+
+
 ### Methods
 
 Methods can be used to specify information about autotest.
