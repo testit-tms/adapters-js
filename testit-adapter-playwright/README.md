@@ -159,6 +159,23 @@ for (const name of people) {
 }
 ```
 
+#### Content types
+```
+  TEXT = "text/plain",
+  XML = "application/xml",
+  HTML = "text/html",
+  CSV = "text/csv",
+  TSV = "text/tab-separated-values",
+  CSS = "text/css",
+  URI = "text/uri-list",
+  SVG = "image/svg+xml",
+  PNG = "image/png",
+  JSON = "application/json",
+  ZIP = "application/zip",
+  WEBM = "video/webm",
+  JPEG = "image/jpeg",
+  MP4 = "video/mp4",
+```
 
 # Contributing
 
