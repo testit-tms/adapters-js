@@ -47,7 +47,6 @@ export class Converter {
         duration: result.duration,
         parameters: autotestData.params,
         attachments: autotestData.addAttachments,
-        message: autotestData.addMessage,
       };
 
       if (result.error) {
@@ -55,6 +54,10 @@ export class Converter {
 
         autotestResult.message = status.message;
         autotestResult.traces = status.trace;
+      }
+
+      if (autotestData.addMessage) {
+        autotestResult.message = autotestData.addMessage
       }
 
       return autotestResult;
