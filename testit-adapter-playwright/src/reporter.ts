@@ -6,8 +6,8 @@ import {
   TestResult,
   TestStep,
 } from "@playwright/test/reporter";
-import { ConfigComposer, Client, StrategyFactory, IStrategy, Utils, Additions, Attachment } from "testit-js-commons";
-import { Converter } from "./converter";
+import { ConfigComposer, Client, StrategyFactory, IStrategy, Utils, Additions, Attachment, Step } from "testit-js-commons";
+import { Converter, Status } from "./converter";
 import { MetadataMessage } from "./labels";
 
 const stepAttachRegexp = /^stepattach_(\w{8}-\w{4}-\w{4}-\w{4}-\w{12})_/i;
@@ -60,6 +60,9 @@ class TmsReporter implements Reporter {
       return;
     }
     if (step.category !== "test.step") {
+      return;
+    }
+    if (step.parent !== undefined) {
       return;
     }
     if (this.stepCache.get(step)) {
@@ -194,21 +197,27 @@ class TmsReporter implements Reporter {
   }
 
   private async loadTest(test: TestCase, result: TestResult): Promise<void> {
-    const autotest = Converter.convertTestCaseToAutotestPost(await this.getAutotestData(test, result));
+    const autotestData = await this.getAutotestData(test, result);
+    const autotest = Converter.convertTestCaseToAutotestPost(autotestData);
     const steps = [...this.stepCache.keys()].filter((step: TestStep) => this.stepCache.get(step) === test);
+    const stepResults = Converter.convertTestStepsToSteps(steps, this.attachmentSteps);
+
+    if (stepResults.find((step: Step) => step.outcome === Status.FAILED)) {
+      result.status = "failed";
+    }
 
     autotest.steps = Converter.convertTestStepsToShortSteps(steps);
 
     await this.strategy.loadAutotest(
       autotest,
-      Converter.convertStatus(result.status, test.expectedStatus) == "Passed");
+      Converter.convertStatus(result.status, test.expectedStatus) == Status.PASSED);
 
     const autotestResult = Converter.convertAutotestPostToAutotestResult(
-      await this.getAutotestData(test, result),
+      autotestData,
       test,
       result);
 
-    autotestResult.stepResults = Converter.convertTestStepsToSteps(steps, this.attachmentSteps);
+    autotestResult.stepResults = stepResults;
 
     await this.strategy.loadTestRun([autotestResult]);
   }
