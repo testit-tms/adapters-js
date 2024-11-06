@@ -9,6 +9,7 @@ import {
 import { ConfigComposer, Client, StrategyFactory, IStrategy, Utils, Additions, Attachment, Step } from "testit-js-commons";
 import { Converter, Status } from "./converter";
 import { MetadataMessage } from "./labels";
+import { isAllStepsWithPassedOutcome } from "./utils";
 
 const stepAttachRegexp = /^stepattach_(\w{8}-\w{4}-\w{4}-\w{4}-\w{12})_/i;
 
@@ -62,7 +63,7 @@ class TmsReporter implements Reporter {
     if (step.category !== "test.step") {
       return;
     }
-    if (step.parent !== undefined) {
+    if (step.parent) {
       return;
     }
     if (this.stepCache.get(step)) {
@@ -115,10 +116,14 @@ class TmsReporter implements Reporter {
     for (const attachment of result.attachments) {
       if (!attachment.body) {
         if (attachment.path && attachment.name !== "screenshot") {
-          await this.additions.addAttachments(Utils.readBuffer(attachment.path), attachment.name).then((ids) => {
-            autotestData.addAttachments?.push(...ids);
-          });
+          const content = Utils.readBuffer(attachment.path);
+
+          await this.additions.addAttachments(content, attachment.name)
+            .then((ids) => {
+              autotestData.addAttachments?.push(...ids);
+            });
         }
+        
         continue;
       }
   
@@ -202,7 +207,7 @@ class TmsReporter implements Reporter {
     const steps = [...this.stepCache.keys()].filter((step: TestStep) => this.stepCache.get(step) === test);
     const stepResults = Converter.convertTestStepsToSteps(steps, this.attachmentSteps);
 
-    if (stepResults.find((step: Step) => step.outcome === Status.FAILED)) {
+    if (!isAllStepsWithPassedOutcome(stepResults)) {
       result.status = "failed";
     }
 
