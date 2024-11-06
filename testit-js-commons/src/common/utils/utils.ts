@@ -51,4 +51,8 @@ export namespace Utils {
   export function readStream(path: string): fs.ReadStream {
     return fs.createReadStream(path);
   }
+
+  export function readBuffer(path: string): Buffer {
+    return fs.readFileSync(path);
+  }
 }

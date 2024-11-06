@@ -111,6 +111,11 @@ class TmsReporter implements Reporter {
 
     for (const attachment of result.attachments) {
       if (!attachment.body) {
+        if (attachment.path && attachment.name !== "screenshot") {
+          await this.additions.addAttachments(Utils.readBuffer(attachment.path), attachment.name).then((ids) => {
+            autotestData.addAttachments?.push(...ids);
+          });
+        }
         continue;
       }
   
