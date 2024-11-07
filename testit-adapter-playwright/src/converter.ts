@@ -13,13 +13,19 @@ import {
     Attachment
 } from "testit-js-commons";
 import { MetadataMessage } from "./labels";
+import { getStatusDetails, isAllStepsWithPassedOutcome, isStep } from "./utils";
 
 
-enum Status {
+export enum Status {
   PASSED = "Passed",
   FAILED = "Failed",
   SKIPPED = "Skipped",
 }
+
+export type StatusDetails = {
+  message?: string;
+  trace?: string;
+};
 
 export class Converter {
     static convertTestCaseToAutotestPost(autotestData: MetadataMessage): AutotestPost {
@@ -47,7 +53,6 @@ export class Converter {
         duration: result.duration,
         parameters: autotestData.params,
         attachments: autotestData.addAttachments,
-        message: autotestData.addMessage,
       };
 
       if (result.error) {
@@ -57,29 +62,39 @@ export class Converter {
         autotestResult.traces = status.trace;
       }
 
+      if (autotestData.addMessage) {
+        autotestResult.message = autotestData.addMessage
+      }
+
       return autotestResult;
     }
 
     static convertTestStepsToShortSteps(steps: TestStep[]): ShortStep[] {
-      return steps.map(step => {
-        return this.convertTestStepToShortStep(step);
-      });
+      return steps
+        .filter((step: TestStep) => isStep(step))
+        .map(step => this.convertTestStepToShortStep(step));
     }
 
     static convertTestStepToShortStep(step: TestStep): ShortStep {
       return {
         title: step.title,
+        steps: step.steps.length !== 0 ? this.convertTestStepsToShortSteps(step.steps) : [],
       };
     }
 
     static convertTestStepsToSteps(steps: TestStep[], attachmentsMap: Map<Attachment, TestStep>): Step[] {
-      return steps.map(step => this.convertTestStepToStep(step, attachmentsMap));
+      return steps
+        .filter((step: TestStep) => isStep(step))
+        .map(step => this.convertTestStepToStep(step, attachmentsMap));
     }
 
     static convertTestStepToStep(step: TestStep, attachmentsMap: Map<Attachment, TestStep>): Step {
+      const steps = step.steps.length !== 0 ? this.convertTestStepsToSteps(step.steps, attachmentsMap) : [];
+
       return {
         title: step.title,
-        outcome: step.error ? Status.FAILED : Status.PASSED,
+        outcome: step.error || !isAllStepsWithPassedOutcome(steps) ? Status.FAILED : Status.PASSED,
+        steps: steps,
         attachments: [...attachmentsMap.keys()].filter((attachmentId: Attachment) => attachmentsMap.get(attachmentId) === step),
       };
     }
@@ -94,29 +109,3 @@ export class Converter {
       return Status.FAILED;
     };
 }
-
-export type StatusDetails = {
-  message?: string;
-  trace?: string;
-};
-
-const getStatusDetails = (error: TestError): StatusDetails => {
-  const message = error.message && stripAscii(error.message);
-  let trace = error.stack && stripAscii(error.stack);
-  if (trace && message && trace.startsWith(`Error: ${message}`)) {
-    trace = trace.substr(message.length + "Error: ".length);
-  }
-  return {
-    message: message,
-    trace: trace,
-  };
-};
-
-export const stripAscii = (str: string): string => {
-  return str.replace(asciiRegex, "");
-};
-
-const asciiRegex = new RegExp(
-  "[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:[a-zA-Z\\d]*(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-ntqry=><~]))",
-  "g",
-);

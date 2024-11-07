@@ -1,6 +1,6 @@
 {
   "name": "testit-adapter-jest",
-  "version": "2.2.4",
+  "version": "2.2.5",
   "description": "Jest adapter for Test IT",
   "main": "dist/testitEnvironment.js",
   "scripts": {
@@ -16,7 +16,7 @@
   "license": "ISC",
   "dependencies": {
     "debug": "^4.3.4",
-    "testit-js-commons": "~2.2.4"
+    "testit-js-commons": "~2.2.5"
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",

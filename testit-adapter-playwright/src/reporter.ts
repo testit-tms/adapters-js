@@ -7,10 +7,9 @@ import {
   TestStep,
 } from "@playwright/test/reporter";
 import { ConfigComposer, Client, StrategyFactory, IStrategy, Utils, Additions, Attachment } from "testit-js-commons";
-import { Converter } from "./converter";
+import { Converter, Status } from "./converter";
 import { MetadataMessage } from "./labels";
-
-const stepAttachRegexp = /^stepattach_(\w{8}-\w{4}-\w{4}-\w{4}-\w{12})_/i;
+import { isAllStepsWithPassedOutcome, stepAttachRegexp } from "./utils";
 
 export type ReporterOptions = {
   detail?: boolean;
@@ -27,8 +26,9 @@ class TmsReporter implements Reporter {
   strategy: IStrategy;
   private readonly additions: Additions;
   private testCache = new Array<TestCase>();
-  private stepCache = new Map<TestStep, TestCase>();
-  private attachmentSteps = new Map<Attachment, TestStep>();
+  private stepsMap = new Map<TestStep, TestCase>();
+  private attachmentStepsCache = new Array<TestStep>();
+  private attachmentsMap = new Map<Attachment, TestStep>();
   private globalStartTime = new Date();
   private loadTestPromises = new Array<Promise<void>>();
 
@@ -59,13 +59,20 @@ class TmsReporter implements Reporter {
     if (!this.testCache.includes(test)) {
       return;
     }
+    if (step.title.match(stepAttachRegexp)) {
+      this.attachmentStepsCache.push(step);
+      return;
+    }
     if (step.category !== "test.step") {
       return;
     }
-    if (this.stepCache.get(step)) {
+    if (step.parent) {
       return;
     }
-    this.stepCache.set(step, test);
+    if (this.stepsMap.get(step)) {
+      return;
+    }
+    this.stepsMap.set(step, test);
   }
 
   async onEnd(): Promise<void> {
@@ -111,6 +118,15 @@ class TmsReporter implements Reporter {
 
     for (const attachment of result.attachments) {
       if (!attachment.body) {
+        if (attachment.path && attachment.name !== "screenshot") {
+          const content = Utils.readBuffer(attachment.path);
+
+          await this.additions.addAttachments(content, attachment.name)
+            .then((ids) => {
+              autotestData.addAttachments?.push(...ids);
+            });
+        }
+        
         continue;
       }
   
@@ -169,15 +185,11 @@ class TmsReporter implements Reporter {
       }
 
       if (attachment.name.match(stepAttachRegexp)) {
-        const step = [...this.stepCache.keys()].find((step: TestStep) => step.title === attachment.name);
-
-        if (step) {
-          this.stepCache.delete(step);
-        }
+        const step = this.attachmentStepsCache.find((step: TestStep) => step.title === attachment.name);
 
         await this.additions.addAttachments(attachment.body, attachment.name.replace(stepAttachRegexp, "")).then((ids) => {
           if (step?.parent) {
-            this.attachmentSteps.set(ids[0], step.parent);
+            this.attachmentsMap.set(ids[0], step.parent);
             return;
           }
           autotestData.addAttachments?.push(...ids);
@@ -189,21 +201,27 @@ class TmsReporter implements Reporter {
   }
 
   private async loadTest(test: TestCase, result: TestResult): Promise<void> {
-    const autotest = Converter.convertTestCaseToAutotestPost(await this.getAutotestData(test, result));
-    const steps = [...this.stepCache.keys()].filter((step: TestStep) => this.stepCache.get(step) === test);
+    const autotestData = await this.getAutotestData(test, result);
+    const autotest = Converter.convertTestCaseToAutotestPost(autotestData);
+    const steps = [...this.stepsMap.keys()].filter((step: TestStep) => this.stepsMap.get(step) === test);
+    const stepResults = Converter.convertTestStepsToSteps(steps, this.attachmentsMap);
+
+    if (!isAllStepsWithPassedOutcome(stepResults)) {
+      result.status = "failed";
+    }
 
     autotest.steps = Converter.convertTestStepsToShortSteps(steps);
 
     await this.strategy.loadAutotest(
       autotest,
-      Converter.convertStatus(result.status, test.expectedStatus) == "Passed");
+      Converter.convertStatus(result.status, test.expectedStatus) == Status.PASSED);
 
     const autotestResult = Converter.convertAutotestPostToAutotestResult(
-      await this.getAutotestData(test, result),
+      autotestData,
       test,
       result);
 
-    autotestResult.stepResults = Converter.convertTestStepsToSteps(steps, this.attachmentSteps);
+    autotestResult.stepResults = stepResults;
 
     await this.strategy.loadTestRun([autotestResult]);
   }
