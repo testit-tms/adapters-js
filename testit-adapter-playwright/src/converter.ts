@@ -13,7 +13,7 @@ import {
     Attachment
 } from "testit-js-commons";
 import { MetadataMessage } from "./labels";
-import { getStatusDetails, isAllStepsWithPassedOutcome } from "./utils";
+import { getStatusDetails, isAllStepsWithPassedOutcome, isStep } from "./utils";
 
 
 export enum Status {
@@ -71,7 +71,7 @@ export class Converter {
 
     static convertTestStepsToShortSteps(steps: TestStep[]): ShortStep[] {
       return steps
-        .filter((step: TestStep) => step.category === "test.step")
+        .filter((step: TestStep) => isStep(step))
         .map(step => this.convertTestStepToShortStep(step));
     }
 
@@ -84,7 +84,7 @@ export class Converter {
 
     static convertTestStepsToSteps(steps: TestStep[], attachmentsMap: Map<Attachment, TestStep>): Step[] {
       return steps
-        .filter((step: TestStep) => step.category === "test.step")
+        .filter((step: TestStep) => isStep(step))
         .map(step => this.convertTestStepToStep(step, attachmentsMap));
     }
 
