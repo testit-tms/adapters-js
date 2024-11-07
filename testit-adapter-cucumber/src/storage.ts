@@ -1,4 +1,4 @@
-import { Attachment, AutotestPost, AutotestResult, Link, Outcome, Step } from "testit-js-commons";
+import { Attachment, AutotestPost, AutotestResult, Link, Outcome, Step, Utils } from "testit-js-commons";
 import {
   GherkinDocument,
   Pickle,
@@ -72,7 +72,7 @@ export class Storage implements IStorage {
 
       const testCase = this.testCases.find((testCase) => testCase.pickleId === pickle.id);
 
-      if (testCase !== undefined && tags.externalId !== undefined) {
+      if (testCase !== undefined) {
         const testCaseStarted = this.testCasesStarted.find((testCase) => testCase.id === testCase.id);
         if (testCaseStarted === undefined) {
           throw new Error("TestCaseStarted not found");
@@ -110,7 +110,7 @@ export class Storage implements IStorage {
         links.push(...tags.links);
 
         const result: AutotestResult = {
-          autoTestExternalId: tags.externalId,
+          autoTestExternalId: tags.externalId ?? Utils.getHash(tags.name ?? pickle.name),
           links,
           stepResults: steps,
           outcome: calculateResultOutcome(
