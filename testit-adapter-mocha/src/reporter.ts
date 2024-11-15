@@ -5,7 +5,6 @@ import {
   Attachment,
   AutotestPost,
   AutotestResult,
-  Client,
   ConfigComposer,
   IAdditions,
   Link,
@@ -60,10 +59,9 @@ export class TmsReporter extends Reporter {
     super(runner, options);
 
     const config = new ConfigComposer().compose(options?.tmsOptions);
-    const client = new Client(config);
 
-    this.strategy = StrategyFactory.create(client, config);
-    this.additions = new Additions(client);
+    this.strategy = StrategyFactory.create(config);
+    this.additions = new Additions(config);
 
     if (options.parallel) {
       options.require = [...(options.require ?? []), resolveParallelModeSetupFile()];
