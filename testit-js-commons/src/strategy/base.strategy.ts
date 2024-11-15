@@ -1,12 +1,14 @@
-import { IClient } from "../client";
+import { Client, IClient } from "../client";
 import { AdapterConfig } from "../common";
-import { AutotestPost, AutotestResult } from "../services";
+import { AutotestPost, AutotestResult, TestRunId } from "../services";
 import { IStrategy } from "./strategy.type";
 
 export class BaseStrategy implements IStrategy {
-  testRunId: Promise<string>;
-
-  protected constructor(protected client: IClient, protected config: AdapterConfig) {
+  client: IClient;
+  testRunId: Promise<TestRunId>;
+  
+  protected constructor(protected config: AdapterConfig) {
+    this.client = new Client(config);
     this.testRunId = Promise.resolve(config.testRunId);
   }
 
