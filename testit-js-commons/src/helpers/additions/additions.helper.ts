@@ -1,13 +1,16 @@
-import type { IClient } from "../../client";
-import type { Link, Attachment } from "../../common";
+import { Client, type IClient } from "../../client";
+import type { Link, Attachment, AdapterConfig } from "../../common";
 import type { IAdditions } from "./additions.type";
 
 export class Additions implements IAdditions {
   public links: Link[] = [];
   public attachments: Attachment[] = [];
   public messages: string[] = [];
+  private client: IClient;
 
-  constructor(private client: IClient) {}
+  constructor(config: AdapterConfig) {
+    this.client = new Client(config);
+  }
 
   async addAttachments(paths: string[]): Promise<Attachment[]>;
   async addAttachments(content: string | Buffer, fileName?: string): Promise<Attachment[]>;

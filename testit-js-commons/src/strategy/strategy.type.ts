@@ -1,7 +1,7 @@
-import { AutotestPost, AutotestResult, AutotestResultGet } from "../services";
+import { AutotestPost, AutotestResult, AutotestResultGet, TestRunId } from "../services";
 
 export interface IStrategy {
-  readonly testRunId: Promise<string>;
+  readonly testRunId: Promise<TestRunId>;
   readonly testsInRun?: Promise<AutotestResultGet[] | undefined>;
 
   setup(): Promise<void>;
