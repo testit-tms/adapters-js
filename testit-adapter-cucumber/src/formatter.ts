@@ -1,4 +1,4 @@
-import { AdapterConfig, Client, ConfigComposer, IClient, IStrategy, Link, StrategyFactory } from "testit-js-commons";
+import { AdapterConfig, Additions, ConfigComposer, IStrategy, Link, StrategyFactory } from "testit-js-commons";
 import { Formatter, IFormatterOptions } from "@cucumber/cucumber";
 import {
   Envelope,
@@ -16,8 +16,8 @@ import { Storage } from "./storage";
 import { parseTags } from "./utils";
 
 export default class TestItFormatter extends Formatter implements IFormatter {
-  private readonly client: IClient;
   private readonly strategy: IStrategy;
+  private readonly additions: Additions;
   private readonly storage: IStorage;
 
   private currentTestCaseId: string | undefined;
@@ -26,10 +26,9 @@ export default class TestItFormatter extends Formatter implements IFormatter {
   constructor(options: IFormatterOptions) {
     super(options);
     const config = new ConfigComposer().compose(options.parsedArgvOptions as AdapterConfig);
-
-    this.client = new Client(config);
+    this.strategy = StrategyFactory.create(config);
+    this.additions = new Additions(config);
     this.storage = new Storage();
-    this.strategy = StrategyFactory.create(this.client, config);
 
     options.eventBroadcaster.on("envelope", async (envelope: Envelope) => {
       if (envelope.gherkinDocument) {
@@ -157,8 +156,8 @@ export default class TestItFormatter extends Formatter implements IFormatter {
 
     const currentTestCaseId = this.currentTestCaseId;
 
-    const promise = this.client.attachments
-      .uploadAttachments(attachments)
+    // @ts-ignore
+    const promise = this.additions.addAttachments(attachments)
       .then((ids) => {
         this.storage.addAttachments(currentTestCaseId, ids);
       })
