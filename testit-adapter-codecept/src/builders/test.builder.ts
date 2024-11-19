@@ -1,11 +1,9 @@
 import { useCompositeHash, useConfig, useDefaultHash, humanize } from "../common/utils";
 import { Codecept, Origin } from "../types";
-import { AdapterConfig, AutotestPost, ShortStep } from "testit-js-commons";
+import { AutotestPost, ShortStep } from "testit-js-commons";
 
 export class TestsBuilder {
-  constructor(private readonly config: AdapterConfig) {}
-
-  public build(test: Codecept.Test<Origin.TestConfig>): AutotestPost {
+  public static build(test: Codecept.Test<Origin.TestConfig>): AutotestPost {
     const config = useConfig(test);
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
@@ -29,14 +27,14 @@ export class TestsBuilder {
     };
   }
 
-  private buildManySteps(steps: Codecept.Step[] = []): ShortStep[] {
+  private static buildManySteps(steps: Codecept.Step[] = []): ShortStep[] {
     return steps.map((step) => ({
       title: `${step.name}  ${humanize(step.args).join(",")}`.trim(),
       description: "",
     }));
   }
 
-  private reduceAfterOrBeforeSuites(suite: Codecept.Test[]) {
+  private static reduceAfterOrBeforeSuites(suite: Codecept.Test[]) {
     return suite.reduce((array, suite) => [...array, ...this.buildManySteps(suite?.steps ?? [])], []);
   }
 }

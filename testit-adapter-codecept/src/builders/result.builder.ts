@@ -1,15 +1,18 @@
-import { AdapterConfig, Attachment, AutotestResult, Step } from "testit-js-commons";
+import { AdapterConfig, Additions, Attachment, AutotestResult, Step } from "testit-js-commons";
 import { humanize, useCompositeHash, useDefaultHash } from "../common/utils";
 import { Codecept, Origin } from "../types";
 
-export class RunsBuilder {
-  constructor(private readonly config: AdapterConfig) {}
+export class ResultBuilder {
+  additions: Additions;
 
-  public build(
+  constructor(private readonly config: AdapterConfig) {
+    this.additions = new Additions(config);
+  }
+  
+  public async build(
     test: Codecept.Test<Origin.TestConfig>,
     metadata: Origin.TestMetadata,
-    attachments: Attachment[]
-  ): AutotestResult {
+  ): Promise<AutotestResult> {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const { _beforeEach, _afterEach, _afterAll, _beforeAll } = test.parent;
@@ -31,7 +34,7 @@ export class RunsBuilder {
       links: metadata?.links,
       startedOn: new Date(test.startedAt),
       duration: test.duration,
-      attachments,
+      attachments: await this.loadAttachments(test, metadata),
       parameters,
       traces: typeof test?.err?.cliMessage === "function" ? test.err.cliMessage() : test?.err?.stack,
       teardownResults,
@@ -41,6 +44,29 @@ export class RunsBuilder {
       outcome: test.state === "passed" ? "Passed" : "Failed",
       stepResults: this.buildManySteps(test.steps),
     };
+  }
+
+  private async loadAttachments(
+    test: Codecept.Test<Origin.TestConfig>,
+    metadata: Origin.TestMetadata
+  ): Promise<Attachment[]> {
+    const screenshot = test.artifacts?.screenshot;
+    const clientUrls = metadata.attachments ?? [];
+
+    if (screenshot) {
+      clientUrls.push(screenshot);
+    }
+
+    const attachments = await this.additions.addAttachments(clientUrls);
+
+    if (metadata?.text) {
+      const attach = await this.additions.addAttachments(metadata.text.content, metadata.text?.name);
+      attachments.push(...attach);
+    }
+
+    this.additions.clear();
+
+    return attachments;
   }
 
   private buildManySteps(steps?: Codecept.Step[]): Step[] {
