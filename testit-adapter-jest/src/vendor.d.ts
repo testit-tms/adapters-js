@@ -1,5 +1,5 @@
-import { Client } from "testit-js-commons";
+import { IStrategy } from "testit-js-commons";
 
 declare global {
-  var client: Client;
+  var strategy: IStrategy;
 }
