@@ -9,7 +9,7 @@ The repository contains new versions of adapters for JS test frameworks.
 | 4.0     | 1.1      | 1.1      | 1.1  | 1.1   | 2.0        | -        |
 | 4.5     | 2.1      | 2.1      | 2.1  | 2.1   | 2.1        | -        |
 | 5.0     | 2.2      | 2.2      | 2.2  | 2.2   | 2.2        | 2.2      |
-
+| 5.2     | 2.3      | 2.3      | 2.3  | 2.3   | 2.3        | 2.3      |
 
 Supported test frameworks :
  1. [Cucumber](https://github.com/testit-tms/adapters-js/tree/main/testit-adapter-cucumber)
