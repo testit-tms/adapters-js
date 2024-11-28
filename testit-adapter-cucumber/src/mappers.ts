@@ -9,6 +9,7 @@ import {
 } from "@cucumber/messages";
 import { parseTags } from "./utils";
 import { AutotestPost, ShortStep, Utils } from "testit-js-commons";
+import { config } from 'dotenv';
 
 export function mapDate(date: number): Date {
   return new Date(date * 1000);
@@ -27,12 +28,12 @@ export function mapDocument(document: GherkinDocument): AutotestPost[] {
   const scenarioAutotests = document.feature.children
     .map((child) => child.scenario)
     .filter((scenario): scenario is Scenario => scenario !== undefined)
-    .map((scenario) => mapScenario(scenario, setup));
+    .map((scenario) => mapScenario(document, scenario, setup));
 
   const ruleAutotests = document.feature.children
     .map((child) => child.rule)
     .filter((rule): rule is Rule => rule !== undefined)
-    .flatMap((rule) => mapRule(rule, setup));
+    .flatMap((rule) => mapRule(document, rule, setup));
 
   return scenarioAutotests.concat(...ruleAutotests);
 }
@@ -45,7 +46,7 @@ export function mapBackground(background: Background): ShortStep {
   };
 }
 
-export function mapRule(rule: Rule, setup: ShortStep[]): AutotestPost[] {
+export function mapRule(document: GherkinDocument, rule: Rule, setup: ShortStep[]): AutotestPost[] {
   const ruleSetup = setup.concat(
     rule.children
       .map((child) => child.background)
@@ -56,25 +57,26 @@ export function mapRule(rule: Rule, setup: ShortStep[]): AutotestPost[] {
   return rule.children
     .map((child) => child.scenario)
     .filter((scenario): scenario is Scenario => scenario !== undefined)
-    .map((scenario) => mapScenario(scenario, ruleSetup));
+    .map((scenario) => mapScenario(document, scenario, ruleSetup));
 }
 
-export function mapScenario(scenario: Scenario, setup: ShortStep[]): AutotestPost {
+export function mapScenario(document: GherkinDocument, scenario: Scenario, setup: ShortStep[]): AutotestPost {
   const tags = parseTags(scenario.tags);
+  const docTags = parseTags(document.feature!!.tags);
   const exampleSteps = scenario.examples.map(mapExamples);
 
   return {
     setup: exampleSteps.concat(setup),
-    externalId: tags.externalId ?? Utils.getHash(tags.name ?? scenario.name),
-    links: tags.links,
-    name: tags.name ?? scenario.name,
-    title: tags.title,
-    description: tags.description ?? scenario.description,
+    externalId: tags.externalId ?? docTags.externalId ?? Utils.getHash(tags.name ?? scenario.name),
+    links: tags.links ?? docTags.links,
+    name: tags.name ?? docTags.name ?? scenario.name,
+    title: tags.title ?? docTags.title,
+    description: tags.description ?? docTags.description ?? scenario.description,
     steps: scenario.steps.map(mapStep),
-    workItemIds: tags.workItemIds,
-    namespace: tags.nameSpace,
-    classname: tags.className,
-    labels: tags.labels?.map((label) => ({ name: label })),
+    workItemIds: tags.workItemIds ?? docTags.workItemIds,
+    namespace: tags.nameSpace ?? docTags.nameSpace ?? process.env.DEFAULT_TESTIT_NAMESPACE,
+    classname: tags.className ?? docTags.className ?? document.feature?.name ?? scenario.name,
+    labels: tags.labels?.map((label) => ({ name: label })) ?? docTags.labels?.map((label) => ({ name: label })),
   };
 }
 
