@@ -8,6 +8,6 @@ export default async (globalConfig: Config.GlobalConfig, projectConfig: Config.P
   await strategy.setup();
   const testRunId = await strategy.testRunId;
 
-  projectConfig.globals["testRunId"] = testRunId;
-  globalThis.strategy = strategy;
+  projectConfig.testEnvironmentOptions["testRunId"] = testRunId;
+  projectConfig.testEnvironmentOptions["adapterMode"] = 1;
 };

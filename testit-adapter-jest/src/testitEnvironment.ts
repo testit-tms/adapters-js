@@ -46,14 +46,8 @@ export default class TestItEnvironment extends NodeEnvironment {
     super(jestConfig, jestContext);
     const config = new ConfigComposer().compose(jestConfig.projectConfig.testEnvironmentOptions);
 
-    const testRunId = jestConfig.projectConfig.globals["testRunId"];
-
-    if (!testRunId || typeof testRunId !== "string") {
-      throw new Error("Looks like globalSetup was not called");
-    }
-
-    this.additions = new Additions({ ...config, testRunId });
-    this.strategy = StrategyFactory.create({ ...config, testRunId });
+    this.additions = new Additions(config);
+    this.strategy = StrategyFactory.create(config);
 
     this.testPath = excludePath(jestContext.testPath, jestConfig.globalConfig.rootDir);
   }
