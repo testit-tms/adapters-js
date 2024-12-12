@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "dotenv": "^16.0.3",
-    "testit-api-client": "~5.0.0"
+    "testit-api-client": "~5.1.0"
   },
   "files": [
     "lib"
