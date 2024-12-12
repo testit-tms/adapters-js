@@ -9,7 +9,6 @@ import {
 } from "@cucumber/messages";
 import { parseTags } from "./utils";
 import { AutotestPost, ShortStep, Utils } from "testit-js-commons";
-import { config } from 'dotenv';
 
 export function mapDate(date: number): Date {
   return new Date(date * 1000);
@@ -74,7 +73,7 @@ export function mapScenario(document: GherkinDocument, scenario: Scenario, setup
     description: tags.description ?? docTags.description ?? scenario.description,
     steps: scenario.steps.map(mapStep),
     workItemIds: tags.workItemIds ?? docTags.workItemIds,
-    namespace: tags.nameSpace ?? docTags.nameSpace ?? process.env.DEFAULT_TESTIT_NAMESPACE,
+    namespace: tags.nameSpace ?? docTags.nameSpace,
     classname: tags.className ?? docTags.className ?? document.feature?.name ?? scenario.name,
     labels: tags.labels?.map((label) => ({ name: label })) ?? docTags.labels?.map((label) => ({ name: label })),
     externalKey: scenario.name,
