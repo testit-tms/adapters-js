@@ -21,6 +21,7 @@ interface AutotestBase {
   setup?: Array<ShortStep>;
   teardown?: Array<ShortStep>;
   labels?: Array<Label>;
+  externalKey?: string;
 }
 
 export interface AutotestPost extends AutotestBase {

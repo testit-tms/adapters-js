@@ -160,6 +160,7 @@ export default class TestItEnvironment extends NodeEnvironment {
     this.currentType = "test";
     this.setDisplayName(test.name);
     this.setExternalId(this.generateExternalId(test.name));
+    this.setExternalKey(test.name);
   }
 
   finishTestCapture(test: Extract<Event, { name: "test_fn_success" }>["test"]) {
@@ -221,6 +222,7 @@ export default class TestItEnvironment extends NodeEnvironment {
         setup: setupSteps,
         steps: autotest.testSteps,
         teardown: teardownSteps,
+        externalKey: autotest.externalKey,
       };
 
       await this.strategy.loadAutotest(autotestPost, result.outcome === "Passed");
@@ -329,6 +331,11 @@ export default class TestItEnvironment extends NodeEnvironment {
   setClassName(className: string) {
     log("Setting className to %s", className);
     this.autotestData.classname = className;
+  }
+
+  setExternalKey(externalKey: string) {
+    log("Setting externalKey to %s", externalKey);
+    this.autotestData.externalKey = externalKey;
   }
 
   startStep(name: string, description?: string) {

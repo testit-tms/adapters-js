@@ -149,6 +149,7 @@ export class TmsReporter extends Reporter {
       setup,
       teardown,
       workItemIds: test.ctx?.workItemsIds,
+      externalKey: test.title,
     };
 
     const promise = this.strategy.loadAutotest(
