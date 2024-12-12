@@ -112,7 +112,8 @@ class TmsReporter implements Reporter {
     const autotestData: MetadataMessage = {
       externalId: Utils.getHash(test.title),
       displayName: test.title,
-      addAttachments: []
+      addAttachments: [],
+      externalKey: test.title,
     };
 
     for (const attachment of result.attachments) {

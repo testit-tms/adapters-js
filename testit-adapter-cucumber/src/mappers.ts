@@ -75,6 +75,7 @@ export function mapScenario(scenario: Scenario, setup: ShortStep[]): AutotestPos
     namespace: tags.nameSpace,
     classname: tags.className,
     labels: tags.labels?.map((label) => ({ name: label })),
+    externalKey: scenario.name,
   };
 }
 

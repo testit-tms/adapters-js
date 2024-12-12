@@ -24,6 +24,7 @@ export class TestsBuilder {
       externalId: useDefaultHash(test) ?? useCompositeHash(test),
       namespace: config?.nameSpace,
       classname: config?.className,
+      externalKey: test.title,
     };
   }
 
