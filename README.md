@@ -18,3 +18,7 @@ Supported test frameworks :
  4. [Mocha](https://github.com/testit-tms/adapters-js/tree/main/testit-adapter-mocha)
  4. [Playwright](https://github.com/testit-tms/adapters-js/tree/main/testit-adapter-playwright)
  5. [TestCafe](https://github.com/testit-tms/adapters-js/tree/main/testcafe-reporter-testit)
+
+# 🚀 Warning
+Since 3.0.0 version for Cucumber:
+- If the externalId annotation is not specified, then its contents will be a hash of the Scenario name.

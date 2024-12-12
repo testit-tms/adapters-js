@@ -16,6 +16,7 @@ export interface MetadataMessage {
   addAttachments?: Attachment[];
   addMessage?: string;
   params?: Parameters;
+  externalKey?: string;
 }
 
 interface AttachmentOptions {

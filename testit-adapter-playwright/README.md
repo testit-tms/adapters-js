@@ -77,6 +77,24 @@ $ testit testrun complete
   --testrun-id $(cat tmp/output.txt) 
 ```
 
+#### Run with filter
+To create filter by autotests you can use the Test IT CLI (use adapterMode 1 for run with filter):
+
+```
+$ export TMS_TOKEN=<YOUR_TOKEN>
+$ testit autotests_filter 
+  --url https://tms.testit.software \
+  --configuration-id 5236eb3f-7c05-46f9-a609-dc0278896464 \
+  --testrun-id 6d4ac4b7-dd67-4805-b879-18da0b89d4a8 \
+  --framework playwright \
+  --output tmp/filter.txt
+
+$ export TMS_TEST_RUN_ID=6d4ac4b7-dd67-4805-b879-18da0b89d4a8
+$ export TMS_ADAPTER_MODE=1
+
+$ npx playwright test --grep "$(cat tmp/filter.txt)"
+```
+
 #### Launch using GitLab repository
 To run your Playwright test's from GitLab to TestIT or in reverse order using "testit-adapter-playwright", you can take this .gitlab-ci.yml file example:
 

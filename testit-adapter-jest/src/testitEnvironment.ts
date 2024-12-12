@@ -1,7 +1,7 @@
 import type { EnvironmentContext, JestEnvironmentConfig } from "@jest/environment";
 import { Event } from "jest-circus";
 import NodeEnvironment from "jest-environment-node";
-import { AutotestPost, AutotestResult, Link, Step, Additions, Client, ConfigComposer, Utils } from "testit-js-commons";
+import { AutotestPost, AutotestResult, Link, Step, Additions, ConfigComposer, Utils, StrategyFactory, IStrategy } from "testit-js-commons";
 import { debug } from "debug";
 import { AutotestData } from "./types";
 import { excludePath, mapParams } from "./utils";
@@ -39,21 +39,15 @@ export default class TestItEnvironment extends NodeEnvironment {
   private readonly testPath: string;
   private attachmentsQueue: Promise<void>[] = [];
 
-  private readonly client: Client;
+  private readonly strategy: IStrategy;
   private readonly additions: Additions;
 
   constructor(jestConfig: JestEnvironmentConfig, jestContext: EnvironmentContext) {
     super(jestConfig, jestContext);
     const config = new ConfigComposer().compose(jestConfig.projectConfig.testEnvironmentOptions);
 
-    const testRunId = jestConfig.projectConfig.globals["testRunId"];
-
-    if (!testRunId || typeof testRunId !== "string") {
-      throw new Error("Looks like globalSetup was not called");
-    }
-
-    this.client = new Client({ ...config, testRunId });
-    this.additions = new Additions(this.client);
+    this.additions = new Additions(config);
+    this.strategy = StrategyFactory.create(config);
 
     this.testPath = excludePath(jestContext.testPath, jestConfig.globalConfig.rootDir);
   }
@@ -166,6 +160,7 @@ export default class TestItEnvironment extends NodeEnvironment {
     this.currentType = "test";
     this.setDisplayName(test.name);
     this.setExternalId(this.generateExternalId(test.name));
+    this.setExternalKey(test.name);
   }
 
   finishTestCapture(test: Extract<Event, { name: "test_fn_success" }>["test"]) {
@@ -227,16 +222,10 @@ export default class TestItEnvironment extends NodeEnvironment {
         setup: setupSteps,
         steps: autotest.testSteps,
         teardown: teardownSteps,
-        shouldCreateWorkItem: this.client.getConfig().automaticCreationTestCases,
+        externalKey: autotest.externalKey,
       };
 
-      await this.client.autoTests.loadAutotest(autotestPost, result.outcome === "Passed");
-
-      if (Array.isArray(autotest.workItemIds) && autotest.workItemIds.length > 0) {
-        await this.client.autoTests
-          .linkToWorkItems(autotest.externalId, autotest.workItemIds)
-          .catch((err) => console.error("Failed to link work items.", err));
-      }
+      await this.strategy.loadAutotest(autotestPost, result.outcome === "Passed");
 
       results.push({
         autoTestExternalId: autotestPost.externalId,
@@ -255,9 +244,7 @@ export default class TestItEnvironment extends NodeEnvironment {
     }
     log("Loading results");
 
-    const testRunId = this.client.getConfig().testRunId;
-
-    await this.client.testRuns.loadAutotests(testRunId, results);
+    await this.strategy.loadTestRun(results);
   }
 
   resetTest() {
@@ -344,6 +331,11 @@ export default class TestItEnvironment extends NodeEnvironment {
   setClassName(className: string) {
     log("Setting className to %s", className);
     this.autotestData.classname = className;
+  }
+
+  setExternalKey(externalKey: string) {
+    log("Setting externalKey to %s", externalKey);
+    this.autotestData.externalKey = externalKey;
   }
 
   startStep(name: string, description?: string) {

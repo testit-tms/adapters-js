@@ -1,4 +1,4 @@
-import { ConfigComposer, Client, StrategyFactory, IStrategy, Additions, Attachment } from "testit-js-commons";
+import { ConfigComposer, StrategyFactory, IStrategy, Additions, Attachment } from "testit-js-commons";
 import { Converter } from "./converter";
 import { TestRunInfo } from "./types";
 import Metadata from "./metadata";
@@ -13,9 +13,8 @@ export default class TmsReporter {
 
   constructor() {
     const config = new ConfigComposer().compose();
-    const client = new Client(config);
-    this.strategy = StrategyFactory.create(client, config);
-    this.additions = new Additions(client);
+    this.strategy = StrategyFactory.create(config);
+    this.additions = new Additions(config);
   }
 
   onFixtureBegin(name: string, path: string, meta: object): void {

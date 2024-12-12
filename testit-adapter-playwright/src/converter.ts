@@ -39,6 +39,7 @@ export class Converter {
         namespace: autotestData.namespace,
         classname: autotestData.classname,
         workItemIds: autotestData.workItemIds,
+        externalKey: autotestData.externalKey,
       };
     }
 
