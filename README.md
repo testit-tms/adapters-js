@@ -3,13 +3,14 @@ The repository contains new versions of adapters for JS test frameworks.
 
 ## Compatibility
 
-| Test IT | Codecept | Cucumber | Jest | Mocha | Playwright | TestCafe |
-|---------|----------|----------|------|-------|------------|----------|
-| 3.5     | -        | 1.0      | -    | -     | -          | -        |
-| 4.0     | 1.1      | 1.1      | 1.1  | 1.1   | 2.0        | -        |
-| 4.5     | 2.1      | 2.1      | 2.1  | 2.1   | 2.1        | -        |
-| 5.0     | 2.2      | 2.2      | 2.2  | 2.2   | 2.2        | 2.2      |
-| 5.2     | 2.3      | 2.3      | 2.3  | 2.3   | 2.3        | 2.3      |
+| Test IT | Codecept        | Cucumber        | Jest            | Mocha           | Playwright      | TestCafe        |
+|---------|-----------------|-----------------|-----------------|-----------------|-----------------|-----------------|
+| 3.5     | -               | 1.0             | -               | -               | -               | -               |
+| 4.0     | 1.1             | 1.1             | 1.1             | 1.1             | 2.0             | -               |
+| 4.5     | 2.1             | 2.1             | 2.1             | 2.1             | 2.1             | -               |
+| 5.0     | 2.2             | 2.2             | 2.2             | 2.2             | 2.2             | 2.2             |
+| 5.2     | 2.3             | 2.3             | 2.3             | 2.3             | 2.3             | 2.3             |
+| Cloud   | 3.1.0-TMS-CLOUD | 3.1.0-TMS-CLOUD | 3.1.0-TMS-CLOUD | 3.1.0-TMS-CLOUD | 3.1.0-TMS-CLOUD | 3.1.0-TMS-CLOUD |
 
 Supported test frameworks :
  1. [Cucumber](https://github.com/testit-tms/adapters-js/tree/main/testit-adapter-cucumber)

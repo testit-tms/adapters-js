@@ -2,7 +2,7 @@ import {
   AutoTestResultsForTestRunModel,
   TestResultV2GetModel,
   TestRunState,
-  TestRunV2GetModel,
+  TestRunV2ApiResult,
 } from "testit-api-client";
 import { BaseConverter, AdapterConfig, Outcome } from "../../common";
 import { AutotestConverter, IAutotestConverter } from "../autotests";
@@ -12,7 +12,7 @@ export interface ITestRunConverter {
   toOriginState(state: RunState): TestRunState;
   toLocalState(state: TestRunState): RunState;
 
-  toLocalTestRun(testRun: TestRunV2GetModel): TestRunGet;
+  toLocalTestRun(testRun: TestRunV2ApiResult): TestRunGet;
 
   toOriginAutotestResult(autotest: AutotestResult): AutoTestResultsForTestRunModel;
   toLocalAutotestResult(autotest: TestResultV2GetModel): AutotestResultGet;
@@ -63,11 +63,11 @@ export class TestRunConverter extends BaseConverter implements ITestRunConverter
       message: test.message ?? undefined,
       traces: test.traces ?? undefined,
       startedOn: test.startedOn ?? undefined,
-      autoTest: test.autoTest ? this.autotestConverter.toLocalAutotest(test.autoTest) : undefined,
+      autoTest: test.autoTest ? this.autotestConverter.toLocalAutotestByModel(test.autoTest) : undefined,
     };
   }
 
-  toLocalTestRun(testRun: TestRunV2GetModel): TestRunGet {
+  toLocalTestRun(testRun: TestRunV2ApiResult): TestRunGet {
     return {
       id: testRun.id,
       name: testRun.name,
@@ -76,7 +76,7 @@ export class TestRunConverter extends BaseConverter implements ITestRunConverter
       description: testRun.description ?? undefined,
       launchSource: testRun.launchSource ?? undefined,
       stateName: this.toLocalState(testRun.stateName),
-      testResults: testRun.testResults?.map((test) => this.toLocalAutotestResult(test)),
+      testResults: testRun.testResults?.map((test: any) => this.toLocalAutotestResult(test)),
     };
   }
 }

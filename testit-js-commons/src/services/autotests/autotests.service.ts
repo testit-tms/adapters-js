@@ -1,16 +1,16 @@
 import {
-  AutoTestModel,
+  AutoTestApiResult,
   AutoTestsApi,
   AutoTestsApiApiKeys,
-  AutotestFilterModel, 
+  AutoTestFilterApiModel, 
   WorkItemIdentifierModel} from "testit-api-client";
 import { AdapterConfig } from "../../common";
 import { BaseService } from "../base.service";
 import { AutotestGet, AutotestPost, type IAutotestService } from "./autotests.type";
 import { AutotestConverter, type IAutotestConverter } from "./autotests.converter";
 import { handleHttpError } from "./autotests.handler";
-import { AutotestsSelectModel } from "testit-api-client/dist/model/autotestsSelectModel";
-import { SearchAutoTestsQueryIncludesModel } from "testit-api-client/dist/model/searchAutoTestsQueryIncludesModel";
+import { AutoTestSearchApiModel } from "testit-api-client/dist/model/autoTestSearchApiModel";
+import { AutoTestSearchIncludeApiModel } from "testit-api-client/dist/model/autoTestSearchIncludeApiModel";
 
 const autotestApiKey = AutoTestsApiApiKeys["Bearer or PrivateToken"];
 
@@ -109,17 +109,17 @@ export class AutotestsService extends BaseService implements IAutotestService {
   }
 
   public async getAutotestByExternalId(externalId: string): Promise<AutotestGet | null> {
-    const filterModel: AutotestFilterModel = {
+    const filterModel: AutoTestFilterApiModel = {
       externalIds: [externalId],
       projectIds: [this.config.projectId],
       isDeleted: false,
     };
-    const includesModel: SearchAutoTestsQueryIncludesModel = {
+    const includesModel: AutoTestSearchIncludeApiModel = {
       includeSteps: false,
       includeLinks: false,
       includeLabels: false
     };
-    const requestModel: AutotestsSelectModel = {
+    const requestModel: AutoTestSearchApiModel = {
         filter: filterModel,
         includes: includesModel
     };
@@ -132,7 +132,7 @@ export class AutotestsService extends BaseService implements IAutotestService {
       undefined,
       requestModel)
       .then(({ body }) => body[0])
-      .then((autotest: AutoTestModel | undefined) => {
+      .then((autotest: AutoTestApiResult | undefined) => {
         return autotest ? this._converter.toLocalAutotest(autotest) : null;
       });
   }
