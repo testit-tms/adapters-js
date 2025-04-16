@@ -10,6 +10,7 @@ The repository contains new versions of adapters for JS test frameworks.
 | 4.5     | 2.1             | 2.1             | 2.1             | 2.1             | 2.1             | -               |
 | 5.0     | 2.2             | 2.2             | 2.2             | 2.2             | 2.2             | 2.2             |
 | 5.2     | 2.3             | 2.3             | 2.3             | 2.3             | 2.3             | 2.3             |
+| 5.3     | 3.2.1-TMS-5.3   | 3.2.1-TMS-5.3   | 3.2.1-TMS-5.3   | 3.2.1-TMS-5.3   | 3.2.1-TMS-5.3   | 3.2.1-TMS-5.3   |
 | Cloud   | 3.2.0-TMS-CLOUD | 3.2.0-TMS-CLOUD | 3.2.0-TMS-CLOUD | 3.2.0-TMS-CLOUD | 3.2.0-TMS-CLOUD | 3.2.0-TMS-CLOUD |
 
 Supported test frameworks :
