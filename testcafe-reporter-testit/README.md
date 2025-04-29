@@ -35,9 +35,10 @@ npm install testcafe-reporter-testit
   "configurationId": "CONFIGURATION_ID",
   "testRunId": "TEST_RUN_ID",
   "testRunName": "TEST_RUN_NAME",
-  "adapterMode": ADAPTER_MODE,
-  "automaticCreationTestCases": AUTOMATIC_CREATION_TEST_CASES,
-  "automaticUpdationLinksToTestCases": AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES
+  "adapterMode": 0, 1 or 2,
+  "automaticCreationTestCases": true or false (optional variable),
+  "certValidation": true or false (optional variable),
+  "automaticUpdationLinksToTestCases": true or false (optional variable)
 }
 ```
 
@@ -55,6 +56,8 @@ TMS_CONFIG_FILE=pathToAnotherConfigFile; #optional
 TMS_AUTOMATIC_CREATION_TEST_CASES=false; # or true, optional
 TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES=false; # or true, optional
 ```
+
+Keep in mind that ".env" file will be a priority for adapter.
 
 ### Parallel run
 To create and complete TestRun you can use the Test IT CLI (use adapterMode 1 for parallel run):
