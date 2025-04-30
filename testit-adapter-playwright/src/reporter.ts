@@ -10,6 +10,7 @@ import { ConfigComposer, StrategyFactory, IStrategy, Utils, Additions, Attachmen
 import { Converter, Status } from "./converter";
 import { MetadataMessage } from "./labels";
 import { isAllStepsWithPassedOutcome, stepAttachRegexp } from "./utils";
+import { Result } from "./models/result";
 
 export type ReporterOptions = {
   detail?: boolean;
@@ -29,7 +30,6 @@ class TmsReporter implements Reporter {
   private stepsMap = new Map<TestStep, TestCase>();
   private attachmentStepsCache = new Array<TestStep>();
   private attachmentsMap = new Map<Attachment, TestStep>();
-  private globalStartTime = new Date();
   private loadTestPromises = new Array<Promise<void>>();
 
   constructor(options: ReporterOptions) {
@@ -50,7 +50,15 @@ class TmsReporter implements Reporter {
 
   onTestEnd(test: TestCase, result: TestResult): void {
     this.loadTestPromises.push(
-      this.loadTest(test, result)
+      this.loadTest(
+        test,
+        {
+          status: result.status,
+          attachments: result.attachments,
+          duration: result.duration,
+          errors: result.errors,
+          error: result.error,
+        })
     );
   }
 
@@ -76,27 +84,20 @@ class TmsReporter implements Reporter {
 
   async onEnd(): Promise<void> {
     await Promise.all(this.loadTestPromises);
-    this.addSkippedResults();
+    await this.addSkippedResults();
   }
 
-  addSkippedResults() {
+  async addSkippedResults(): Promise<void> {
     const unprocessedCases = this.suite
       .allTests()
       .filter((testCase: any) => !this.testCache.includes(testCase));
 
-    unprocessedCases.forEach((testCase: any) => {
-      this.onTestEnd(testCase, {
+    unprocessedCases.forEach(async (testCase: any) => {
+      await this.loadTest(testCase, {
         status: "skipped",
         attachments: [],
         duration: 0,
         errors: [],
-        parallelIndex: 0,
-        workerIndex: 0,
-        retry: 0,
-        steps: [],
-        stderr: [],
-        stdout: [],
-        startTime: this.globalStartTime,
       });
     });
   }
@@ -107,7 +108,7 @@ class TmsReporter implements Reporter {
 
   private async getAutotestData(
     test: TestCase,
-    result: TestResult
+    result: Result
   ) {
     const autotestData: MetadataMessage = {
       externalId: Utils.getHash(test.title),
@@ -200,7 +201,7 @@ class TmsReporter implements Reporter {
     return autotestData;
   }
 
-  private async loadTest(test: TestCase, result: TestResult): Promise<void> {
+  private async loadTest(test: TestCase, result: Result): Promise<void> {
     const autotestData = await this.getAutotestData(test, result);
     const autotest = Converter.convertTestCaseToAutotestPost(autotestData);
     const steps = [...this.stepsMap.keys()].filter((step: TestStep) => this.stepsMap.get(step) === test);
