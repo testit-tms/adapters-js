@@ -1,8 +1,6 @@
 import {
     TestCase,
     TestStep,
-    TestError,
-    TestResult,
 } from "@playwright/test/reporter";
 import { TestStatus } from "@playwright/test";
 import {
@@ -14,6 +12,7 @@ import {
 } from "testit-js-commons";
 import { MetadataMessage } from "./labels";
 import { getStatusDetails, isAllStepsWithPassedOutcome, isStep } from "./utils";
+import { Result } from "./models/result";
 
 
 export enum Status {
@@ -46,7 +45,7 @@ export class Converter {
     static convertAutotestPostToAutotestResult(
       autotestData: MetadataMessage,
       test: TestCase,
-      result: TestResult): AutotestResult {
+      result: Result): AutotestResult {
       const autotestResult: AutotestResult = {
         autoTestExternalId: autotestData.externalId!,
         outcome: this.convertStatus(result.status, test.expectedStatus),
