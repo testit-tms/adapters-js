@@ -19,18 +19,28 @@ export class AutotestsService extends BaseService implements IAutotestService {
   protected _converter: IAutotestConverter;
   private MAX_TRIES: number = 10;
   private WAITING_TIME: number = 100;
+  private _options: {
+    headers: {
+        [name: string]: string;
+    };
+    rejectUnauthorized: boolean | undefined;
+  };
 
   constructor(protected readonly config: AdapterConfig) {
     super(config);
     this._client = new AutoTestsApi(config.url);
     this._client.setApiKey(autotestApiKey, `PrivateToken ${config.privateToken}`);
     this._converter = new AutotestConverter(config);
+    this._options = {
+      headers: {},
+      rejectUnauthorized: config.certValidation,
+    };
   }
 
   public async createAutotest(autotest: AutotestPost): Promise<void> {
     const autotestPost = this._converter.toOriginAutotest(autotest);
     return await this._client
-      .createAutoTest(autotestPost)
+      .createAutoTest(autotestPost, this._options)
       .then(() => console.log(`Create autotest "${autotest.name}".`))
       .catch((err) => handleHttpError(err, `Failed create autotest "${autotestPost.name}"`));
   }
@@ -38,7 +48,7 @@ export class AutotestsService extends BaseService implements IAutotestService {
   public async updateAutotest(autotest: AutotestPost): Promise<void> {
     const autotestPost = this._converter.toOriginAutotest(autotest);
     await this._client
-      .updateAutoTest(autotestPost)
+      .updateAutoTest(autotestPost, this._options)
       .then(() => console.log(`Update autotest "${autotest.name}".`))
       .catch((err) => handleHttpError(err, `Failed update autotest "${autotestPost.name}"`));
   }
@@ -69,7 +79,7 @@ export class AutotestsService extends BaseService implements IAutotestService {
     const promises = workItemIds.map(async (workItemId) => {
       for (var attempts = 0; attempts < this.MAX_TRIES; attempts++) {
         try {
-          await this._client.linkAutoTestToWorkItem(internalId, { id: workItemId });
+          await this._client.linkAutoTestToWorkItem(internalId, { id: workItemId }, this._options);
           console.log(`Link autotest ${internalId} to workitem ${workItemId} is successfully`);
   
           return;
@@ -87,7 +97,7 @@ export class AutotestsService extends BaseService implements IAutotestService {
   public async unlinkToWorkItem(internalId: string, workItemId: string): Promise<void> {
     for (var attempts = 0; attempts < this.MAX_TRIES; attempts++) {
       try {
-        await this._client.deleteAutoTestLinkFromWorkItem(internalId, workItemId);
+        await this._client.deleteAutoTestLinkFromWorkItem(internalId, workItemId, this._options);
         console.log(`Unlink autotest ${internalId} from workitem ${workItemId} is successfully`);
 
         return;
@@ -100,7 +110,12 @@ export class AutotestsService extends BaseService implements IAutotestService {
   }
 
   public async getWorkItemsLinkedToAutoTest(internalId: string): Promise<Array<WorkItemIdentifierModel>> {
-    return await this._client.getWorkItemsLinkedToAutoTest(internalId).then((res) => res.body)
+    return await this._client.getWorkItemsLinkedToAutoTest(
+      internalId,
+      undefined,
+      undefined,
+      this._options)
+    .then((res) => res.body)
     .catch((e) => {
       console.log(`Cannot get linked workitems to autotest ${internalId}: ${e}`);
 
@@ -130,7 +145,8 @@ export class AutotestsService extends BaseService implements IAutotestService {
       undefined,
       undefined,
       undefined,
-      requestModel)
+      requestModel,
+      this._options)
       .then(({ body }) => body[0])
       .then((autotest: AutoTestApiResult | undefined) => {
         return autotest ? this._converter.toLocalAutotest(autotest) : null;
