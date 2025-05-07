@@ -8,7 +8,12 @@ const apiKey = AttachmentsApiApiKeys["Bearer or PrivateToken"];
 
 export class AttachmentsService extends BaseService implements IAttachmentsService {
   protected _client: AttachmentsApi;
-  private _options: any;
+  private _options: {
+    headers: {
+        [name: string]: string;
+    };
+    rejectUnauthorized: boolean | undefined;
+  };
 
   constructor(protected readonly config: AdapterConfig) {
     super(config);
@@ -35,7 +40,7 @@ export class AttachmentsService extends BaseService implements IAttachmentsServi
         const extension = Utils.getExtName(path);
 
         const headers: { [key: string]: string } = {};
-        const rejectUnauthorized: boolean = this._options.rejectUnauthorized;
+        const rejectUnauthorized: boolean | undefined = this._options.rejectUnauthorized;
 
         if (extension.search("txt") >= 0) {
           headers["Content-Type"] = "text/plain";

@@ -10,7 +10,12 @@ const testRunsApiKey = TestRunsApiApiKeys["Bearer or PrivateToken"];
 export class TestRunsService extends BaseService implements ITestRunsService {
   protected _client: TestRunsApi;
   protected _converter: ITestRunConverter;
-  private _options: any;
+  private _options: {
+    headers: {
+        [name: string]: string;
+    };
+    rejectUnauthorized: boolean | undefined;
+  };
 
   constructor(protected readonly config: AdapterConfig) {
     super(config);
