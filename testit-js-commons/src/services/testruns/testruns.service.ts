@@ -10,12 +10,22 @@ const testRunsApiKey = TestRunsApiApiKeys["Bearer or PrivateToken"];
 export class TestRunsService extends BaseService implements ITestRunsService {
   protected _client: TestRunsApi;
   protected _converter: ITestRunConverter;
+  private _options: {
+    headers: {
+        [name: string]: string;
+    };
+    rejectUnauthorized: boolean | undefined;
+  };
 
   constructor(protected readonly config: AdapterConfig) {
     super(config);
     this._client = new TestRunsApi(config.url);
     this._converter = new TestRunConverter(config);
     this._client.setApiKey(testRunsApiKey, `PrivateToken ${config.privateToken}`);
+    this._options = {
+      headers: {},
+      rejectUnauthorized: config.certValidation,
+    };
   }
 
   public async createTestRun(): Promise<TestRunId> {
@@ -23,7 +33,7 @@ export class TestRunsService extends BaseService implements ITestRunsService {
       .createEmpty({
         projectId: this.config.projectId,
         name: this.config.testRunName,
-      })
+      }, this._options)
       .then(({ body }) => body.id);
   }
 
@@ -31,7 +41,7 @@ export class TestRunsService extends BaseService implements ITestRunsService {
     try {
       const testRun = await this.getTestRun(testRunId);
       if (testRun.stateName !== "Completed" && testRun.stateName !== "InProgress") {
-        await this._client.startTestRun(testRunId);
+        await this._client.startTestRun(testRunId, this._options);
       }
     } catch (err) {
       TestRunErrorHandler.handleErrorStartTestRun(err);
@@ -42,7 +52,7 @@ export class TestRunsService extends BaseService implements ITestRunsService {
     try {
       const testRun = await this.getTestRun(testRunId);
       if (testRun.stateName === "InProgress") {
-        await this._client.completeTestRun(testRunId);
+        await this._client.completeTestRun(testRunId, this._options);
       }
     } catch (err) {
       TestRunErrorHandler.handleErrorCompletedTestRun(err);
@@ -52,7 +62,7 @@ export class TestRunsService extends BaseService implements ITestRunsService {
   public async loadAutotests(testRunId: string, autotests: Array<AutotestResult>) {
     const autotestResults = autotests.map((test) => this._converter.toOriginAutotestResult(test));
     for(const autotestResult of autotestResults) {
-      await this._client.setAutoTestResultsForTestRun(testRunId, [autotestResult]);
+      await this._client.setAutoTestResultsForTestRun(testRunId, [autotestResult], this._options);
     }
   }
 
@@ -63,7 +73,7 @@ export class TestRunsService extends BaseService implements ITestRunsService {
 
   public async getTestRun(testRunId: TestRunId): Promise<TestRunGet> {
     return await this._client
-      .getTestRunById(testRunId)
+      .getTestRunById(testRunId, this._options)
       .then(({ body }) => body)
       .then((run) => this._converter.toLocalTestRun(run));
   }

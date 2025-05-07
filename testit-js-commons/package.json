@@ -1,6 +1,6 @@
 {
   "name": "testit-js-commons",
-  "version": "3.2.2-TMS-CLOUD",
+  "version": "3.2.3-TMS-CLOUD",
   "description": "JavaScript commons for Test IT",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "dotenv": "^16.0.3",
-    "testit-api-client": "6.0.1-TMS-5.3"
+    "testit-api-client": "6.0.2-TMS-5.3"
   },
   "files": [
     "lib"
