@@ -35,8 +35,7 @@ export class TestRunConverter extends BaseConverter implements ITestRunConverter
   }
 
   toOriginAutotestResult(autotest: AutotestResult): AutoTestResultsForTestRunModel {
-    return {
-      ...autotest,
+    const model: AutoTestResultsForTestRunModel = {
       configurationId: this.config.configurationId,
       autoTestExternalId: autotest.autoTestExternalId,
       links: autotest.links?.map((link) => this.toOriginLink(link)),
@@ -44,7 +43,26 @@ export class TestRunConverter extends BaseConverter implements ITestRunConverter
       stepResults: autotest.stepResults?.map((step) => this.toOriginStep(step)),
       setupResults: autotest.setupResults?.map((step) => this.toOriginStep(step)),
       teardownResults: autotest.teardownResults?.map((step) => this.toOriginStep(step)),
-    };
+      attachments: autotest.attachments,
+      message: autotest.message,
+      traces: autotest.traces,
+      parameters: autotest.parameters,
+      properties: autotest.properties,
+    }
+
+    if (autotest.duration !== undefined) {
+      model.duration = autotest.duration;
+    }
+
+    if (autotest.startedOn !== undefined) {
+      model.startedOn = autotest.startedOn;
+    }
+
+    if (autotest.completedOn !== undefined) {
+      model.completedOn = autotest.completedOn;
+    }
+
+    return model;
   }
 
   toLocalAutotestResult(test: TestResultV2GetModel): AutotestResultGet {
