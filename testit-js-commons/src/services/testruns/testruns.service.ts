@@ -1,6 +1,5 @@
 import { TestRunsApi, TestRunsApiApiKeys } from "testit-api-client";
-import { AdapterConfig } from "../../common";
-import { BaseService } from "../base.service";
+import { BaseService, AdapterConfig } from "../../common";
 import { type ITestRunsService, TestRunId, AutotestResult, TestRunGet, AutotestResultGet } from "./testruns.type";
 import { type ITestRunConverter, TestRunConverter } from "./testruns.converter";
 import { TestRunErrorHandler } from "./testruns.handler";

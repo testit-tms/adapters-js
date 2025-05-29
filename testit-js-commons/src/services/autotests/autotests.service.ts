@@ -4,8 +4,7 @@ import {
   AutoTestsApiApiKeys,
   AutoTestFilterApiModel, 
   WorkItemIdentifierModel} from "testit-api-client";
-import { AdapterConfig } from "../../common";
-import { BaseService } from "../base.service";
+import { BaseService, AdapterConfig } from "../../common";
 import { AutotestGet, AutotestPost, type IAutotestService } from "./autotests.type";
 import { AutotestConverter, type IAutotestConverter } from "./autotests.converter";
 import { handleHttpError } from "./autotests.handler";

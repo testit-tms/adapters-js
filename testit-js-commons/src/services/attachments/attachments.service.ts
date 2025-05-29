@@ -1,6 +1,5 @@
 import { AttachmentsApi, AttachmentsApiApiKeys, RequestDetailedFile } from "testit-api-client";
-import { Utils, AdapterConfig, Attachment } from "../../common";
-import { BaseService } from "../base.service";
+import { BaseService, Utils, AdapterConfig, Attachment } from "../../common";
 import { IAttachmentsService } from "./attachments.type";
 import { Buffer } from "buffer";
 

@@ -68,10 +68,19 @@ export class BaseConverter implements IBaseConverter {
   }
 
   toOriginStep(step: Step): AttachmentPutModelAutoTestStepResultsModel {
-    return {
-      ...step,
+    const model: AttachmentPutModelAutoTestStepResultsModel = {
+      title: step.title,
+      description: step.description,
+      parameters: step.parameters,
+      attachments: step.attachments,
       outcome: step.outcome ? this.toOriginOutcome(step.outcome) : undefined,
       stepResults: step.steps?.map((step) => this.toOriginStep(step)),
     };
+
+    if (step.duration !== undefined) {
+      model.duration = step.duration;
+    }
+
+    return model;
   }
 }
