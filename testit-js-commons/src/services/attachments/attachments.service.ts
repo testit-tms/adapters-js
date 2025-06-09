@@ -7,21 +7,14 @@ const apiKey = AttachmentsApiApiKeys["Bearer or PrivateToken"];
 
 export class AttachmentsService extends BaseService implements IAttachmentsService {
   protected _client: AttachmentsApi;
-  private _options: {
-    headers: {
-        [name: string]: string;
-    };
-    rejectUnauthorized: boolean | undefined;
-  };
 
   constructor(protected readonly config: AdapterConfig) {
     super(config);
     this._client = new AttachmentsApi(config.url);
     this._client.setApiKey(apiKey, `PrivateToken ${config.privateToken}`);
-    this._options = {
-      headers: {},
-      rejectUnauthorized: config.certValidation,
-    };
+    if (config.certValidation !== undefined) {
+      this._client.setRejectUnauthorized(config.certValidation);
+    }
   }
 
   public async uploadTextAttachment(content: string | Buffer, filename?: string): Promise<Attachment[]> {
@@ -30,7 +23,7 @@ export class AttachmentsService extends BaseService implements IAttachmentsServi
       options: { filename: filename ?? Utils.generateFileName() },
     };
 
-    return await this._client.apiV2AttachmentsPost(request, this._options).then(({ body }) => [{ id: body.id }]);
+    return await this._client.apiV2AttachmentsPost(request).then(({ body }) => [{ id: body.id }]);
   }
 
   public async uploadAttachments(paths: string[]): Promise<Attachment[]> {
@@ -39,7 +32,6 @@ export class AttachmentsService extends BaseService implements IAttachmentsServi
         const extension = Utils.getExtName(path);
 
         const headers: { [key: string]: string } = {};
-        const rejectUnauthorized: boolean | undefined = this._options.rejectUnauthorized;
 
         if (extension.search("txt") >= 0) {
           headers["Content-Type"] = "text/plain";
@@ -50,7 +42,7 @@ export class AttachmentsService extends BaseService implements IAttachmentsServi
         }
 
         return this._client
-          .apiV2AttachmentsPost(Utils.readStream(path), { headers, rejectUnauthorized })
+          .apiV2AttachmentsPost(Utils.readStream(path), { headers })
           .then(({ body }) => ({ id: body.id }));
       })
     );
