@@ -60,6 +60,7 @@ export class AutotestsService extends BaseService implements IAutotestService {
           externalId: originAutotest?.externalId ?? autotest.externalId,
           name: originAutotest?.name ?? autotest.name,
           links: autotest.links,
+          externalKey: autotest.externalKey,
         });
   }
 
