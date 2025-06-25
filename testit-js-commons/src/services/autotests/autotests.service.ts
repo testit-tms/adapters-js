@@ -5,6 +5,7 @@ import {
   AutoTestFilterApiModel, 
   WorkItemIdentifierModel} from "testit-api-client";
 import { BaseService, AdapterConfig } from "../../common";
+import { escapeHtmlInObject, escapeHtmlTags } from "../../common/utils";
 import { AutotestGet, AutotestPost, type IAutotestService } from "./autotests.type";
 import { AutotestConverter, type IAutotestConverter } from "./autotests.converter";
 import { handleHttpError } from "./autotests.handler";
@@ -31,6 +32,8 @@ export class AutotestsService extends BaseService implements IAutotestService {
 
   public async createAutotest(autotest: AutotestPost): Promise<void> {
     const autotestPost = this._converter.toOriginAutotest(autotest);
+    escapeHtmlInObject(autotestPost);
+    
     return await this._client
       .createAutoTest(autotestPost)
       .then(() => console.log(`Create autotest "${autotest.name}".`))
@@ -39,6 +42,8 @@ export class AutotestsService extends BaseService implements IAutotestService {
 
   public async updateAutotest(autotest: AutotestPost): Promise<void> {
     const autotestPost = this._converter.toOriginAutotest(autotest);
+    escapeHtmlInObject(autotestPost);
+    
     await this._client
       .updateAutoTest(autotestPost)
       .then(() => console.log(`Update autotest "${autotest.name}".`))
