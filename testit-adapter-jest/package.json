@@ -1,6 +1,6 @@
 {
   "name": "testit-adapter-jest",
-  "version": "3.2.7-TMS-5.4",
+  "version": "3.2.7-TMS-CLOUD",
   "description": "Jest adapter for Test IT",
   "main": "dist/testitEnvironment.js",
   "scripts": {
@@ -16,7 +16,7 @@
   "license": "ISC",
   "dependencies": {
     "debug": "^4.3.4",
-    "testit-js-commons": "3.2.7-TMS-5.4"
+    "testit-js-commons": "3.2.7-TMS-CLOUD"
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",
