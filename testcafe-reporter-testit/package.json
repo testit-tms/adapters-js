@@ -28,7 +28,7 @@
     "@babel/core": "^7.9.0",
     "@babel/eslint-parser": "^7.22.9",
     "@babel/preset-env": "^7.9.5",
-    "minimatch": "^9.0.5",
+    "@types/minimatch": "^5.1.2",
     "@types/node": "22.5.1",
     "babel-plugin-add-module-exports": "^1.0.2",
     "callsite-record": "^4.1.3",
