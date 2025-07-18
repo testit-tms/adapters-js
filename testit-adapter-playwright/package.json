@@ -1,6 +1,6 @@
 {
   "name": "testit-adapter-playwright",
-  "version": "3.2.7-TMS-CLOUD",
+  "version": "3.2.8-TMS-5.4",
   "description": "Playwright adapter for Test IT",
   "license": "Apache-2.0",
   "author": {
@@ -40,7 +40,7 @@
     "prettier": "^3.0.1"
   },
   "dependencies": {
-    "testit-js-commons": "3.2.7-TMS-CLOUD"
+    "testit-js-commons": "3.2.8-TMS-5.4"
   },
   "files": [
     "dist"
