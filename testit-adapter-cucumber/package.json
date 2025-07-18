@@ -1,6 +1,6 @@
 {
   "name": "testit-adapter-cucumber",
-  "version": "3.2.7-TMS-CLOUD",
+  "version": "3.2.8-TMS-5.4",
   "description": "Cucumber adapter for Test IT",
   "main": "dist/formatter.js",
   "scripts": {
@@ -23,7 +23,7 @@
   "dependencies": {
     "@cucumber/cucumber": "^7.3.1",
     "@cucumber/messages": "^17.1.1",
-    "testit-js-commons": "3.2.7-TMS-CLOUD"
+    "testit-js-commons": "3.2.8-TMS-5.4"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.15.8",
