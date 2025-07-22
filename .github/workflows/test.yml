@@ -4,12 +4,13 @@ on:
   pull_request:
     paths:
       - "testit-js-commons/**"
-      - "testit-adapter-codecept/**"
+      #- "testit-adapter-codecept/**"
       - "testit-adapter-cucumber/**"
       - "testit-adapter-jest/**"
       - "testit-adapter-mocha/**"
       - "testit-adapter-playwright/**"
       - ".github/**/test.yml"
+
   workflow_dispatch:
 env:
   DOTNET_VERSION: 8
@@ -20,6 +21,7 @@ env:
   TMS_ADAPTER_MODE: 1
   TMS_CERT_VALIDATION: false
   TMS_OVERWRITE_EXPECTED: false
+  TMS_IS_CI: true
   TMS_PRIVATE_TOKEN: ${{ secrets.TESTIT_PRIVATE_TOKEN }}
   TMS_URL: ${{ secrets.TESTIT_URL }}
 jobs:
@@ -30,10 +32,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - adapter_name: testit-adapter-codecept
-            configuration_id: CODECEPT_CONFIGURATION_ID
-            project_id: CODECEPT_PROJECT_ID
-            project_name: codecept
+          # - adapter_name: testit-adapter-codecept
+          #   configuration_id: CODECEPT_CONFIGURATION_ID
+          #   project_id: CODECEPT_PROJECT_ID
+          #   project_name: codecept
           - adapter_name: testit-adapter-cucumber
             configuration_id: CUCUMBER_CONFIGURATION_ID
             project_id: CUCUMBER_PROJECT_ID

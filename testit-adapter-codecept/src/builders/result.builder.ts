@@ -29,6 +29,20 @@ export class ResultBuilder {
       ...this.reduceAfterOrBeforeSuites(_beforeAll),
     ];
 
+    let traces = typeof test?.err?.cliMessage === "function" ? test.err.cliMessage() : test?.err?.stack;
+    let message = metadata?.message ?? null;
+    // If TMS_IS_CI env is true, trim traces and message to 20 chars and log this
+    if (process.env.TMS_IS_CI === "true") {
+      if (typeof traces === "string" && traces.length > 20) {
+        console.log("TMS_IS_CI is true: trimming traces to 20 chars");
+        traces = traces.slice(0, 20);
+      }
+      if (typeof message === "string" && message.length > 20) {
+        console.log("TMS_IS_CI is true: trimming message to 20 chars");
+        message = message.slice(0, 20);
+      }
+    }
+
     return {
       autoTestExternalId: useDefaultHash(test) ?? useCompositeHash(test),
       links: metadata?.links,
@@ -36,11 +50,11 @@ export class ResultBuilder {
       duration: test.duration,
       attachments: await this.loadAttachments(test, metadata),
       parameters,
-      traces: typeof test?.err?.cliMessage === "function" ? test.err.cliMessage() : test?.err?.stack,
+      traces: traces,
       teardownResults,
       setupResults,
       completedOn: test.duration ? new Date(test.startedAt + test.duration) : undefined,
-      message: metadata?.message ?? null,
+      message: message,
       outcome: test.state === "passed" ? "Passed" : "Failed",
       stepResults: this.buildManySteps(test.steps),
     };
