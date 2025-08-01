@@ -6,7 +6,7 @@ import {
   TestResult,
   TestStep,
 } from "@playwright/test/reporter";
-import { ConfigComposer, StrategyFactory, IStrategy, Utils, Additions, Attachment } from "testit-js-commons";
+import { ConfigComposer, StrategyFactory, IStrategy, Utils, Additions, Attachment, AdapterConfig } from "testit-js-commons";
 import { Converter, Status } from "./converter";
 import { MetadataMessage } from "./labels";
 import { isAllStepsWithPassedOutcome, stepAttachRegexp } from "./utils";
@@ -17,6 +17,7 @@ export type ReporterOptions = {
   outputFolder?: string;
   suiteTitle?: boolean;
   environmentInfo?: Record<string, string>;
+  tmsOptions?: AdapterConfig;
 };
 
 class TmsReporter implements Reporter {
@@ -34,7 +35,7 @@ class TmsReporter implements Reporter {
 
   constructor(options: ReporterOptions) {
     this.options = { suiteTitle: true, detail: true, ...options };
-    const config = new ConfigComposer().compose();
+    const config = new ConfigComposer().compose(options.tmsOptions);
     this.strategy = StrategyFactory.create(config);
     this.additions = new Additions(config);
   }
