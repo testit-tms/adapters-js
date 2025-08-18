@@ -50,7 +50,7 @@ export class AutotestsService extends BaseService implements IAutotestService {
       .catch((err) => handleHttpError(err, `Failed update autotest "${autotestPost.name}"`));
   }
 
-  public async loadAutotest(autotest: AutotestPost, status: Status): Promise<void> {
+  public async loadAutotest(autotest: AutotestPost, status: string): Promise<void> {
       const originAutotest = await this.getAutotestByExternalId(autotest.externalId);
 
       if (!originAutotest) {
@@ -59,10 +59,10 @@ export class AutotestsService extends BaseService implements IAutotestService {
       }
 
       switch (status) {
-        case "Passed":
+        case Status.PASSED:
             await this.updateAutotest(autotest);
             return;
-        case "Failed":
+        case Status.FAILED:
             await this.updateAutotest({
                 ...originAutotest,
                 externalId: originAutotest?.externalId ?? autotest.externalId,
@@ -71,7 +71,7 @@ export class AutotestsService extends BaseService implements IAutotestService {
                 externalKey: autotest.externalKey,
             });
             return;
-        case "Skipped":
+        case Status.SKIPPED:
             if (originAutotest.name != undefined && originAutotest.externalId != undefined) {
                 await this.updateAutotest({
                     ...originAutotest,
