@@ -1,10 +1,12 @@
 import { WorkItemIdentifierModel } from "testit-api-client";
 import { Label, Link, ShortStep } from "../../common";
 
+export type Status = "Passed" | "Failed" | "Skipped";
+
 export interface IAutotestService {
   createAutotest(autotest: AutotestPost): Promise<void>;
   updateAutotest(autotest: AutotestPost): Promise<void>;
-  loadAutotest(autotest: AutotestPost, isPassed: boolean): Promise<void>;
+  loadAutotest(autotest: AutotestPost, status: Status): Promise<void>;
   linkToWorkItems(internalId: string, workItemIds: Array<string>): Promise<void>;
   unlinkToWorkItem(internalId: string, workItemId: string): Promise<void>;
   getWorkItemsLinkedToAutoTest(internalId: string): Promise<Array<WorkItemIdentifierModel>>;

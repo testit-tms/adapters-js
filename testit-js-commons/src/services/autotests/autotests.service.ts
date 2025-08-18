@@ -6,7 +6,7 @@ import {
   WorkItemIdentifierModel} from "testit-api-client";
 import { BaseService, AdapterConfig } from "../../common";
 import { escapeHtmlInObject, escapeHtmlTags } from "../../common/utils";
-import { AutotestGet, AutotestPost, type IAutotestService } from "./autotests.type";
+import { AutotestGet, AutotestPost, type IAutotestService, Status } from "./autotests.type";
 import { AutotestConverter, type IAutotestConverter } from "./autotests.converter";
 import { handleHttpError } from "./autotests.handler";
 import { AutoTestSearchApiModel } from "testit-api-client/dist/model/autoTestSearchApiModel";
@@ -50,27 +50,60 @@ export class AutotestsService extends BaseService implements IAutotestService {
       .catch((err) => handleHttpError(err, `Failed update autotest "${autotestPost.name}"`));
   }
 
-  private async loadPassedAutotest(autotest: AutotestPost) {
-    const originAutotest = await this.getAutotestByExternalId(autotest.externalId);
-    !originAutotest ? await this.createAutotest(autotest) : await this.updateAutotest(autotest);
-  }
+//   private async loadPassedAutotest(autotest: AutotestPost) {
+//     const originAutotest = await this.getAutotestByExternalId(autotest.externalId);
+//     !originAutotest ? await this.createAutotest(autotest) : await this.updateAutotest(autotest);
+//   }
+//
+//   private async loadFailedAutotest(autotest: AutotestPost) {
+//     const originAutotest = await this.getAutotestByExternalId(autotest.externalId);
+//
+//     !originAutotest
+//       ? await this.createAutotest(autotest)
+//       : await this.updateAutotest({
+//           ...originAutotest,
+//           externalId: originAutotest?.externalId ?? autotest.externalId,
+//           name: originAutotest?.name ?? autotest.name,
+//           links: autotest.links,
+//           externalKey: autotest.externalKey,
+//         });
+//   }
 
-  private async loadFailedAutotest(autotest: AutotestPost) {
-    const originAutotest = await this.getAutotestByExternalId(autotest.externalId);
+  public async loadAutotest(autotest: AutotestPost, status: Status): Promise<void> {
+      const originAutotest = await this.getAutotestByExternalId(autotest.externalId);
 
-    !originAutotest
-      ? await this.createAutotest(autotest)
-      : await this.updateAutotest({
-          ...originAutotest,
-          externalId: originAutotest?.externalId ?? autotest.externalId,
-          name: originAutotest?.name ?? autotest.name,
-          links: autotest.links,
-          externalKey: autotest.externalKey,
-        });
-  }
+      if (!originAutotest) {
+          await this.createAutotest(autotest);
+          return;
+      }
 
-  public async loadAutotest(autotest: AutotestPost, isPassed: boolean): Promise<void> {
-    isPassed ? await this.loadPassedAutotest(autotest) : await this.loadFailedAutotest(autotest);
+      switch (status) {
+        case "Passed":
+            await this.updateAutotest(autotest);
+            return;
+        case "Failed":
+            await this.updateAutotest({
+                ...originAutotest,
+                externalId: originAutotest?.externalId ?? autotest.externalId,
+                name: originAutotest?.name ?? autotest.name,
+                links: autotest.links,
+                externalKey: autotest.externalKey,
+            });
+            return;
+        case "Skipped":
+            if (originAutotest.name != undefined && originAutotest.externalId != undefined) {
+                await this.updateAutotest({
+                    ...originAutotest,
+                    externalId: originAutotest.externalId,
+                    name: originAutotest.name,
+                });
+                return;
+            }
+            console.log(`Cannot update skipped autotest ${autotest.name} without name or externalId`);
+            return;
+        default:
+            console.log(`Cannot update autotest ${autotest.name} with unknown status ${status}`);
+      }
   }
 
   public async linkToWorkItems(internalId: string, workItemIds: Array<string>) {
@@ -79,7 +112,7 @@ export class AutotestsService extends BaseService implements IAutotestService {
         try {
           await this._client.linkAutoTestToWorkItem(internalId, { id: workItemId });
           console.log(`Link autotest ${internalId} to workitem ${workItemId} is successfully`);
-  
+
           return;
         } catch (e) {
           console.log(`Cannot link autotest ${internalId} to work item ${workItemId}: ${e}`);
