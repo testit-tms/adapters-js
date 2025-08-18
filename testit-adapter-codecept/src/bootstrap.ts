@@ -15,7 +15,7 @@ module.exports = async function (options) {
     recorder.add("transferTestAndRuns", async () => {
       const autotest = TestsBuilder.build(test);
 
-      await strategy.loadAutotest(autotest, isPassed(test));
+      await strategy.loadAutotest(autotest, test.state);
 
       const result = await new ResultBuilder(config).build(test, helper.metadata);
 

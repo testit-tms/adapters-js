@@ -50,25 +50,6 @@ export class AutotestsService extends BaseService implements IAutotestService {
       .catch((err) => handleHttpError(err, `Failed update autotest "${autotestPost.name}"`));
   }
 
-//   private async loadPassedAutotest(autotest: AutotestPost) {
-//     const originAutotest = await this.getAutotestByExternalId(autotest.externalId);
-//     !originAutotest ? await this.createAutotest(autotest) : await this.updateAutotest(autotest);
-//   }
-//
-//   private async loadFailedAutotest(autotest: AutotestPost) {
-//     const originAutotest = await this.getAutotestByExternalId(autotest.externalId);
-//
-//     !originAutotest
-//       ? await this.createAutotest(autotest)
-//       : await this.updateAutotest({
-//           ...originAutotest,
-//           externalId: originAutotest?.externalId ?? autotest.externalId,
-//           name: originAutotest?.name ?? autotest.name,
-//           links: autotest.links,
-//           externalKey: autotest.externalKey,
-//         });
-//   }
-
   public async loadAutotest(autotest: AutotestPost, status: Status): Promise<void> {
       const originAutotest = await this.getAutotestByExternalId(autotest.externalId);
 

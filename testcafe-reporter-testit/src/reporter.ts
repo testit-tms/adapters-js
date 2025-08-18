@@ -61,7 +61,7 @@ export default class TmsReporter {
 
     await this.strategy.loadAutotest(
       autotest,
-      true);
+      "Passed");
     await this.strategy.loadTestRun([autotestResult]);
   }
   

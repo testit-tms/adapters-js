@@ -32,8 +32,7 @@
   },
   "dependencies": {
     "dotenv": "^16.0.3",
-    "testit-api-client": "6.2.0",
-    "testit-js-commons": "file:"
+    "testit-api-client": "6.2.0"
   },
   "files": [
     "lib"
