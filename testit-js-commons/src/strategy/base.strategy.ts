@@ -1,6 +1,6 @@
 import { Client, IClient } from "../client";
 import { AdapterConfig } from "../common";
-import { AutotestPost, AutotestResult, TestRunId, Status } from "../services";
+import { AutotestPost, AutotestResult, TestRunId } from "../services";
 import { IStrategy } from "./strategy.type";
 
 export class BaseStrategy implements IStrategy {
@@ -22,7 +22,7 @@ export class BaseStrategy implements IStrategy {
     await this.client.testRuns.completeTestRun(testRunId);
   }
 
-  async loadAutotest(autotest: AutotestPost, status: Status): Promise<void> {
+  async loadAutotest(autotest: AutotestPost, status: string): Promise<void> {
     await this.client.autoTests.loadAutotest(autotest, status);
 
     if (Array.isArray(autotest.workItemIds)) {
