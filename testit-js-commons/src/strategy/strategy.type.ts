@@ -7,6 +7,6 @@ export interface IStrategy {
   setup(): Promise<void>;
   teardown(): Promise<void>;
 
-  loadAutotest(autotest: AutotestPost, isPassed: boolean): Promise<void>;
+  loadAutotest(autotest: AutotestPost, status: string): Promise<void>;
   loadTestRun(autotests: AutotestResult[]): Promise<void>;
 }

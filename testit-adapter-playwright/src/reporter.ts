@@ -215,7 +215,7 @@ class TmsReporter implements Reporter {
 
     await this.strategy.loadAutotest(
       autotest,
-      Converter.convertStatus(result.status, test.expectedStatus) == Status.PASSED);
+      Converter.convertStatus(result.status, test.expectedStatus));
 
     const autotestResult = Converter.convertAutotestPostToAutotestResult(
       autotestData,

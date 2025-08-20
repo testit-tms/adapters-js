@@ -123,7 +123,7 @@ export default class TestItFormatter extends Formatter implements IFormatter {
         const result = results.find((result) => result.autoTestExternalId === autotestPost.externalId);
 
         if (result !== undefined) {
-          return this.strategy.loadAutotest(autotestPost, result.outcome === "Passed");
+          return this.strategy.loadAutotest(autotestPost, result.outcome);
         }
       })
     );
