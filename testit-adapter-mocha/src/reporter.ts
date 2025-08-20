@@ -154,7 +154,7 @@ export class TmsReporter extends Reporter {
 
     const promise = this.strategy.loadAutotest(
       autotestPost,
-      test.state);
+      this._getOutcome(test.state));
     this.autotestsQueue.push(promise);
 
     this.autotestsForTestRun.push({
