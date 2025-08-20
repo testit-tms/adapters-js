@@ -225,7 +225,7 @@ export default class TestItEnvironment extends NodeEnvironment {
         externalKey: autotest.externalKey,
       };
 
-      await this.strategy.loadAutotest(autotestPost, result.outcome === "Passed");
+      await this.strategy.loadAutotest(autotestPost, result.outcome);
 
       results.push({
         autoTestExternalId: autotestPost.externalId,

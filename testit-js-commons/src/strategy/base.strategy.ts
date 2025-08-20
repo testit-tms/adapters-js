@@ -22,8 +22,8 @@ export class BaseStrategy implements IStrategy {
     await this.client.testRuns.completeTestRun(testRunId);
   }
 
-  async loadAutotest(autotest: AutotestPost, isPassed: boolean): Promise<void> {
-    await this.client.autoTests.loadAutotest(autotest, isPassed);
+  async loadAutotest(autotest: AutotestPost, status: string): Promise<void> {
+    await this.client.autoTests.loadAutotest(autotest, status);
 
     if (Array.isArray(autotest.workItemIds)) {
       await this.updateTestLinkToWorkItems(autotest.externalId, autotest.workItemIds);
