@@ -1,13 +1,13 @@
 import { AdapterConfig, AdapterMode } from "../common";
-import { IStrategy } from "./strategy.type";
 import { ZeroStrategy } from "./zero.strategy";
 import { FirstStrategy } from "./first.strategy";
 import { SecondStrategy } from "./second.strategy";
+import {BaseStrategy} from "./base.strategy";
 
-type StrategyConstructor = () => IStrategy;
+type StrategyConstructor = () => BaseStrategy;
 
 export class StrategyFactory {
-  public static create(config: AdapterConfig) {
+  public static create(config: AdapterConfig): BaseStrategy {
     const strategies: Record<AdapterMode, StrategyConstructor> = {
       0: () => new ZeroStrategy(config),
       1: () => new FirstStrategy(config),

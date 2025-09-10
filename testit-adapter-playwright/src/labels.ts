@@ -24,7 +24,7 @@ interface AttachmentOptions {
   fileExtension?: string;
 }
 
-enum ContentType {
+export enum ContentType {
   TEXT = "text/plain",
   XML = "application/xml",
   HTML = "text/html",
@@ -39,6 +39,15 @@ enum ContentType {
   WEBM = "video/webm",
   JPEG = "image/jpeg",
   MP4 = "video/mp4",
+  MD =  "text/markdown",
+}
+
+export enum Extensions {
+    PNG = ".png",
+    JPEG = ".jpg",
+    ZIP = ".zip",
+    WEBM = ".webm",
+    MD = ".md",
 }
 
 type Parameters = Record<string, string>;
