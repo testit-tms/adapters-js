@@ -52,7 +52,7 @@ export namespace Utils {
     return fs.createReadStream(path);
   }
 
-  export function readBuffer(path: string): Buffer {
+  export function readBufferSync(path: string): Buffer {
     return fs.readFileSync(path);
   }
 }
