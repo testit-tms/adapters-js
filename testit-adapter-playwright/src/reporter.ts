@@ -7,10 +7,10 @@ import {
   TestStep,
 } from "@playwright/test/reporter";
 import { ConfigComposer, StrategyFactory, IStrategy, Utils, Additions, Attachment } from "testit-js-commons";
-import { Converter, Status } from "./converter";
+import { Converter } from "./converter";
 import { MetadataMessage } from "./labels";
-import { isAllStepsWithPassedOutcome, stepAttachRegexp } from "./utils";
-import { Result } from "./models/result";
+import { isAllStepsWithPassedOutcome, processAttachmentExtensions, stepAttachRegexp } from "./utils";
+import { Result, ResultAttachment } from "./models/result";
 
 export type ReporterOptions = {
   detail?: boolean;
@@ -22,7 +22,6 @@ export type ReporterOptions = {
 class TmsReporter implements Reporter {
   config!: FullConfig;
   suite!: Suite;
-  resultsDir!: string;
   options: ReporterOptions;
   strategy: IStrategy;
   private readonly additions: Additions;
@@ -54,12 +53,17 @@ class TmsReporter implements Reporter {
         test,
         {
           status: result.status,
-          attachments: result.attachments,
+          attachments: this._processAttachmentsWithExtensions(result),
           duration: result.duration,
           errors: result.errors,
           error: result.error,
         })
     );
+  }
+
+  // fix issues with trace and video files on playwright
+  private _processAttachmentsWithExtensions(result: TestResult): ResultAttachment[] {
+    return result.attachments.map(processAttachmentExtensions)
   }
 
   onStepBegin(test: TestCase, _result: TestResult, step: TestStep): void {
@@ -120,10 +124,10 @@ class TmsReporter implements Reporter {
     for (const attachment of result.attachments) {
       if (!attachment.body) {
         if (attachment.path && attachment.name !== "screenshot") {
-          const content = Utils.readBuffer(attachment.path);
+          const content = Utils.readBufferSync(attachment.path);
 
           await this.additions.addAttachments(content, attachment.name)
-            .then((ids) => {
+            .then((ids: any) => {
               autotestData.addAttachments?.push(...ids);
             });
         }
@@ -188,7 +192,9 @@ class TmsReporter implements Reporter {
       if (attachment.name.match(stepAttachRegexp)) {
         const step = this.attachmentStepsCache.find((step: TestStep) => step.title === attachment.name);
 
-        await this.additions.addAttachments(attachment.body, attachment.name.replace(stepAttachRegexp, "")).then((ids) => {
+        await this.additions.addAttachments(attachment.body,
+            attachment.name.replace(stepAttachRegexp, ""))
+            .then((ids: any[]) => {
           if (step?.parent) {
             this.attachmentsMap.set(ids[0], step.parent);
             return;
