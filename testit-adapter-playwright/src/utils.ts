@@ -42,38 +42,22 @@ const asciiRegex = new RegExp(
 );
 
 export function processAttachmentExtensions(attachment: ResultAttachment): ResultAttachment {
-    switch (attachment.contentType) {
-        case ContentType.ZIP:
-            if (!attachment.name.includes(Extensions.ZIP)) {
-                attachment.name += Extensions.ZIP;
-            }
-            return attachment;
+    const extensionMap: { [key: string]: string } = {
+        [ContentType.ZIP]: Extensions.ZIP,
+        [ContentType.PNG]: Extensions.PNG,
+        [ContentType.WEBM]: Extensions.WEBM,
+        [ContentType.MD]: Extensions.MD,
+        [ContentType.JPEG]: Extensions.JPEG,
+    };
 
-        case ContentType.PNG:
-            if (!attachment.name.includes(Extensions.PNG)) {
-                attachment.name += Extensions.PNG;
-            }
-            return attachment;
+    const extension = extensionMap[attachment.contentType];
 
-        case ContentType.WEBM:
-            if (!attachment.name.includes(Extensions.WEBM)) {
-                attachment.name += Extensions.WEBM;
-            }
-            return attachment;
-
-        case ContentType.MD:
-            if (!attachment.name.includes(Extensions.MD)) {
-                attachment.name += Extensions.MD;
-            }
-            return attachment;
-
-        case ContentType.JPEG:
-            if (!attachment.name.includes(Extensions.JPEG)) {
-                attachment.name += Extensions.JPEG;
-            }
-            return attachment;
-
-        default:
-            return attachment;
+    if (extension && !attachment.name.includes(extension)) {
+        return {
+            ...attachment,
+            name: attachment.name + extension
+        };
     }
+
+    return attachment;
 }
