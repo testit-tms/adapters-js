@@ -13,7 +13,6 @@ export interface TestRunGet {
   startedOn?: Date;
   completedOn?: Date;
   stateName: RunState;
-  testResults?: Array<AutotestResultGet>;
 }
 
 interface AutotestResultBase {
@@ -44,6 +43,7 @@ export interface AutotestResultGet extends AutotestResultBase {
   id?: string;
   configurationId?: string;
   autoTest?: AutotestGet;
+  autoTestExternalId?: string;
   autoTestId?: string;
   testRunId?: string;
   comment?: string;
@@ -55,6 +55,5 @@ export interface ITestRunsService {
   getTestRun(testRunId: TestRunId): Promise<TestRunGet>;
   startTestRun(testRunId: TestRunId): Promise<void>;
   completeTestRun(testRunId: TestRunId): Promise<void>;
-  getAutotests(testRunId: TestRunId): Promise<AutotestResultGet[] | undefined>;
   loadAutotests(testRunId: string, autotests: Array<AutotestResult>): Promise<void>;
 }

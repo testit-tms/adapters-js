@@ -35,11 +35,7 @@ export default class TestItFormatter extends Formatter implements IFormatter {
         return this.onGherkinDocument(envelope.gherkinDocument);
       }
       if (envelope.pickle) {
-        const testsInRun = await this.strategy.testsInRun;
-
-        const resolvedAutotests = testsInRun
-          ?.map((test) => test.autoTest?.externalId)
-          .filter((id): id is string => id !== undefined);
+        const resolvedAutotests = await this.strategy.testsInRun;
 
         if (resolvedAutotests !== undefined) {
           const tags = parseTags(envelope.pickle.tags);
