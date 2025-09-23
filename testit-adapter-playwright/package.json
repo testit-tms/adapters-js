@@ -1,6 +1,6 @@
 {
   "name": "testit-adapter-playwright",
-  "version": "3.3.1",
+  "version": "3.4.0",
   "description": "Playwright adapter for Test IT",
   "license": "Apache-2.0",
   "author": {
@@ -40,7 +40,7 @@
     "prettier": "^3.0.1"
   },
   "dependencies": {
-    "testit-js-commons": "3.3.1"
+    "testit-js-commons": "3.4.0"
   },
   "files": [
     "dist"

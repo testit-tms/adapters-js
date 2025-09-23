@@ -1,6 +1,6 @@
 import { TestRunsApi, TestRunsApiApiKeys } from "testit-api-client";
 import { AdapterConfig, BaseService } from "../../common";
-import { escapeHtmlInObject, escapeHtmlInObjectArray, escapeHtmlTags } from "../../common/utils";
+import { escapeHtmlInObject, escapeHtmlInObjectArray } from "../../common/utils";
 import { type ITestRunsService, TestRunId, AutotestResult, TestRunGet, AutotestResultGet } from "./testruns.type";
 import { type ITestRunConverter, TestRunConverter } from "./testruns.converter";
 import { TestRunErrorHandler } from "./testruns.handler";
@@ -61,11 +61,6 @@ export class TestRunsService extends BaseService implements ITestRunsService {
     for(const autotestResult of autotestResults) {
       await this._client.setAutoTestResultsForTestRun(testRunId, [autotestResult]);
     }
-  }
-
-  public async getAutotests(testRunId: string): Promise<AutotestResultGet[] | undefined> {
-    const testRun = await this.getTestRun(testRunId);
-    return testRun.testResults?.filter((autotest) => autotest.configurationId === this.config.configurationId);
   }
 
   public async getTestRun(testRunId: TestRunId): Promise<TestRunGet> {

@@ -5,7 +5,7 @@ import {
   AutoTestFilterApiModel, 
   WorkItemIdentifierModel} from "testit-api-client";
 import { BaseService, AdapterConfig } from "../../common";
-import { escapeHtmlInObject, escapeHtmlTags } from "../../common/utils";
+import { escapeHtmlInObject } from "../../common/utils";
 import { AutotestGet, AutotestPost, type IAutotestService, Status } from "./autotests.type";
 import { AutotestConverter, type IAutotestConverter } from "./autotests.converter";
 import { handleHttpError } from "./autotests.handler";
