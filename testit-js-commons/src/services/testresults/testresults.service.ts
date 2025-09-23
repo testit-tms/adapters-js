@@ -21,13 +21,29 @@ export class TestResultsService extends BaseService implements ITestResultsServi
     }
   }
 
-  public async getTestResults(): Promise<string[]> {
+  public async getExternalIdsForRun(): Promise<string[]> {
     var skip = 0;
-    var allTestResults: string[] = [];
+    var externalIds: string[] = [];
     const model: TestResultsFilterApiModel = this._converter.getTestResultsFilterApiModel();
 
-    while (skip >= 0) {
-      const testResults: TestResultShortResponse[] = await this._client
+    while (true) {
+      const testResults: TestResultShortResponse[] = await this.getTestResults(skip, model);
+
+      if (testResults.length != 0) {
+        externalIds = externalIds.concat(
+        testResults.map((result) => result.autotestExternalId).filter((id): id is string => id !== undefined)
+        );
+        skip += this._testsLimit;
+
+        continue;
+      }
+
+      return externalIds;
+    }
+  }
+
+  private async getTestResults(skip: number, model: TestResultsFilterApiModel): Promise<TestResultShortResponse[]> {
+    return await this._client
         .apiV2TestResultsSearchPost(skip, this._testsLimit, undefined, undefined, undefined, model)
         .then(({ body }) => body)
         .catch((err) => {
@@ -35,17 +51,5 @@ export class TestResultsService extends BaseService implements ITestResultsServi
 
           return [];
         });
-
-      allTestResults = allTestResults.concat(
-        testResults.map((result) => result.autotestExternalId).filter((id): id is string => id !== undefined)
-      );
-      skip += this._testsLimit;
-
-      if (testResults.length == 0) {
-        skip = -1;
-      }
-    }
-
-    return allTestResults;
   }
 }

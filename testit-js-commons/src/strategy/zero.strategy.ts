@@ -8,6 +8,6 @@ export class ZeroStrategy extends BaseStrategy implements IStrategy {
   constructor(config: AdapterConfig) {
     super(config);
     if (!config.testRunId) throw new Error("testRunId is required when mode is 0");
-    this.testsInRun = this.client.testResults.getTestResults();
+    this.testsInRun = this.client.testResults.getExternalIdsForRun();
   }
 }

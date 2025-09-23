@@ -1,3 +1,3 @@
 export interface ITestResultsService {
-  getTestResults(): Promise<string[]>;
+  getExternalIdsForRun(): Promise<string[]>;
 }
