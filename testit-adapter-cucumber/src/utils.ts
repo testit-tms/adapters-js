@@ -53,8 +53,9 @@ export function getTitle(tag: string): string {
   return tag.replace(new RegExp(`^@${tags.title}=`), "");
 }
 
-export function getWorkItemId(tag: string): string {
-  return tag.replace(new RegExp(`^@${tags.workItemIds}=`), "");
+export function getWorkItemId(tag: string): string[] {
+  return tag.replace(new RegExp(`^@${tags.workItemIds}=`), "")
+    .split(",");
 }
 
 export function getName(tag: string): string {
@@ -101,7 +102,7 @@ export function parseTags(tags: readonly Pick<Tag, "name">[]): ParsedTags {
         continue;
       }
       case TagType.WorkItemId: {
-        parsedTags.workItemIds?.push(getWorkItemId(tag.name));
+        parsedTags.workItemIds?.push(...getWorkItemId(tag.name));
         continue;
       }
       case TagType.Name: {
