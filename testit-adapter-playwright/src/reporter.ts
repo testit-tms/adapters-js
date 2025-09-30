@@ -11,6 +11,7 @@ import { Converter } from "./converter";
 import { MetadataMessage } from "./labels";
 import { isAllStepsWithPassedOutcome, processAttachmentExtensions, stepAttachRegexp } from "./utils";
 import { Result, ResultAttachment } from "./models/result";
+import path from "path";
 
 export type ReporterOptions = {
   detail?: boolean;
@@ -110,15 +111,33 @@ class TmsReporter implements Reporter {
     return false;
   }
 
+  private getDictionariesByTest(test: TestCase): string[] {
+    const location = test.parent.title;
+
+    if (location == undefined) {
+      return [];
+    }
+
+    return location.split(path.sep);
+  }
+
   private async getAutotestData(
     test: TestCase,
     result: Result
   ) {
+    const dictionaries: string[] = this.getDictionariesByTest(test);
+    const classname: string = dictionaries[dictionaries.length - 1];
+    const namespace: string = dictionaries
+      .slice(0, -1)
+      .join(path.sep);
+
     const autotestData: MetadataMessage = {
       externalId: Utils.getHash(test.title),
       displayName: test.title,
       addAttachments: [],
       externalKey: test.title,
+      namespace: namespace,
+      classname: classname,
     };
 
     for (const attachment of result.attachments) {
