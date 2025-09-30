@@ -16,6 +16,7 @@ export class AutotestConverter extends BaseConverter implements IAutotestConvert
   public toOriginAutotest(autotest: AutotestPost): AutoTestPostModel {
     return {
       ...autotest,
+      workItemIds: [],
       projectId: this.config.projectId,
       links: Array.isArray(autotest.links) ? autotest.links.map((link) => this.toOriginLink(link)) : undefined,
       shouldCreateWorkItem: this.config.automaticCreationTestCases,
