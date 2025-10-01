@@ -125,20 +125,26 @@ class TmsReporter implements Reporter {
     test: TestCase,
     result: Result
   ) {
-    const dictionaries: string[] = this.getDictionariesByTest(test);
-    const classname: string = dictionaries[dictionaries.length - 1];
-    const namespace: string = dictionaries
-      .slice(0, -1)
-      .join(path.sep);
-
     const autotestData: MetadataMessage = {
       externalId: Utils.getHash(test.title),
       displayName: test.title,
       addAttachments: [],
       externalKey: test.title,
-      namespace: namespace,
-      classname: classname,
     };
+
+    const dictionaries: string[] = this.getDictionariesByTest(test);
+    const namespace: string = dictionaries
+      .slice(0, -1)
+      .join(path.sep);
+    const classname: string = dictionaries[dictionaries.length - 1];
+
+    if (namespace != undefined && namespace.length > 0) {
+      autotestData.namespace = namespace;
+    }
+
+    if (classname != undefined && classname.length > 0) {
+      autotestData.classname = classname;
+    }
 
     for (const attachment of result.attachments) {
       if (!attachment.body) {
