@@ -1,6 +1,5 @@
 import {
   AutoTestResultsForTestRunModel,
-  TestResultV2GetModel,
   TestRunState,
   TestRunV2ApiResult,
 } from "testit-api-client";
@@ -71,6 +70,8 @@ export class TestRunConverter extends BaseConverter implements ITestRunConverter
       description: testRun.description ?? undefined,
       launchSource: testRun.launchSource ?? undefined,
       stateName: this.toLocalState(testRun.stateName),
+      attachments: testRun.attachments,
+      links: testRun.links,
     };
   }
 }
