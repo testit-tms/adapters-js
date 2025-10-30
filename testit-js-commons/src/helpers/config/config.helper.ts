@@ -38,11 +38,11 @@ export class ConfigComposer implements IConfigComposer {
       testRunId: this.resolveAllProperties(file.testRunId, env?.TMS_TEST_RUN_ID, base?.testRunId),
       testRunName: this.resolveAllProperties(file.testRunName, env?.TMS_TEST_RUN_NAME, base?.testRunName) == "" ? undefined : this.resolveAllProperties(file.testRunName, env?.TMS_TEST_RUN_NAME, base?.testRunName),
       privateToken: this.resolveAllProperties(file.privateToken, env?.TMS_PRIVATE_TOKEN, base?.privateToken),
-      adapterMode: base?.adapterMode ?? env?.TMS_ADAPTER_MODE ?? file?.adapterMode ?? 0,
+      adapterMode: base?.adapterMode ?? stringToAdapterMode(env?.TMS_ADAPTER_MODE) ?? file?.adapterMode ?? 0,
       configurationId: this.resolveAllProperties(file.configurationId, env?.TMS_CONFIGURATION_ID, base?.configurationId),
-      automaticCreationTestCases: file.automaticCreationTestCases ?? env?.TMS_AUTOMATIC_CREATION_TEST_CASES ?? base?.automaticCreationTestCases ?? false,
-      automaticUpdationLinksToTestCases: file.automaticUpdationLinksToTestCases ?? env?.TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES ?? base?.automaticUpdationLinksToTestCases ?? false,
-      certValidation: file.certValidation ?? env?.TMS_CERT_VALIDATION ?? base?.certValidation ?? true
+      automaticCreationTestCases: file.automaticCreationTestCases ?? stringToBoolean(env?.TMS_AUTOMATIC_CREATION_TEST_CASES) ?? base?.automaticCreationTestCases ?? false,
+      automaticUpdationLinksToTestCases: file.automaticUpdationLinksToTestCases ?? stringToBoolean(env?.TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES) ?? base?.automaticUpdationLinksToTestCases ?? false,
+      certValidation: file.certValidation ?? stringToBoolean(env?.TMS_CERT_VALIDATION) ?? base?.certValidation ?? true
     };
   }
 
@@ -53,11 +53,11 @@ export class ConfigComposer implements IConfigComposer {
       testRunId: this.resolveProperties(env?.TMS_TEST_RUN_ID, base?.testRunId),
       testRunName: this.resolveProperties(env?.TMS_TEST_RUN_NAME, base?.testRunName) == "" ? undefined : this.resolveProperties(env?.TMS_TEST_RUN_NAME, base?.testRunName),
       privateToken: this.resolveProperties(env?.TMS_PRIVATE_TOKEN, base?.privateToken),
-      adapterMode: base?.adapterMode ?? env?.TMS_ADAPTER_MODE ?? 0,
+      adapterMode: base?.adapterMode ?? stringToAdapterMode(env?.TMS_ADAPTER_MODE) ?? 0,
       configurationId: this.resolveProperties(env?.TMS_CONFIGURATION_ID, base?.configurationId),
-      automaticCreationTestCases: env?.TMS_AUTOMATIC_CREATION_TEST_CASES ?? base?.automaticCreationTestCases ?? false,
-      automaticUpdationLinksToTestCases: env?.TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES ?? base?.automaticUpdationLinksToTestCases ?? false,
-      certValidation: env?.TMS_CERT_VALIDATION ?? base?.certValidation ?? true
+      automaticCreationTestCases: stringToBoolean(env?.TMS_AUTOMATIC_CREATION_TEST_CASES) ?? base?.automaticCreationTestCases ?? false,
+      automaticUpdationLinksToTestCases: stringToBoolean(env?.TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES) ?? base?.automaticUpdationLinksToTestCases ?? false,
+      certValidation: stringToBoolean(env?.TMS_CERT_VALIDATION) ?? base?.certValidation ?? true
     };
   }
 
@@ -145,15 +145,15 @@ function parseProcessEnvConfig(): Partial<EnvironmentOptions> {
     TMS_CONFIGURATION_ID: process.env.TMS_CONFIGURATION_ID,
     TMS_TEST_RUN_ID: process.env.TMS_TEST_RUN_ID,
     TMS_TEST_RUN_NAME: process.env.TMS_TEST_RUN_NAME,
-    TMS_ADAPTER_MODE: process.env.TMS_ADAPTER_MODE ? stringToAdapterMode(process.env.TMS_ADAPTER_MODE) : undefined,
-    TMS_CERT_VALIDATION: process.env.TMS_CERT_VALIDATION ? stringToBoolean(process.env.TMS_CERT_VALIDATION) : undefined,
-    TMS_AUTOMATIC_CREATION_TEST_CASES: process.env.TMS_AUTOMATIC_CREATION_TEST_CASES ? stringToBoolean(process.env.TMS_AUTOMATIC_CREATION_TEST_CASES) : undefined,
-    TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES: process.env.TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES ? stringToBoolean(process.env.TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES) : undefined,
+    TMS_ADAPTER_MODE: process.env.TMS_ADAPTER_MODE,
+    TMS_CERT_VALIDATION: process.env.TMS_CERT_VALIDATION,
+    TMS_AUTOMATIC_CREATION_TEST_CASES: process.env.TMS_AUTOMATIC_CREATION_TEST_CASES,
+    TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES: process.env.TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES,
     TMS_CONFIG_FILE: process.env.TMS_PRIVATE_TOKEN,
   };
 }
 
-function stringToAdapterMode(str: string): AdapterMode | undefined {
+function stringToAdapterMode(str: string | undefined): AdapterMode | undefined {
   switch (str) {
     case "2":
       return 2;
@@ -166,6 +166,13 @@ function stringToAdapterMode(str: string): AdapterMode | undefined {
   }
 }
 
-function stringToBoolean(str: string): boolean {
-  return (str?.toLowerCase() === "true");
+function stringToBoolean(str: string | undefined): boolean | undefined {
+    switch (str?.toLowerCase()) {
+    case "true":
+      return true;
+    case "false":
+      return false;
+    default:
+      return undefined;
+  }
 }
