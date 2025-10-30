@@ -20,11 +20,11 @@ export interface EnvironmentOptions {
   TMS_CONFIGURATION_ID: string;
   TMS_TEST_RUN_ID: string;
   TMS_TEST_RUN_NAME: string;
-  TMS_ADAPTER_MODE: AdapterMode;
+  TMS_ADAPTER_MODE: string;
   TMS_CONFIG_FILE: string;
-  TMS_AUTOMATIC_CREATION_TEST_CASES: boolean;
-  TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES: boolean;
-  TMS_CERT_VALIDATION: boolean;
+  TMS_AUTOMATIC_CREATION_TEST_CASES: string;
+  TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES: string;
+  TMS_CERT_VALIDATION: string;
 }
 
 export interface ProcessEnvOptions {
@@ -34,11 +34,11 @@ export interface ProcessEnvOptions {
   TMS_CONFIGURATION_ID?: string;
   TMS_TEST_RUN_ID?: string;
   TMS_TEST_RUN_NAME?: string;
-  TMS_ADAPTER_MODE?: AdapterMode;
+  TMS_ADAPTER_MODE?: string;
   TMS_CONFIG_FILE?: string;
-  TMS_AUTOMATIC_CREATION_TEST_CASES?: boolean;
-  TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES?: boolean;
-  TMS_CERT_VALIDATION?: boolean;
+  TMS_AUTOMATIC_CREATION_TEST_CASES?: string;
+  TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES?: string;
+  TMS_CERT_VALIDATION?: string;
 }
 
 export interface AdapterConfig {
