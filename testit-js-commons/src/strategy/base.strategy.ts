@@ -62,4 +62,22 @@ export class BaseStrategy implements IStrategy {
     const testRunId = await this.testRunId;
     return await this.client.testRuns.loadAutotests(testRunId, autotests);
   }
+
+  protected async updateTestRun(config: AdapterConfig): Promise<void> {
+    const testRunId = config.testRunId;
+
+    if (config.testRunName == undefined) {
+      return;
+    }
+
+    const testRun = await this.client.testRuns.getTestRun(testRunId);
+
+    if (config.testRunName == testRun.name) {
+      return;
+    }
+
+    testRun.name = config.testRunName;
+
+    this.client.testRuns.updateTestRun(testRun);
+  }
 }

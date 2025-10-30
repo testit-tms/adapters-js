@@ -13,6 +13,16 @@ export interface TestRunGet {
   startedOn?: Date;
   completedOn?: Date;
   stateName: RunState;
+  attachments?: Array<Attachment>;
+  links?: Array<LinkGet>;
+}
+
+export interface LinkGet {
+  url: string;
+  id?: string | null;
+  title?: string | null;
+  description?: string | null;
+  hasInfo: boolean;
 }
 
 interface AutotestResultBase {
@@ -53,6 +63,7 @@ export interface AutotestResultGet extends AutotestResultBase {
 export interface ITestRunsService {
   createTestRun(): Promise<string>;
   getTestRun(testRunId: TestRunId): Promise<TestRunGet>;
+  updateTestRun(testRun: TestRunGet): Promise<void>;
   startTestRun(testRunId: TestRunId): Promise<void>;
   completeTestRun(testRunId: TestRunId): Promise<void>;
   loadAutotests(testRunId: string, autotests: Array<AutotestResult>): Promise<void>;
