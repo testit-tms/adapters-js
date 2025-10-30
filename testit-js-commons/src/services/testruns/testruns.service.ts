@@ -1,7 +1,7 @@
 import { TestRunsApi, TestRunsApiApiKeys } from "testit-api-client";
 import { AdapterConfig, BaseService } from "../../common";
 import { escapeHtmlInObject, escapeHtmlInObjectArray } from "../../common/utils";
-import { type ITestRunsService, TestRunId, AutotestResult, TestRunGet, AutotestResultGet } from "./testruns.type";
+import { type ITestRunsService, TestRunId, AutotestResult, TestRunGet } from "./testruns.type";
 import { type ITestRunConverter, TestRunConverter } from "./testruns.converter";
 import { TestRunErrorHandler } from "./testruns.handler";
 
@@ -30,6 +30,20 @@ export class TestRunsService extends BaseService implements ITestRunsService {
     return await this._client
       .createEmpty(escapeHtmlInObject(createRequest))
       .then(({ body }) => body.id);
+  }
+
+  public async getTestRun(testRunId: TestRunId): Promise<TestRunGet> {
+    return await this._client
+      .getTestRunById(testRunId)
+      .then(({ body }) => body)
+      .then((run) => this._converter.toLocalTestRun(run));
+  }
+
+  public async updateTestRun(testRun: TestRunGet): Promise<void> {
+    await this._client
+      .updateEmpty(testRun)
+      .then(({ body }) => body)
+      .then((run) => this._converter.toLocalTestRun(run));
   }
 
   public async startTestRun(testRunId: TestRunId): Promise<void> {
@@ -61,12 +75,5 @@ export class TestRunsService extends BaseService implements ITestRunsService {
     for(const autotestResult of autotestResults) {
       await this._client.setAutoTestResultsForTestRun(testRunId, [autotestResult]);
     }
-  }
-
-  public async getTestRun(testRunId: TestRunId): Promise<TestRunGet> {
-    return await this._client
-      .getTestRunById(testRunId)
-      .then(({ body }) => body)
-      .then((run) => this._converter.toLocalTestRun(run));
   }
 }
