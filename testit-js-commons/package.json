@@ -1,6 +1,6 @@
 {
   "name": "testit-js-commons",
-  "version": "3.4.3-TMS-5.5",
+  "version": "3.4.5-TMS-5.5",
   "description": "JavaScript commons for Test IT",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",

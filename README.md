@@ -13,7 +13,7 @@ The repository contains new versions of adapters for JS test frameworks.
 | 5.3     | 3.2.1-TMS-5.3   | 3.2.1-TMS-5.3   | 3.2.1-TMS-5.3   | 3.2.1-TMS-5.3   | 3.2.1-TMS-5.3   | 3.2.1-TMS-5.3   |
 | 5.4     | 3.2.8-TMS-5.4   | 3.2.8-TMS-5.4   | 3.2.8-TMS-5.4   | 3.2.8-TMS-5.4   | 3.2.8-TMS-5.4   | 3.2.8-TMS-5.4   |
 | 5.5     | 3.4.3-TMS-5.5   | 3.4.3-TMS-5.5   | 3.4.3-TMS-5.5   | 3.4.3-TMS-5.5   | 3.4.3-TMS-5.5   | 3.4.3-TMS-5.5   |
-| Cloud   | 3.3.1           | 3.3.1           | 3.3.1           | 3.3.1           | 3.3.1           | 3.3.1           |
+| Cloud   | 3.4.3           | 3.4.3           | 3.4.3           | 3.4.3           | 3.4.3           | 3.4.3           |
 
 Supported test frameworks :
  1. [Cucumber](https://github.com/testit-tms/adapters-js/tree/main/testit-adapter-cucumber)
