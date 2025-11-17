@@ -4,8 +4,8 @@ const NO_ESCAPE_HTML_ENV_VAR = 'NO_ESCAPE_HTML';
 const HTML_TAG_PATTERN = /<\S.*?(?:>|\/>)/;
 
 // Regex patterns to escape only non-escaped characters
-const LESS_THAN_PATTERN = /(?<!\\)</g;
-const GREATER_THAN_PATTERN = /(?<!\\)>/g;
+const LESS_THAN_PATTERN = /</;
+const GREATER_THAN_PATTERN = />/;
 
 /**
  * Escapes HTML tags to prevent XSS attacks.
@@ -25,8 +25,8 @@ export function escapeHtmlTags(text: string | null | undefined): string | null |
   }
 
   // Use regex with negative lookbehind to escape only non-escaped characters
-  let result = text.replace(LESS_THAN_PATTERN, '\\<');
-  result = result.replace(GREATER_THAN_PATTERN, '\\>');
+  let result = text.replace(LESS_THAN_PATTERN, '&lt;');
+  result = result.replace(GREATER_THAN_PATTERN, '&gt;');
 
   return result;
 }
