@@ -37,48 +37,48 @@ export function getTagType(tag: string): TagType {
   return TagType.Unknown;
 }
 
-export function getExternalId(tag: string): string {
-  return tag.replace(new RegExp(`^@${tags.externalId}=`), "");
+function getExternalId(tag: string): string {
+  return parseSpaceInTag(tag.replace(new RegExp(`^@${tags.externalId}=`), ""));
 }
 
-export function getLinkUrl(tag: string): string {
-  return tag.replace(new RegExp(`^@${tags.links}=`), "");
+function getLinkUrl(tag: string): string {
+  return parseSpaceInTag(tag.replace(new RegExp(`^@${tags.links}=`), ""));
 }
 
-export function getLink(tag: string): Link {
+function getLink(tag: string): Link {
   return JSON.parse(getLinkUrl(tag));
 }
 
-export function getTitle(tag: string): string {
-  return tag.replace(new RegExp(`^@${tags.title}=`), "");
+function getTitle(tag: string): string {
+  return parseSpaceInTag(tag.replace(new RegExp(`^@${tags.title}=`), ""));
 }
 
-export function getWorkItemId(tag: string): string[] {
-  return tag.replace(new RegExp(`^@${tags.workItemIds}=`), "")
+function getWorkItemId(tag: string): string[] {
+  return parseSpaceInTag(tag.replace(new RegExp(`^@${tags.workItemIds}=`), ""))
     .split(",");
 }
 
-export function getName(tag: string): string {
-  return tag.replace(new RegExp(`^@${tags.name}=`), "");
+function getName(tag: string): string {
+  return parseSpaceInTag(tag.replace(new RegExp(`^@${tags.name}=`), ""));
 }
 
-export function getDescription(tag: string): string {
-  return tag.replace(new RegExp(`^@${tags.description}=`), "");
+function getDescription(tag: string): string {
+  return parseSpaceInTag(tag.replace(new RegExp(`^@${tags.description}=`), ""));
 }
 
-export function getLabel(tag: string): string[] {
-  return tag
-    .replace(new RegExp(`^@${tags.labels}=`), "")
+function getLabel(tag: string): string[] {
+  return parseSpaceInTag(tag
+    .replace(new RegExp(`^@${tags.labels}=`), ""))
     .split(",")
     .map((label) => label.trim());
 }
 
-export function getNameSpace(tag: string): string {
-  return tag.replace(new RegExp(`^@${tags.nameSpace}=`), "");
+function getNameSpace(tag: string): string {
+  return parseSpaceInTag(tag.replace(new RegExp(`^@${tags.nameSpace}=`), ""));
 }
 
-export function getClassName(tag: string): string {
-  return tag.replace(new RegExp(`^@${tags.className}=`), "");
+function getClassName(tag: string): string {
+  return parseSpaceInTag(tag.replace(new RegExp(`^@${tags.className}=`), ""));
 }
 
 export function parseTags(tags: readonly Pick<Tag, "name">[]): ParsedTags {
@@ -148,4 +148,8 @@ export function calculateResultOutcome(outcomes: Outcome[]): Outcome {
     return "Passed";
   }
   throw new Error("Cannot calculate result outcome");
+}
+
+function parseSpaceInTag(tag: string): string {
+  return tag.replace("\_", " ");
 }

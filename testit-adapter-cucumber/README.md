@@ -111,6 +111,8 @@ Cucumber tags can be used to specify information about autotest.
 - `@NameSpace` - directory in the TMS system
 - `@ClassName` - subdirectory in the TMS system
 
+If you want to insert a space in the tags, use the "\\_" character combination.
+
 ### Examples
 
 #### Tags
