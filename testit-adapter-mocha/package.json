@@ -1,6 +1,6 @@
 {
   "name": "testit-adapter-mocha",
-  "version": "3.4.6",
+  "version": "3.4.7",
   "description": "Mocha adapter for Test IT",
   "main": "lib/index.js",
   "types": "lib/types.d.ts",
@@ -27,7 +27,7 @@
   "dependencies": {
     "mocha": "^10.2.0",
     "deasync-promise": "^1.0.1",
-    "testit-js-commons": "3.4.6"
+    "testit-js-commons": "3.4.7"
   },
   "files": [
     "lib"
