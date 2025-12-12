@@ -145,6 +145,8 @@ Description of methods:
 - `addAttachments` - uploading files in the autotest result
 - `addMessage` - information about autotest in the autotest result
 
+The adapter automatically masks sensitive data passed through CodeceptJS `secret()` function in test steps to prevent exposure in reports and logs.
+
 ### Examples
 
 #### Simple test
