@@ -14,30 +14,30 @@
 
 ```mermaid
 flowchart TD
-    A0["Общая Библиотека (testit-js-commons)
+    A0["testit-js-commons
 "]
-    A1["Менеджер Конфигурации (ConfigComposer)
+    A1["ConfigComposer
 "]
-    A2["Стратегия Интеграции (IStrategy & StrategyFactory)
+    A2["IStrategy & StrategyFactory
 "]
-    A3["Сервисы API (AutotestsService, TestRunsService, AttachmentsService)
+    A3["Сервисы API
 "]
-    A4["Репортер/Форматтер Адаптера
+    A4["Репортер/Форматтер
 "]
-    A5["Вспомогательные Методы (Additions, Metadata, testit)
+    A5["Вспомогательные Методы
 "]
     A6["Конвертеры Данных
 "]
-    A4 -- "Использует общую логику" --> A0
-    A4 -- "Получает конфигурацию (чере..." --> A1
-    A2 -- "Использует конфигурацию (дл..." --> A1
-    A4 -- "Использует стратегию интегр..." --> A2
-    A2 -- "Обращается к сервисам API" --> A3
-    A4 -- "Предоставляет интерфейс для..." --> A5
-    A5 -- "Использует API для загрузки..." --> A3
-    A4 -- "Использует для преобразован..." --> A6
-    A6 -- "Использует общие типы данных" --> A0
-    A3 -- "Используют конфигурацию" --> A1
+    A4 -- "Using" --> A0
+    A4 -- "Send config" --> A1
+    A2 -- "Using" --> A1
+    A4 -- "Using" --> A2
+    A2 -- "Calling API" --> A3
+    A4 -- "Provide I" --> A5
+    A5 -- "Using" --> A3
+    A4 -- "Using" --> A6
+    A6 -- "Using" --> A0
+    A3 -- "Using" --> A1
 ```
 
 ## Chapters
