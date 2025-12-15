@@ -84,14 +84,18 @@ export class ResultBuilder {
   }
 
   private buildManySteps(steps?: Codecept.Step[]): Step[] {
-    return steps?.map((step) => ({
-      title: `${step.name}  ${humanize(step.args).join(",")}`.trim(),
-      outcome: step.status === "success" ? "Passed" : "Failed",
-      description: "",
-      startedOn: new Date(step.startedAt),
-      duration: step.duration,
-      completedOn: new Date(step.finishedAt),
-    }));
+    return steps?.map((step) => {
+      const humanizedArgs = humanize(step.args);
+
+      return {
+        title: `${step.name}  ${humanizedArgs.join(",")}`.trim(),
+        outcome: step.status === "success" ? "Passed" : "Failed",
+        description: "",
+        startedOn: new Date(step.startedAt),
+        duration: step.duration,
+        completedOn: new Date(step.finishedAt),
+      };
+    });
   }
 
   private reduceAfterOrBeforeSuites(suite: Codecept.Test[]): Step[] {
