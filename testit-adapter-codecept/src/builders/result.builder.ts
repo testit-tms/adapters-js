@@ -98,7 +98,9 @@ export class ResultBuilder {
     });
   }
 
+  //
   private reduceAfterOrBeforeSuites(suite: Codecept.Test[]): Step[] {
     return suite.reduce((array, suite) => [...array, ...this.buildManySteps(suite?.steps ?? [])], []);
   }
 }
+

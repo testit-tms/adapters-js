@@ -2,20 +2,18 @@ name: Test
 run-name: "#${{ github.run_number }} test by ${{ github.triggering_actor }}"
 on:
   pull_request:
-    paths:
-      - "testit-js-commons/**"
-      #- "testit-adapter-codecept/**"
-      - "testit-adapter-cucumber/**"
-      - "testit-adapter-jest/**"
-      - "testit-adapter-mocha/**"
-      - "testit-adapter-playwright/**"
-      - ".github/**/test.yml"
-
+    types: [opened, labeled, unlabeled, synchronize]
   workflow_dispatch:
+    inputs:
+        run_tests:
+          description: 'Запустить тесты'
+          required: true
+          type: boolean
+          default: true
 env:
   DOTNET_VERSION: 8
   GITHUB_PAT: ${{ secrets.SERVICE_ACCOUNT_TOKEN }}
-  NODE_VERSION: 21
+  NODE_VERSION: 22
   PYTHON_VERSION: 3.12
   TEMP_FILE: tmp/output.txt
   TMS_ADAPTER_MODE: 1
@@ -32,10 +30,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # - adapter_name: testit-adapter-codecept
-          #   configuration_id: CODECEPT_CONFIGURATION_ID
-          #   project_id: CODECEPT_PROJECT_ID
-          #   project_name: codecept
+          - adapter_name: testit-adapter-codecept
+            configuration_id: CODECEPT_CONFIGURATION_ID
+            project_id: CODECEPT_PROJECT_ID
+            project_name: codecept
           - adapter_name: testit-adapter-cucumber
             configuration_id: CUCUMBER_CONFIGURATION_ID
             project_id: CUCUMBER_PROJECT_ID
@@ -52,6 +50,10 @@ jobs:
             configuration_id: PLAYWRIGHT_CONFIGURATION_ID
             project_id: PLAYWRIGHT_PROJECT_ID
             project_name: playwright
+          - adapter_name: testcafe-reporter-testit
+            configuration_id: TESTCAFE_CONFIGURATION_ID
+            project_id: TESTCAFE_PROJECT_ID
+            project_name: testcafe
     env:
       TMS_CONFIGURATION_ID: ${{ secrets[matrix.configuration_id] }}
       TMS_PROJECT_ID: ${{ secrets[matrix.project_id] }}
@@ -69,7 +71,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: testit-tms/js-examples
-          ref: examples_for_tests
+          ref: examples_for_tests 
           path: js-examples
       - name: Setup dotnet
         uses: actions/setup-dotnet@v4
@@ -79,6 +81,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
       - name: Setup python
         uses: actions/setup-python@v5
         with:
@@ -87,13 +91,14 @@ jobs:
         run: |        
           dotnet build --configuration Debug --property WarningLevel=0 api-validator-dotnet
           pip install testit-cli
-          cd ${{ matrix.adapter_name }}
-          npm run build && npm link
-          cd ../js-examples/${{ matrix.project_name }}
-          npm link ${{ matrix.adapter_name }} && npm install
-          # Install Playwright browsers for codecept project
-          if [ "${{ matrix.project_name }}" = "codecept" ]; then
-            npx playwright install
+
+          # linking is not working for codecept adapter
+          if [ "${{ matrix.adapter_name }}" != "testit-adapter-codecept" ]; then
+            echo "Adapter is not codecept, proceeding..."
+            cd ${{ matrix.adapter_name }}
+            npm run build && npm link
+            cd ../js-examples/${{ matrix.project_name }}
+            npm link ${{ matrix.adapter_name }} && npm install
           fi
       - name: Create TestRun
         run: |
@@ -110,6 +115,7 @@ jobs:
         run: |
           cd js-examples/${{ matrix.project_name }}
           npm install
+          export HEADLESS=true
           npm run test || exit 0
           
       - name: Validate
