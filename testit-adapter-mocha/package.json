@@ -13,6 +13,10 @@
     "name": "Integration team",
     "email": "integrations@testit.software"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/testit-tms/adapters-js.git"
+  },
   "license": "Apache-2.0",
   "devDependencies": {
     "@types/deasync-promise": "^1.0.2",

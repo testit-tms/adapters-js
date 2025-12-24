@@ -4,16 +4,20 @@ on:
   release:
     types: [published]
 
+permissions:
+  id-token: write  # Required for OIDC
+  contents: read
+
 jobs:
   publish_commons:
     runs-on: ubuntu-latest
     steps:
         - name: Get repository code [testit-js-commons]
-          uses: actions/checkout@v3
+          uses: actions/checkout@v4
         - name: Install Node JS
-          uses: actions/setup-node@v3
+          uses: actions/setup-node@v4
           with:
-            node-version:  20
+            node-version: '24'
             registry-url: 'https://registry.npmjs.org'
         - name: Install dependecies
           working-directory: testit-js-commons
@@ -21,10 +25,11 @@ jobs:
         - name: Build application testit-js-commons
           working-directory: testit-js-commons
           run: npm run build
-        - run: npm publish
+        # - run: npm version ${{ github.ref_name }}
+        #   working-directory: testit-js-commons
+        - run: npm publish --tag latest
           working-directory: testit-js-commons
-          env:
-            NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+     
 
   publish_adapters:
     needs: publish_commons
@@ -32,7 +37,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        node-version: [20]
+        node-version: ['24']
         package: [
             testit-adapter-codecept,
             testit-adapter-cucumber,
@@ -43,16 +48,17 @@ jobs:
         ]
     steps:
       - name: Get repository code [${{ matrix.package }}]
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install Node JS
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version:  ${{ matrix.node-version }}
+          node-version: ${{ matrix.node-version }}
           registry-url: 'https://registry.npmjs.org'
       - name: Build application ${{ matrix.package }}
         working-directory: ${{ matrix.package }}
         run: npm run build
-      - run: npm publish
+      # - run: npm version ${{ github.ref_name }}
+      #   working-directory: ${{ matrix.package }}
+      - run: npm publish --tag latest
         working-directory: ${{ matrix.package }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+       
