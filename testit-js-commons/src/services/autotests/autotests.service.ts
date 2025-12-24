@@ -2,10 +2,10 @@ import {
   AutoTestApiResult,
   AutoTestsApi,
   AutoTestsApiApiKeys,
-  AutoTestFilterApiModel, 
-  WorkItemIdentifierModel} from "testit-api-client";
-import { BaseService, AdapterConfig } from "../../common";
-import { escapeHtmlInObject } from "../../common/utils";
+  AutoTestFilterApiModel,
+  WorkItemIdentifierModel,
+} from "testit-api-client";
+import { BaseService, AdapterConfig, escapeHtmlInObject } from "../../common";
 import { AutotestGet, AutotestPost, type IAutotestService, Status } from "./autotests.type";
 import { AutotestConverter, type IAutotestConverter } from "./autotests.converter";
 import { handleHttpError } from "./autotests.handler";
@@ -33,7 +33,7 @@ export class AutotestsService extends BaseService implements IAutotestService {
   public async createAutotest(autotest: AutotestPost): Promise<void> {
     const autotestPost = this._converter.toOriginAutotest(autotest);
     escapeHtmlInObject(autotestPost);
-    
+
     return await this._client
       .createAutoTest(autotestPost)
       .then(() => console.log(`Create autotest "${autotest.name}".`))
@@ -43,7 +43,7 @@ export class AutotestsService extends BaseService implements IAutotestService {
   public async updateAutotest(autotest: AutotestPost): Promise<void> {
     const autotestPost = this._converter.toOriginAutotest(autotest);
     escapeHtmlInObject(autotestPost);
-    
+
     await this._client
       .updateAutoTest(autotestPost)
       .then(() => console.log(`Update autotest "${autotest.name}".`))
@@ -51,45 +51,56 @@ export class AutotestsService extends BaseService implements IAutotestService {
   }
 
   public async loadAutotest(autotest: AutotestPost, status: string): Promise<void> {
-      const originAutotest = await this.getAutotestByExternalId(autotest.externalId);
+    const originAutotest = await this.getAutotestByExternalId(autotest.externalId);
 
-      if (!originAutotest) {
-          await this.createAutotest(autotest);
+    if (!originAutotest) {
+      await this.createAutotest(autotest);
+      return;
+    }
+
+    switch (status) {
+      case Status.PASSED:
+        await this.updateAutotest(autotest);
+        return;
+      case Status.FAILED:
+        await this.updateAutotestFromFailed(originAutotest, autotest);
+        return;
+      case Status.SKIPPED:
+        if (originAutotest.name != undefined && originAutotest.externalId != undefined) {
+          await this.updateAutotestFromFailed(originAutotest, autotest);
           return;
-      }
+        }
+        console.log(`Cannot update skipped autotest ${autotest.name} without name or externalId`);
+        return;
+      default:
+        console.log(`Cannot update autotest ${autotest.name} with unknown status ${status}`);
+    }
+  }
 
-      switch (status) {
-        case Status.PASSED:
-            await this.updateAutotest(autotest);
-            return;
-        case Status.FAILED:
-            await this.updateAutotest({
-                ...originAutotest,
-                externalId: originAutotest?.externalId ?? autotest.externalId,
-                name: originAutotest?.name ?? autotest.name,
-                links: autotest.links,
-                externalKey: autotest.externalKey,
-            });
-            return;
-        case Status.SKIPPED:
-            if (originAutotest.name != undefined && originAutotest.externalId != undefined) {
-                await this.updateAutotest({
-                    ...originAutotest,
-                    externalId: originAutotest.externalId,
-                    name: originAutotest.name,
-                });
-                return;
-            }
-            console.log(`Cannot update skipped autotest ${autotest.name} without name or externalId`);
-            return;
-        default:
-            console.log(`Cannot update autotest ${autotest.name} with unknown status ${status}`);
-      }
+  private async updateAutotestFromFailed(originAutotest: AutotestGet, autotest: AutotestPost): Promise<void> {
+    await this.updateAutotest({
+      ...originAutotest,
+      externalId: originAutotest?.externalId ?? autotest.externalId,
+      name: originAutotest?.name ?? autotest.name,
+      links: autotest.links,
+      externalKey: autotest.externalKey,
+      steps: autotest.steps,
+      setup: autotest.setup,
+      teardown: autotest.teardown,
+      title: autotest.title,
+      description: autotest.description,
+      namespace: autotest.namespace,
+      classname: autotest.classname,
+      labels: autotest.labels,
+      workItemIds: autotest.workItemIds,
+      isFlaky: autotest.isFlaky,
+      shouldCreateWorkItem: autotest.shouldCreateWorkItem,
+    });
   }
 
   public async linkToWorkItems(internalId: string, workItemIds: Array<string>) {
     const promises = workItemIds.map(async (workItemId) => {
-      for (var attempts = 0; attempts < this.MAX_TRIES; attempts++) {
+      for (let attempts = 0; attempts < this.MAX_TRIES; attempts++) {
         try {
           await this._client.linkAutoTestToWorkItem(internalId, { id: workItemId });
           console.log(`Link autotest ${internalId} to workitem ${workItemId} is successfully`);
@@ -97,8 +108,8 @@ export class AutotestsService extends BaseService implements IAutotestService {
           return;
         } catch (e) {
           console.log(`Cannot link autotest ${internalId} to work item ${workItemId}: ${e}`);
-  
-          await new Promise(f => setTimeout(f, this.WAITING_TIME));
+
+          await new Promise((f) => setTimeout(f, this.WAITING_TIME));
         }
       }
     });
@@ -107,7 +118,7 @@ export class AutotestsService extends BaseService implements IAutotestService {
   }
 
   public async unlinkToWorkItem(internalId: string, workItemId: string): Promise<void> {
-    for (var attempts = 0; attempts < this.MAX_TRIES; attempts++) {
+    for (let attempts = 0; attempts < this.MAX_TRIES; attempts++) {
       try {
         await this._client.deleteAutoTestLinkFromWorkItem(internalId, workItemId);
         console.log(`Unlink autotest ${internalId} from workitem ${workItemId} is successfully`);
@@ -116,22 +127,20 @@ export class AutotestsService extends BaseService implements IAutotestService {
       } catch (e) {
         console.log(`Cannot unlink autotest ${internalId} to work item ${workItemId}: ${e}`);
 
-        await new Promise(f => setTimeout(f, this.WAITING_TIME));
+        await new Promise((f) => setTimeout(f, this.WAITING_TIME));
       }
     }
   }
 
   public async getWorkItemsLinkedToAutoTest(internalId: string): Promise<Array<WorkItemIdentifierModel>> {
-    return await this._client.getWorkItemsLinkedToAutoTest(
-      internalId,
-      undefined,
-      undefined)
-    .then((res) => res.body)
-    .catch((e) => {
-      console.log(`Cannot get linked workitems to autotest ${internalId}: ${e}`);
+    return await this._client
+      .getWorkItemsLinkedToAutoTest(internalId, undefined, undefined)
+      .then((res) => res.body)
+      .catch((e) => {
+        console.log(`Cannot get linked workitems to autotest ${internalId}: ${e}`);
 
-      return [];
-    });
+        return [];
+      });
   }
 
   public async getAutotestByExternalId(externalId: string): Promise<AutotestGet | null> {
@@ -143,20 +152,15 @@ export class AutotestsService extends BaseService implements IAutotestService {
     const includesModel: AutoTestSearchIncludeApiModel = {
       includeSteps: false,
       includeLinks: false,
-      includeLabels: false
+      includeLabels: false,
     };
     const requestModel: AutoTestSearchApiModel = {
-        filter: filterModel,
-        includes: includesModel
+      filter: filterModel,
+      includes: includesModel,
     };
 
-    return await this._client.apiV2AutoTestsSearchPost(
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      requestModel)
+    return await this._client
+      .apiV2AutoTestsSearchPost(undefined, undefined, undefined, undefined, undefined, requestModel)
       .then(({ body }) => body[0])
       .then((autotest: AutoTestApiResult | undefined) => {
         return autotest ? this._converter.toLocalAutotest(autotest) : null;
