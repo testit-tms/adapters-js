@@ -21,6 +21,7 @@ coverage.xml
 .vs
 node_modules
 lib
-package-lock.json
 *tgz
+package-lock.json
 coverage/
+testing

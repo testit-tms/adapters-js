@@ -1,24 +1,20 @@
-import { TestRunsApi, TestRunsApiApiKeys } from "testit-api-client";
+// @ts-ignore
+import TestitApiClient from "testit-api-client";
 import { AdapterConfig, BaseService } from "../../common";
 import { escapeHtmlInObject, escapeHtmlInObjectArray } from "../../common/utils";
 import { type ITestRunsService, TestRunId, AutotestResult, TestRunGet } from "./testruns.type";
 import { type ITestRunConverter, TestRunConverter } from "./testruns.converter";
 import { TestRunErrorHandler } from "./testruns.handler";
 
-const testRunsApiKey = TestRunsApiApiKeys["Bearer or PrivateToken"];
 
 export class TestRunsService extends BaseService implements ITestRunsService {
-  protected _client: TestRunsApi;
+  protected _client;
   protected _converter: ITestRunConverter;
 
   constructor(protected readonly config: AdapterConfig) {
     super(config);
-    this._client = new TestRunsApi(config.url);
+    this._client = new TestitApiClient.TestRunsApi();
     this._converter = new TestRunConverter(config);
-    this._client.setApiKey(testRunsApiKey, `PrivateToken ${config.privateToken}`);
-    if (config.certValidation !== undefined) {
-      this._client.setRejectUnauthorized(config.certValidation);
-    }
   }
 
   public async createTestRun(): Promise<TestRunId> {
@@ -28,21 +24,26 @@ export class TestRunsService extends BaseService implements ITestRunsService {
     };
 
     return await this._client
-      .createEmpty(escapeHtmlInObject(createRequest))
+      .createEmpty({ createEmptyTestRunApiModel: escapeHtmlInObject(createRequest)})
+      // @ts-ignore
       .then(({ body }) => body.id);
   }
 
   public async getTestRun(testRunId: TestRunId): Promise<TestRunGet> {
     return await this._client
       .getTestRunById(testRunId)
+      // @ts-ignore
       .then(({ body }) => body)
+      // @ts-ignore
       .then((run) => this._converter.toLocalTestRun(run));
   }
 
   public async updateTestRun(testRun: TestRunGet): Promise<void> {
     await this._client
-      .updateEmpty(testRun)
+      .updateEmpty({ updateEmptyTestRunApiModel: testRun })
+      // @ts-ignore
       .then(({ body }) => body)
+      // @ts-ignore
       .then((run) => this._converter.toLocalTestRun(run));
   }
 
@@ -73,7 +74,7 @@ export class TestRunsService extends BaseService implements ITestRunsService {
     escapeHtmlInObjectArray(autotestResults);
     
     for(const autotestResult of autotestResults) {
-      await this._client.setAutoTestResultsForTestRun(testRunId, [autotestResult]);
+      await this._client.setAutoTestResultsForTestRun(testRunId, { autoTestResultsForTestRunModel: [autotestResult] });
     }
   }
 }

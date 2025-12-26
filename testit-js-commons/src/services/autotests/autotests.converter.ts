@@ -1,9 +1,10 @@
-import { AutoTestModelV2GetModel, AutoTestApiResult, AutoTestPostModel } from "testit-api-client";
+// @ts-ignore
+import { AutoTestModelV2GetModel, AutoTestApiResult } from "testit-api-client";
 import { BaseConverter, AdapterConfig } from "../../common";
 import { AutotestGet, AutotestPost } from "./autotests.type";
 
 export interface IAutotestConverter {
-  toOriginAutotest(autotest: AutotestPost): AutoTestPostModel;
+  toOriginAutotest(autotest: AutotestPost): any;
   toLocalAutotest(autotest: AutoTestApiResult): AutotestGet;
   toLocalAutotestByModel(autotest: AutoTestModelV2GetModel): AutotestGet;
 }
@@ -13,7 +14,7 @@ export class AutotestConverter extends BaseConverter implements IAutotestConvert
     super(config);
   }
 
-  public toOriginAutotest(autotest: AutotestPost): AutoTestPostModel {
+  public toOriginAutotest(autotest: AutotestPost): any {
     return {
       externalId: autotest.externalId,
       name: autotest.name,
@@ -38,11 +39,15 @@ export class AutotestConverter extends BaseConverter implements IAutotestConvert
       id: autotest.id,
       name: autotest.name ?? undefined,
       externalId: autotest.externalId ?? undefined,
+      // @ts-ignore
       links: autotest.links?.map((link) => this.toLocalLink(link)),
       namespace: autotest.namespace ?? undefined,
       classname: autotest.classname ?? undefined,
+      // @ts-ignore
       steps: autotest.steps?.map((step) => this.toLocalShortStep(step)),
+      // @ts-ignore
       setup: autotest.setup?.map((step) => this.toLocalShortStep(step)),
+      // @ts-ignore
       teardown: autotest.teardown?.map((step) => this.toLocalShortStep(step)),
       labels: autotest.labels ?? undefined,
     };
@@ -53,11 +58,15 @@ export class AutotestConverter extends BaseConverter implements IAutotestConvert
       id: autotest.id,
       name: autotest.name ?? undefined,
       externalId: autotest.externalId ?? undefined,
+      // @ts-ignore
       links: autotest.links?.map((link) => this.toLocalLink(link)),
       namespace: autotest.namespace ?? undefined,
       classname: autotest.classname ?? undefined,
+      // @ts-ignore
       steps: autotest.steps?.map((step) => this.toLocalShortStep(step)),
+      // @ts-ignore
       setup: autotest.setup?.map((step) => this.toLocalShortStep(step)),
+      // @ts-ignore
       teardown: autotest.teardown?.map((step) => this.toLocalShortStep(step)),
       labels: autotest.labels ?? undefined,
     };

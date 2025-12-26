@@ -5,6 +5,7 @@ import {
   AttachmentPutModelAutoTestStepResultsModel,
   LinkPutModel,
   AutoTestStepModel,
+  // @ts-ignore
 } from "testit-api-client";
 import { AdapterConfig, Link, LinkType, Outcome, ShortStep, Step } from "./types";
 
@@ -27,22 +28,27 @@ export class BaseConverter implements IBaseConverter {
   constructor(protected readonly config: AdapterConfig) {}
 
   toOriginOutcome(outcome: Outcome): AvailableTestResultOutcome {
+    // @ts-ignore
     return AvailableTestResultOutcome[outcome];
   }
 
   toLocalOutcome(outcome: AvailableTestResultOutcome): Outcome {
+    // @ts-ignore
     return AvailableTestResultOutcome[outcome] as Outcome;
   }
 
   toOriginLinkType(linkType: LinkType): OriginLinkType {
+    // @ts-ignore
     return OriginLinkType[linkType];
   }
 
   toLocalLinkType(linkType: OriginLinkType): LinkType {
+    // @ts-ignore
     return OriginLinkType[linkType] as LinkType;
   }
 
   toOriginLink(link: Link): LinkPostModel {
+    // @ts-ignore
     return {
       ...link,
       type: link.type ? this.toOriginLinkType(link.type) : undefined,
@@ -63,11 +69,13 @@ export class BaseConverter implements IBaseConverter {
     return {
       title: step.title,
       description: step.description ?? undefined,
+      // @ts-ignore
       steps: step.steps?.map((step) => this.toLocalShortStep(step)),
     };
   }
 
   toOriginStep(step: Step): AttachmentPutModelAutoTestStepResultsModel {
+    // @ts-ignore
     const model: AttachmentPutModelAutoTestStepResultsModel = {
       title: step.title,
       description: step.description,
