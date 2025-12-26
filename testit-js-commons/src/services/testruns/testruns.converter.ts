@@ -2,6 +2,7 @@ import {
   AutoTestResultsForTestRunModel,
   TestRunState,
   TestRunV2ApiResult,
+  // @ts-ignore
 } from "testit-api-client";
 import { BaseConverter, AdapterConfig } from "../../common";
 import { AutotestConverter, IAutotestConverter } from "../autotests";

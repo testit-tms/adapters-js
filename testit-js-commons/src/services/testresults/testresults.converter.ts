@@ -1,3 +1,4 @@
+// @ts-ignore
 import { TestResultsFilterApiModel } from "testit-api-client";
 import { AdapterConfig, BaseConverter } from "../../common";
 

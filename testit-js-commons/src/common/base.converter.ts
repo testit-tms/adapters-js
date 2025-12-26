@@ -5,6 +5,7 @@ import {
   AttachmentPutModelAutoTestStepResultsModel,
   LinkPutModel,
   AutoTestStepModel,
+  // @ts-ignore
 } from "testit-api-client";
 import { AdapterConfig, Link, LinkType, Outcome, ShortStep, Step } from "./types";
 
@@ -63,6 +64,7 @@ export class BaseConverter implements IBaseConverter {
     return {
       title: step.title,
       description: step.description ?? undefined,
+      // @ts-ignore
       steps: step.steps?.map((step) => this.toLocalShortStep(step)),
     };
   }
