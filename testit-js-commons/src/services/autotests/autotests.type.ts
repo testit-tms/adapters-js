@@ -1,5 +1,5 @@
 // @ts-ignore
-import { WorkItemIdentifierModel } from "testit-api-client";
+// import { WorkItemIdentifierModel } from "testit-api-client";
 import { Label, Link, ShortStep } from "../../common";
 
 export enum Status {
@@ -14,7 +14,7 @@ export interface IAutotestService {
   loadAutotest(autotest: AutotestPost, status: string): Promise<void>;
   linkToWorkItems(internalId: string, workItemIds: Array<string>): Promise<void>;
   unlinkToWorkItem(internalId: string, workItemId: string): Promise<void>;
-  getWorkItemsLinkedToAutoTest(internalId: string): Promise<Array<WorkItemIdentifierModel>>;
+  getWorkItemsLinkedToAutoTest(internalId: string): Promise<Array<any>>;
   getAutotestByExternalId(externalId: string): Promise<AutotestGet | null>;
 }
 

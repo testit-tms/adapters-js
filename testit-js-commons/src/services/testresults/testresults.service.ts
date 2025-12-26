@@ -40,7 +40,7 @@ export class TestResultsService extends BaseService implements ITestResultsServi
 
   private async getTestResults(skip: number, model: any): Promise<any> {
     return await this._client
-        .apiV2TestResultsSearchPost({skip: skip, take: this._testsLimit, testResultsFilterApiModel: model})
+        .apiV2TestResultsSearchPost({skip: skip, take: this._testsLimit, testResultsFilterApiModel: model} as any)
         // @ts-ignore
         .then(({ body }) => body)
         // @ts-ignore

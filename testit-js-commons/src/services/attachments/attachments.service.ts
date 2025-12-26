@@ -26,6 +26,7 @@ export class AttachmentsService extends BaseService implements IAttachmentsServi
     return await Promise.all(
       paths.map((path) => {
         return this._client
+          // @ts-ignore
           .apiV2AttachmentsPost({file: Utils.readStream(path) })
           // @ts-ignore
           .then(({ body }) => ({ id: body.id }));

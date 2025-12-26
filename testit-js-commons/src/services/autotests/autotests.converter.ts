@@ -1,10 +1,10 @@
 // @ts-ignore
-import { AutoTestModelV2GetModel, AutoTestApiResult, AutoTestPostModel } from "testit-api-client";
+import { AutoTestModelV2GetModel, AutoTestApiResult } from "testit-api-client";
 import { BaseConverter, AdapterConfig } from "../../common";
 import { AutotestGet, AutotestPost } from "./autotests.type";
 
 export interface IAutotestConverter {
-  toOriginAutotest(autotest: AutotestPost): AutoTestPostModel;
+  toOriginAutotest(autotest: AutotestPost): any;
   toLocalAutotest(autotest: AutoTestApiResult): AutotestGet;
   toLocalAutotestByModel(autotest: AutoTestModelV2GetModel): AutotestGet;
 }
@@ -14,7 +14,7 @@ export class AutotestConverter extends BaseConverter implements IAutotestConvert
     super(config);
   }
 
-  public toOriginAutotest(autotest: AutotestPost): AutoTestPostModel {
+  public toOriginAutotest(autotest: AutotestPost): any {
     return {
       externalId: autotest.externalId,
       name: autotest.name,

@@ -128,7 +128,7 @@ export class AutotestsService extends BaseService implements IAutotestService {
 
   public async getWorkItemsLinkedToAutoTest(internalId: string): Promise<Array<any>> {
     return await this._client
-      .getWorkItemsLinkedToAutoTest(internalId, {})
+      .getWorkItemsLinkedToAutoTest(internalId, {} as any)
       // @ts-ignore
       .then((res) => res.body)
       // @ts-ignore
@@ -156,7 +156,7 @@ export class AutotestsService extends BaseService implements IAutotestService {
     };
 
     return await this._client
-      .apiV2AutoTestsSearchPost({ autoTestSearchApiModel: requestModel })
+      .apiV2AutoTestsSearchPost({ autoTestSearchApiModel: requestModel } as any)
       // @ts-ignore
       .then(({ body }) => body[0])
       .then((autotest: any | undefined) => {

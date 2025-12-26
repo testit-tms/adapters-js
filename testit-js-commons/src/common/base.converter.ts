@@ -28,22 +28,27 @@ export class BaseConverter implements IBaseConverter {
   constructor(protected readonly config: AdapterConfig) {}
 
   toOriginOutcome(outcome: Outcome): AvailableTestResultOutcome {
+    // @ts-ignore
     return AvailableTestResultOutcome[outcome];
   }
 
   toLocalOutcome(outcome: AvailableTestResultOutcome): Outcome {
+    // @ts-ignore
     return AvailableTestResultOutcome[outcome] as Outcome;
   }
 
   toOriginLinkType(linkType: LinkType): OriginLinkType {
+    // @ts-ignore
     return OriginLinkType[linkType];
   }
 
   toLocalLinkType(linkType: OriginLinkType): LinkType {
+    // @ts-ignore
     return OriginLinkType[linkType] as LinkType;
   }
 
   toOriginLink(link: Link): LinkPostModel {
+    // @ts-ignore
     return {
       ...link,
       type: link.type ? this.toOriginLinkType(link.type) : undefined,
@@ -70,6 +75,7 @@ export class BaseConverter implements IBaseConverter {
   }
 
   toOriginStep(step: Step): AttachmentPutModelAutoTestStepResultsModel {
+    // @ts-ignore
     const model: AttachmentPutModelAutoTestStepResultsModel = {
       title: step.title,
       description: step.description,

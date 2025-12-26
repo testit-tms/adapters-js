@@ -24,10 +24,12 @@ export class TestRunConverter extends BaseConverter implements ITestRunConverter
   }
 
   toLocalState(state: TestRunState): RunState {
+    // @ts-ignore
     return TestRunState[state] as RunState;
   }
 
   toOriginState(state: RunState): TestRunState {
+    // @ts-ignore
     return TestRunState[state];
   }
 
@@ -45,6 +47,11 @@ export class TestRunConverter extends BaseConverter implements ITestRunConverter
       traces: autotest.traces,
       parameters: autotest.parameters,
       properties: autotest.properties,
+      failureReasonNames: undefined,
+      outcome: undefined,
+      startedOn: undefined,
+      completedOn: undefined,
+      duration: undefined
     }
 
     if (autotest.duration !== undefined) {
