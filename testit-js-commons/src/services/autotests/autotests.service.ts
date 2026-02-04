@@ -1,5 +1,5 @@
 // @ts-ignore
-import TestitApiClient from "testit-api-client";
+import * as TestitApiClient from "testit-api-client";
 // @ts-ignore
 import { AutoTestSearchIncludeApiModel, AutoTestSearchApiModel } from "testit-api-client";
 
@@ -8,9 +8,8 @@ import { AutotestGet, AutotestPost, type IAutotestService, Status } from "./auto
 import { AutotestConverter, type IAutotestConverter } from "./autotests.converter";
 import { handleHttpError } from "./autotests.handler";
 
-
 export class AutotestsService extends BaseService implements IAutotestService {
-  protected _client
+  protected _client;
   protected _converter: IAutotestConverter;
   private MAX_TRIES: number = 10;
   private WAITING_TIME: number = 100;
@@ -96,12 +95,14 @@ export class AutotestsService extends BaseService implements IAutotestService {
     const promises = workItemIds.map(async (workItemId) => {
       for (let attempts = 0; attempts < this.MAX_TRIES; attempts++) {
         try {
-          await this._client.linkAutoTestToWorkItem(internalId, { workItemIdApiModel: { id: workItemId }});
+          await this._client.linkAutoTestToWorkItem(internalId, { workItemIdApiModel: { id: workItemId } });
           console.log(`Link autotest ${internalId} to workitem ${workItemId} is successfully`);
 
           return;
-        } catch (e) {
-          console.log(`Cannot link autotest ${internalId} to work item ${workItemId}: ${e}`);
+        // @ts-ignore
+        } catch (e: any) {
+          console.error(`Cannot link autotest ${internalId} to work item ${workItemId}`);
+          // console.error(e);
 
           await new Promise((f) => setTimeout(f, this.WAITING_TIME));
         }
@@ -158,9 +159,16 @@ export class AutotestsService extends BaseService implements IAutotestService {
     return await this._client
       .apiV2AutoTestsSearchPost({ autoTestSearchApiModel: requestModel } as any)
       // @ts-ignore
-      .then(({ body }) => body[0])
+      .then((response) => {
+        const data = response.body || response;
+        return data ? data[0] : null;
+      })
       .then((autotest: any | undefined) => {
         return autotest ? this._converter.toLocalAutotest(autotest) : null;
+      })
+      .catch((reason) => {
+        console.error(reason);
+        return null;
       });
   }
 }

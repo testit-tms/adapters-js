@@ -6,7 +6,7 @@ import { IStrategy } from "./strategy.type";
 export class BaseStrategy implements IStrategy {
   client: IClient;
   testRunId: Promise<TestRunId>;
-  
+
   protected constructor(protected config: AdapterConfig) {
     this.client = new Client(config);
     this.testRunId = Promise.resolve(config.testRunId);
@@ -31,29 +31,36 @@ export class BaseStrategy implements IStrategy {
   }
 
   private async updateTestLinkToWorkItems(externalId: string, workItemIds: Array<string>): Promise<void> {
-    const internalId = await this.client.autoTests.getAutotestByExternalId(externalId).then((test) => test?.id);
+    const existingAutotest = await this.client.autoTests.getAutotestByExternalId(externalId).then((test) => test?.id);
 
-    if (internalId === undefined) {
-      throw new Error(`Autotest with external id ${internalId} not found`);
+    if (existingAutotest === undefined) {
+      throw new Error(`Autotest with external id ${externalId} not found`);
     }
 
-    const linkedWorkItems = await this.client.autoTests.getWorkItemsLinkedToAutoTest(internalId);
+    const linkedWorkItems = await this.client.autoTests.getWorkItemsLinkedToAutoTest(existingAutotest);
 
-    for (const linkedWorkItem of linkedWorkItems) {
-        const linkedWorkItemId = linkedWorkItem.globalId.toString();
+    // Проверяем, является ли linkedWorkItems массивом, если нет - делаем его массивом
+    const workItemsArray = Array.isArray(linkedWorkItems) ? linkedWorkItems : linkedWorkItems ? [linkedWorkItems] : [];
 
-        if (workItemIds.includes(linkedWorkItemId)) {
-            delete workItemIds[workItemIds.indexOf(linkedWorkItemId)];
+    for (const linkedWorkItem of workItemsArray) {
+      const linkedWorkItemId = linkedWorkItem.globalId.toString();
 
-            continue;
+      if (workItemIds.includes(linkedWorkItemId)) {
+        // Правильно удаляем элемент из массива
+        const index = workItemIds.indexOf(linkedWorkItemId);
+        if (index > -1) {
+          workItemIds.splice(index, 1);
         }
 
-        if (this.config.automaticUpdationLinksToTestCases) {
-          await this.client.autoTests.unlinkToWorkItem(internalId, linkedWorkItemId);
-        }
+        continue;
+      }
+
+      if (this.config.automaticUpdationLinksToTestCases) {
+        await this.client.autoTests.unlinkToWorkItem(existingAutotest, linkedWorkItemId);
+      }
     }
 
-    await this.client.autoTests.linkToWorkItems(internalId, workItemIds).catch((err) => {
+    await this.client.autoTests.linkToWorkItems(existingAutotest, workItemIds).catch((err) => {
       console.log("Failed link work items. \n", err);
     });
   }

@@ -84,17 +84,42 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Setup environment
-        run: |        
-          dotnet build --configuration Debug --property WarningLevel=0 api-validator-dotnet
-          pip install testit-cli
+        run: |
+        
           cd ${{ matrix.adapter_name }}
           npm run build && npm link
+
+          # Copy built packages to examples directory node_modules
           cd ../js-examples/${{ matrix.project_name }}
-          npm link ${{ matrix.adapter_name }} && npm install
+          npm i
+
+          # Copy testit-api-client
+          rm -rf node_modules/testit-api-client
+          cp -r ../../testit-js-commons/node_modules/testit-api-client node_modules/testit-api-client
+
+          # Copy testit-js-commons
+          cp -r ../../testit-js-commons/lib node_modules/testit-js-commons/
+
+          # Copy the specific adapter
+          # Handle different output directories for different adapters
+          if [ "${{ matrix.adapter_name }}" = "testit-adapter-mocha" ]; then
+            cp -r ../../${{ matrix.adapter_name }}/lib node_modules/${{ matrix.adapter_name }}
+          elif [ "${{ matrix.adapter_name }}" = "testit-adapter-codecept" ]; then
+            cp -r ../../${{ matrix.adapter_name }}/build node_modules/${{ matrix.adapter_name }}
+          else
+            cp -r ../../${{ matrix.adapter_name }}/dist node_modules/${{ matrix.adapter_name }}
+          fi
+
           # Install Playwright browsers for codecept project
           if [ "${{ matrix.project_name }}" = "codecept" ]; then
             npx playwright install
           fi
+
+          cd ../..
+
+          dotnet build --configuration Debug --property WarningLevel=0 api-validator-dotnet
+          pip install testit-cli
+
       - name: Create TestRun
         run: |
           testit testrun create --token ${{ env.TMS_PRIVATE_TOKEN }} --output ${{ env.TEMP_FILE }}
@@ -109,9 +134,19 @@ jobs:
       - name: Test
         run: |
           cd js-examples/${{ matrix.project_name }}
-          npm install
+
+          # # Search for testit references in package-lock.json
+          # if [ -f "package-lock.json" ]; then
+          #   echo "=== Searching for testit references in package-lock.json ==="
+          #   echo "Found testit packages:"
+          #   grep -i "\"testit" package-lock.json || echo "No testit package references found"
+          #   echo ""
+          # else
+          #   echo "package-lock.json not found"
+          # fi
+
           npm run test || exit 0
-          
+
       - name: Validate
         run: |
           dotnet test --configuration Debug --no-build --logger:"console;verbosity=detailed" api-validator-dotnet
