@@ -1,12 +1,12 @@
 // @ts-ignore
-import TestitApiClient from "testit-api-client";
+import * as TestitApiClient from "testit-api-client";
 import { AdapterConfig, BaseService } from "../../common";
 import { handleHttpError } from "./testresults.handler";
 import { ITestResultsConverter, TestResultsConverter } from "./testresults.converter";
 import { ITestResultsService } from "./testresults.type";
 
 export class TestResultsService extends BaseService implements ITestResultsService {
-  protected _client
+  protected _client;
   protected _converter: ITestResultsConverter;
   protected _testsLimit: number = 100;
 
@@ -40,14 +40,17 @@ export class TestResultsService extends BaseService implements ITestResultsServi
 
   private async getTestResults(skip: number, model: any): Promise<any> {
     return await this._client
-        .apiV2TestResultsSearchPost({skip: skip, take: this._testsLimit, testResultsFilterApiModel: model} as any)
-        // @ts-ignore
-        .then(({ body }) => body)
-        // @ts-ignore
-        .catch((err) => {
-          handleHttpError(err);
+      .apiV2TestResultsSearchPost({ skip: skip, take: this._testsLimit, testResultsFilterApiModel: model } as any)
+      // @ts-ignore
+      .then((response) => {
+        const data = response.body || response;
+        return data;
+      })
+      // @ts-ignore
+      .catch((err) => {
+        handleHttpError(err);
 
-          return [];
-        });
+        return [];
+      });
   }
 }
