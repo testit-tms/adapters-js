@@ -1,6 +1,6 @@
 {
   "name": "testit-adapter-cucumber",
-  "version": "3.6.1",
+  "version": "3.6.1-TMS-5.6",
   "description": "Cucumber adapter for Test IT",
   "main": "dist/formatter.js",
   "scripts": {
@@ -23,7 +23,7 @@
   "dependencies": {
     "@cucumber/cucumber": "^7.3.1",
     "@cucumber/messages": "^17.1.1",
-    "testit-js-commons": "3.6.1"
+    "testit-js-commons": "3.6.1-TMS-5.6"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.15.8",
