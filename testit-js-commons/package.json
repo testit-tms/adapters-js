@@ -1,6 +1,6 @@
 {
   "name": "testit-js-commons",
-  "version": "3.6.1",
+  "version": "3.7.0",
   "description": "JavaScript commons for Test IT",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "dotenv": "^16.0.3",
-    "testit-api-client": "7.1.0"
+    "testit-api-client": "7.2.0"
   },
   "files": [
     "lib"
