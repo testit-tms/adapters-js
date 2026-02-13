@@ -6,7 +6,6 @@ import { AutotestGet, AutotestPost } from "./autotests.type";
 export interface IAutotestConverter {
   toOriginAutotest(autotest: AutotestPost): any;
   toLocalAutotest(autotest: AutoTestApiResult): AutotestGet;
-  toLocalAutotestByModel(autotest: AutoTestModelV2GetModel): AutotestGet;
 }
 
 export class AutotestConverter extends BaseConverter implements IAutotestConverter {
@@ -24,6 +23,7 @@ export class AutotestConverter extends BaseConverter implements IAutotestConvert
       setup: autotest.setup,
       teardown: autotest.teardown,
       labels: autotest.labels,
+      tags: autotest.tags,
       externalKey: autotest.externalKey,
       title: autotest.title,
       description: autotest.description,
@@ -31,25 +31,6 @@ export class AutotestConverter extends BaseConverter implements IAutotestConvert
       projectId: this.config.projectId,
       links: Array.isArray(autotest.links) ? autotest.links.map((link) => this.toOriginLink(link)) : undefined,
       shouldCreateWorkItem: this.config.automaticCreationTestCases,
-    };
-  }
-
-  public toLocalAutotestByModel(autotest: AutoTestModelV2GetModel): AutotestGet {
-    return {
-      id: autotest.id,
-      name: autotest.name ?? undefined,
-      externalId: autotest.externalId ?? undefined,
-      // @ts-ignore
-      links: autotest.links?.map((link) => this.toLocalLink(link)),
-      namespace: autotest.namespace ?? undefined,
-      classname: autotest.classname ?? undefined,
-      // @ts-ignore
-      steps: autotest.steps?.map((step) => this.toLocalShortStep(step)),
-      // @ts-ignore
-      setup: autotest.setup?.map((step) => this.toLocalShortStep(step)),
-      // @ts-ignore
-      teardown: autotest.teardown?.map((step) => this.toLocalShortStep(step)),
-      labels: autotest.labels ?? undefined,
     };
   }
 
@@ -69,6 +50,8 @@ export class AutotestConverter extends BaseConverter implements IAutotestConvert
       // @ts-ignore
       teardown: autotest.teardown?.map((step) => this.toLocalShortStep(step)),
       labels: autotest.labels ?? undefined,
+      // @ts-ignore
+      tags: autotest.tags ?? undefined,
     };
   }
 }

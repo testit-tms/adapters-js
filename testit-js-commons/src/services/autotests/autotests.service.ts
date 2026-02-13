@@ -85,6 +85,7 @@ export class AutotestsService extends BaseService implements IAutotestService {
       namespace: autotest.namespace,
       classname: autotest.classname,
       labels: autotest.labels,
+      tags: autotest.tags,
       workItemIds: autotest.workItemIds,
       isFlaky: autotest.isFlaky,
       shouldCreateWorkItem: autotest.shouldCreateWorkItem,

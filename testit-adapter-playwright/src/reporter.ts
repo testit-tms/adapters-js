@@ -184,6 +184,10 @@ class TmsReporter implements Reporter {
           autotestData.labels = metadata.labels;
         }
 
+        if (metadata.tags) {
+          autotestData.tags = metadata.tags;
+        }
+
         if (metadata.links) {
           autotestData.links = metadata.links;
         }

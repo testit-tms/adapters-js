@@ -134,7 +134,8 @@ Description of metadata properties:
 - `this.externalId` - unique internal autotest ID (used in Test IT)
 - `this.title` - autotest name specified in the autotest card. If not specified, the name from the displayName method is used
 - `this.description` - autotest description specified in the autotest card
-- `this.labels` - tags listed in the autotest card
+- `this.labels` - labels listed in the autotest card
+- `this.tags` - tags listed in the autotest card
 - `this.links` - links listed in the autotest card
 - `this.nameSpace` - directory in the TMS system (default - directory's name of test)
 - `this.className` - subdirectory in the TMS system (default - file's name of test)
