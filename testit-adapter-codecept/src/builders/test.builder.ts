@@ -16,6 +16,7 @@ export class TestsBuilder {
       title: config?.title,
       name: config?.displayName ?? test.title,
       labels: (config?.labels ?? []).map((label) => ({ name: label })),
+      tags: config?.tags ?? [],
       description: config?.description ?? "",
       steps: this.buildManySteps(test.steps),
       setup,

@@ -135,7 +135,8 @@ Description of metadata methods:
 - `externalId` - unique internal autotest ID (used in Test IT)
 - `title` - autotest name specified in the autotest card. If not specified, the name from the displayName method is used
 - `description` - autotest description specified in the autotest card
-- `labels` - tags listed in the autotest card
+- `labels` - labels listed in the autotest card
+- `tags` - tags listed in the autotest card
 - `link` - links listed in the autotest card
 - `namespace` - directory in the TMS system
 - `classname` - subdirectory in the TMS system

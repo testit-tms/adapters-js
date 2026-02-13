@@ -18,6 +18,7 @@ const emptyAutotestData = (): AutotestData => ({
   attachments: [],
   links: [],
   labels: [],
+  tags: [],
 });
 
 const emptyStepData = (): Step => ({
@@ -59,6 +60,7 @@ export default class TestItEnvironment extends NodeEnvironment {
       displayName: this.setDisplayName.bind(this),
       links: this.setLinks.bind(this),
       labels: this.setLabels.bind(this),
+      tags: this.setTags.bind(this),
       workItemIds: this.setWorkItems.bind(this),
       params: this.setParams.bind(this),
       step: this.startStep.bind(this),
@@ -217,6 +219,7 @@ export default class TestItEnvironment extends NodeEnvironment {
         description: autotest.description,
         links: autotest.links,
         labels: autotest.labels,
+        tags: autotest.tags,
         namespace: autotest.namespace ?? Utils.getDir(this.testPath),
         classname: autotest.classname ?? Utils.getFileName(this.testPath),
         setup: setupSteps,
@@ -311,6 +314,11 @@ export default class TestItEnvironment extends NodeEnvironment {
   setLabels(labels: string[]) {
     log("Setting labels to %s", this.autotestData.name);
     this.autotestData.labels = labels.map((label) => ({ name: label }));
+  }
+
+  setTags(tags: string[]) {
+    log("Setting tags to %s", this.autotestData.name);
+    this.autotestData.tags = tags;
   }
 
   setWorkItems(workItems: string[]) {

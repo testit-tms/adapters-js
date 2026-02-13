@@ -28,6 +28,7 @@ interface AutotestBase {
   setup?: Array<ShortStep>;
   teardown?: Array<ShortStep>;
   labels?: Array<Label>;
+  tags?: Array<string>;
   externalKey?: string;
 }
 

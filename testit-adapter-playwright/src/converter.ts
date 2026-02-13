@@ -34,6 +34,7 @@ export class Converter {
         title: autotestData.title,
         description: autotestData.description,
         labels: autotestData.labels,
+        tags: autotestData.tags,
         links: autotestData.links,
         namespace: autotestData.namespace,
         classname: autotestData.classname,
