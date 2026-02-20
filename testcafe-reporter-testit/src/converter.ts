@@ -21,6 +21,7 @@ export class Converter {
         title: autotestData.title,
         description: autotestData.description,
         labels: autotestData.labels?.map((label) => ({ name: label })),
+        tags: autotestData.tags,
         links: autotestData.links,
         namespace: autotestData.namespace,
         classname: autotestData.classname,
