@@ -125,7 +125,8 @@ Description of metadata methods:
 - `testit.externalId` - ID of the autotest within the project in the Test IT System
 - `testit.title` - title in the autotest card
 - `testit.description` - description in the autotest card
-- `testit.labels` - tags in the work item
+- `testit.labels` - labels in the autotest card
+- `testit.tags` - tags in the autotest card
 - `testit.links` - links in the autotest card
 - `testit.namespace` - directory in the TMS system (default - directory's name of test)
 - `testit.classname` - subdirectory in the TMS system (default - file's name of test)

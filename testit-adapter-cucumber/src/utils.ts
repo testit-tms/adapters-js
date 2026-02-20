@@ -28,6 +28,9 @@ export function getTagType(tag: string): TagType {
   if (new RegExp(`^@${tags.labels}=.+$`).test(tag)) {
     return TagType.Label;
   }
+  if (new RegExp(`^@${tags.tags}=.+$`).test(tag)) {
+    return TagType.Tag;
+  }
   if (new RegExp(`^@${tags.nameSpace}=.+$`).test(tag)) {
     return TagType.NameSpace;
   }
@@ -73,6 +76,13 @@ function getLabel(tag: string): string[] {
     .map((label) => label.trim());
 }
 
+function getTag(tag: string): string[] {
+  return parseSpaceInTag(tag
+    .replace(new RegExp(`^@${tags.tags}=`), ""))
+    .split(",")
+    .map((tag) => tag.trim());
+}
+
 function getNameSpace(tag: string): string {
   return parseSpaceInTag(tag.replace(new RegExp(`^@${tags.nameSpace}=`), ""));
 }
@@ -82,7 +92,7 @@ function getClassName(tag: string): string {
 }
 
 export function parseTags(tags: readonly Pick<Tag, "name">[]): ParsedTags {
-  const parsedTags: ParsedTags = { links: [], labels: [], workItemIds: [] };
+  const parsedTags: ParsedTags = { links: [], labels: [], tags: [], workItemIds: [] };
   for (const tag of tags) {
     switch (getTagType(tag.name)) {
       case TagType.ExternalId:
@@ -115,6 +125,10 @@ export function parseTags(tags: readonly Pick<Tag, "name">[]): ParsedTags {
       }
       case TagType.Label: {
         parsedTags.labels?.push(...getLabel(tag.name));
+        continue;
+      }
+      case TagType.Tag: {
+        parsedTags.tags?.push(...getTag(tag.name));
         continue;
       }
       case TagType.NameSpace: {

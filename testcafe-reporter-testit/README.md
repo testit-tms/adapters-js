@@ -91,7 +91,8 @@ Description of metadata properties:
 - `externalId` - unique internal autotest ID (used in Test IT)
 - `title` - autotest name specified in the autotest card. If not specified, the name from the displayName method is used
 - `description` - autotest description specified in the autotest card
-- `labels` - tags listed in the autotest card
+- `labels` - labels listed in the autotest card
+- `tags` - tags listed in the autotest card
 - `links` - links listed in the autotest card
 - `nameSpace` - directory in the TMS system (default - directory's name of test)
 - `className` - subdirectory in the TMS system (default - file's name of test)
@@ -135,6 +136,7 @@ test.meta({
   classname: 'classname',
   workItemIds: ['123', '321'],
   labels: ['label1', 'label2'],
+  tags: ['tag1', 'tag2'],
 })('test', async t => {
   adapter.addMessage(t, "Message");
   adapter.addAttachments(t, paths);

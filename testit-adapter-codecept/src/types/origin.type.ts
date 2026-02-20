@@ -8,6 +8,7 @@ export namespace Origin {
     externalId?: string;
     links: Link[];
     labels?: string[];
+    tags?: string[];
     workItemIds?: [];
     classname?: string;
     namespace?: string;
