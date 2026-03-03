@@ -81,12 +81,20 @@ export class BaseConverter implements IBaseConverter {
       description: step.description,
       parameters: step.parameters,
       attachments: step.attachments,
-      outcome: step.outcome ? this.toOriginOutcome(step.outcome) : undefined,
+      outcome: step.outcome ? step.outcome : undefined,
       stepResults: step.steps?.map((step) => this.toOriginStep(step)),
     };
 
     if (step.duration !== undefined) {
       model.duration = step.duration;
+    }
+    if (step.startedOn !== undefined) {
+      // @ts-ignore
+      model.startedOn = step.startedOn;
+    }
+    if (step.completedOn !== undefined) {
+      // @ts-ignore
+      model.completedOn = step.completedOn;
     }
 
     return model;

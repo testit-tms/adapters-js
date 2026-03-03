@@ -27,7 +27,9 @@ export class TestResultsConverter extends BaseConverter implements ITestResultsC
         startedOn: undefined,
         completedOn: undefined,
         duration: undefined,
-        resultReasons: undefined
+        resultReasons: undefined,
+        autoTestTags: undefined,
+        excludeAutoTestTags: undefined
     };
 
     return model;
