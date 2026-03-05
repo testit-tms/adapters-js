@@ -1,6 +1,6 @@
 {
   "name": "testit-adapter-cypress",
-  "version": "3.7.3",
+  "version": "3.7.4",
   "description": "Cypress adapter for Test IT",
   "license": "Apache-2.0",
   "author": {
@@ -42,7 +42,7 @@
     "@types/node": "^20.14.2"
   },
   "dependencies": {
-    "testit-js-commons": "3.7.3"
+    "testit-js-commons": "3.7.4"
   },
   "files": [
     "dist"
