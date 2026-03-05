@@ -1,6 +1,5 @@
 import { Status } from "testit-js-commons";
-import { StatusDetails } from "../models/types.js";
-import {
+import type {
   CypressConsoleProps,
   CypressHook,
   CypressLogEntry,
@@ -9,6 +8,7 @@ import {
   CypressSuite,
   CypressTest,
   StepDescriptor,
+  StatusDetails,
 } from "../models/types.js";
 import { TMS_REPORT_SYSTEM_HOOK } from "./events/mocha.js";
 import { getTmsState, getProjectDir } from "./state.js";

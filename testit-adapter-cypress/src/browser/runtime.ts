@@ -1,7 +1,6 @@
 import { Label, Link, Status } from "testit-js-commons";
 import type { AttachmentOptions, TestRuntime } from "./types.js";
-import type  { StatusDetails } from "../models/types.js";
-import type { TmsCypressTaskArgs, CypressMessage } from "../models/types.js";
+import type { TmsCypressTaskArgs, CypressMessage, StatusDetails } from "../models/types.js";
 import { enqueueRuntimeMessage, getRuntimeMessages, setRuntimeMessages } from "./state.js";
 import { TMS_STEP_CMD_SUBJECT, startTmsApiStep, stopCurrentTmsApiStep } from "./steps.js";
 import { getGlobalTestRuntime, getMessageAndTraceFromError, setGlobalTestRuntime, uint8ArrayToBase64 } from "./utils.js";

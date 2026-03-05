@@ -1,6 +1,5 @@
 import { ContentType } from "./types.js";
-import { StatusDetails } from "../models/types.js";
-import { CypressFailMessage, CypressHook, CypressSuite, CypressTest, StepDescriptor } from "../models/types.js";
+import type { CypressFailMessage, CypressHook, CypressSuite, CypressTest, StepDescriptor, StatusDetails } from "../models/types.js";
 import { getTestRuntime } from "./runtime.js";
 import { dropCurrentTest, enqueueRuntimeMessage, getCurrentTest, setCurrentTest } from "./state.js";
 import { finalizeSteps, stopAllSteps } from "./steps.js";
