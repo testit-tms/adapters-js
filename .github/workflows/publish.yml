@@ -9,28 +9,28 @@ permissions:
   contents: read
 
 jobs:
-  # publish_commons:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #       - name: Get repository code [testit-js-commons]
-  #         uses: actions/checkout@v4
-  #       - name: Install Node JS
-  #         uses: actions/setup-node@v4
-  #         with:
-  #           node-version: '24'
-  #           registry-url: 'https://registry.npmjs.org'
-  #       - name: Install dependecies
-  #         working-directory: testit-js-commons
-  #         run: npm install
-  #       - name: Build application testit-js-commons
-  #         working-directory: testit-js-commons
-  #         run: npm run build
-  #       - run: npm publish --tag latest
-  #         working-directory: testit-js-commons
+  publish_commons:
+    runs-on: ubuntu-latest
+    steps:
+        - name: Get repository code [testit-js-commons]
+          uses: actions/checkout@v4
+        - name: Install Node JS
+          uses: actions/setup-node@v4
+          with:
+            node-version: '24'
+            registry-url: 'https://registry.npmjs.org'
+        - name: Install dependecies
+          working-directory: testit-js-commons
+          run: npm install
+        - name: Build application testit-js-commons
+          working-directory: testit-js-commons
+          run: npm run build
+        - run: npm publish --tag latest
+          working-directory: testit-js-commons
      
 
   publish_adapters:
-    # needs: publish_commons
+    needs: publish_commons
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -38,12 +38,12 @@ jobs:
         node-version: ['24']
         package: [
             testit-adapter-codecept,
-            # testit-adapter-cucumber,
-            # testit-adapter-jest,
-            # testit-adapter-mocha,
+            testit-adapter-cucumber,
+            testit-adapter-jest,
+            testit-adapter-mocha,
             testit-adapter-playwright,
-            # testcafe-reporter-testit,
-            # testit-adapter-cypress
+            testcafe-reporter-testit,
+            testit-adapter-cypress
         ]
     steps:
       - name: Get repository code [${{ matrix.package }}]
