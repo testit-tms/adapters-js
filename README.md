@@ -3,7 +3,7 @@ The repository contains new versions of adapters for JS test frameworks.
 
 ## Compatibility
 
-| Test IT | Codecept        | Cucumber        | Jest            | Mocha           | Playwright      | TestCafe        | TestCafe        |
+| Test IT | Codecept        | Cucumber        | Jest            | Mocha           | Playwright      | TestCafe        | Cypress         |
 |---------|-----------------|-----------------|-----------------|-----------------|-----------------|-----------------|-----------------|
 | 3.5     | -               | 1.0             | -               | -               | -               | -               | -               |
 | 4.0     | 1.1             | 1.1             | 1.1             | 1.1             | 2.0             | -               | -               |
