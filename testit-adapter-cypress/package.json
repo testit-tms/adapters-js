@@ -1,0 +1,50 @@
+{
+  "name": "testit-adapter-cypress",
+  "version": "3.7.3",
+  "description": "Cypress adapter for Test IT",
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Integration team",
+    "email": "integrations@testit.software"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/testit-tms/adapters-js.git"
+  },
+  "keywords": [],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./reporter": {
+      "types": "./dist/reporter.d.ts",
+      "default": "./dist/reporter.js"
+    },
+    "./runtime": {
+      "types": "./dist/browser/runtime.d.ts",
+      "default": "./dist/browser/runtime.js"
+    }
+  },
+  "scripts": {
+    "clean": "rimraf ./dist ./out",
+    "prebuild": "npm --prefix ../testit-js-commons run build && npm link ../testit-js-commons",
+    "build": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "cypress": "14.2.0",
+    "typescript": "^5.2.2",
+    "esbuild": "^0.27.0",
+    "eslint": "^8.57.0",
+    "@types/eslint": "^8.56.11",
+    "@types/node": "^20.14.2"
+  },
+  "dependencies": {
+    "testit-js-commons": "3.7.3"
+  },
+  "files": [
+    "dist"
+  ]
+}

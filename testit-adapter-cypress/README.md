@@ -1,11 +1,11 @@
-# Test IT TMS adapters for Jest
+# Test IT TMS adapters for Cypress
 ![Test IT](https://raw.githubusercontent.com/testit-tms/adapters-js/master/images/banner.png)
 
 ## Getting Started
 
 ### Installation
 ```
-npm install testit-adapter-jest
+npm install testit-adapter-cypress
 ```
 
 ## Usage
@@ -25,9 +25,30 @@ npm install testit-adapter-jest
 | Mode of automatic creation test cases (**It's optional**). Default value - false. The adapter supports following modes:<br/>true - in this mode, the adapter will create a test case linked to the created autotest (not to the updated autotest)<br/>false - in this mode, the adapter will not create a test case                                                                    | automaticCreationTestCases        | TMS_AUTOMATIC_CREATION_TEST_CASES          |
 | Mode of automatic updation links to test cases (**It's optional**). Default value - false. The adapter supports following modes:<br/>true - in this mode, the adapter will update links to test cases<br/>false - in this mode, the adapter will not update link to test cases                                                                                                         | automaticUpdationLinksToTestCases | TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES |
 
+Add Adapter to Cypress file configuration:
+
+```ts
+import { tmsCypress } from "testit-adapter-cypress/reporter";
+
+export default {
+  e2e: {
+    setupNodeEvents(on, config) {
+      tmsCypress(on, config);
+
+      return config;
+    },
+  },
+};
+```
+
+Add Adapter to `cypress/support/e2e.js`:
+```ts
+import "testit-adapter-cypress";
+```
+
 #### File
 
-1. Create .env config or file config with default name tms.config.json in the root directory of the project
+Create .env config or file config with default name tms.config.json in the root directory of the project
 
 ```json
 {
@@ -37,61 +58,34 @@ npm install testit-adapter-jest
   "configurationId": "CONFIGURATION_ID",
   "testRunId": "TEST_RUN_ID",
   "testRunName": "TEST_RUN_NAME",
-  "adapterMode": ADAPTER_MODE,
-  "automaticCreationTestCases": AUTOMATIC_CREATION_TEST_CASES,
-  "automaticUpdationLinksToTestCases": AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES
+  "adapterMode": "ADAPTER_MODE",
+  "automaticCreationTestCases": "AUTOMATIC_CREATION_TEST_CASES",
+  "automaticUpdationLinksToTestCases": "AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES"
 }
 ```
 
-2. You need to set custom setup and teardown in `jest.config.js`. Additionally, you can set adapter config in this file
+#### Parallel run
+To create and complete TestRun you can use the Test IT CLI (use adapterMode 1 for parallel run):
 
-```js
-module.exports = {
-  testEnvironment: 'testit-adapter-jest',
-  globalSetup: 'testit-adapter-jest/dist/globalSetup.js',
-  globalTeardown: 'testit-adapter-jest/dist/globalTeardown.js',
-  testEnvironmentOptions: {
-    url: 'URL',
-    privateToken: 'USER_PRIVATE_TOKEN',
-    projectId: 'PROJECT_ID',
-    configurationId: 'CONFIGURATION_ID',
-    testRunId: 'TEST_RUN_ID',
-    adapterMode: ADAPTER_MODE,
-    automaticCreationTestCases: AUTOMATIC_CREATION_TEST_CASES,
-    automaticUpdationLinksToTestCases: AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES
-  },
-};
 ```
+$ export TMS_TOKEN=<YOUR_TOKEN>
+$ testit testrun create
+  --url https://tms.testit.software \
+  --project-id 5236eb3f-7c05-46f9-a609-dc0278896464 \
+  --testrun-name "New test run" \
+  --output tmp/output.txt
 
-3. You also can extract environment configuration to external config and launch tests with `jest --config ./testit.jest.config.js`.
+$ export TMS_TEST_RUN_ID=$(cat tmp/output.txt)  
 
-```js
-// testit.jest.config.js
-const defaultConfig = require('./jest.config');
+$ npx cypress run
 
-module.exports = {
-  ...defaultConfig,
-  testEnvironment: 'testit-adapter-jest',
-  globalSetup: 'testit-adapter-jest/dist/globalSetup.js',
-  globalTeardown: 'testit-adapter-jest/dist/globalTeardown.js',
-  testEnvironmentOptions: {
-    url: 'URL',
-    privateToken: 'USER_PRIVATE_TOKEN',
-    projectId: 'PROJECT_ID',
-    configurationId: 'CONFIGURATION_ID',
-    testRunId: 'TEST_RUN_ID',
-    adapterMode: ADAPTER_MODE,
-    automaticCreationTestCases: AUTOMATIC_CREATION_TEST_CASES,
-    automaticUpdationLinksToTestCases: AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES
-  },
-};
+$ testit testrun complete
+  --url https://tms.testit.software \
+  --testrun-id $(cat tmp/output.txt) 
 ```
-
-#### Command line
-
-You can also specify options via cli arguments `jest --testEnvironment testit-adapter-jest --testEnvironmentOptions "{\"url\":\"URL\",\"privateToken\":\"USER_PRIVATE_TOKEN\",\"projectId\":\"PROJECT_ID\",\"configurationId\":\"CONFIGURATION_ID\",\"testRunId\":\"TEST_RUN_ID\",\"adapterMode\":ADAPTER_MODE,\"automaticCreationTestCases\":AUTOMATIC_CREATION_TEST_CASES,\"automaticUpdationLinksToTestCases\":AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES}" --globalSetup testit-adapter-jest/dist/globalSetup.js --globalTeardown testit-adapter-jest/dist/globalTeardown.js`
 
 #### Run with filter
+It is necessary to use test filtering in cypress. This example uses the "@cypress/grep" plugin.
 To create filter by autotests you can use the Test IT CLI (use adapterMode 1 for run with filter):
 
 ```
@@ -100,66 +94,94 @@ $ testit autotests_filter
   --url https://tms.testit.software \
   --configuration-id 5236eb3f-7c05-46f9-a609-dc0278896464 \
   --testrun-id 6d4ac4b7-dd67-4805-b879-18da0b89d4a8 \
-  --framework jest \
+  --framework cypress \
   --output tmp/filter.txt
 
 $ export TMS_TEST_RUN_ID=6d4ac4b7-dd67-4805-b879-18da0b89d4a8
 $ export TMS_ADAPTER_MODE=1
 
-$ npx jest -t "$(cat tmp/filter.txt)"
+$ npx cypress run --expose grep="$(cat tmp/filter.txt)"
 ```
+
+#### Launch using GitLab repository
+To run your Cypress test's from GitLab to TestIT or in reverse order using "testit-adapter-cypress", you can take this .gitlab-ci.yml file example:
+
+```
+image: node:latest
+
+stages:
+  - run
+
+first-job:
+  stage: run
+  script:
+    - npm install
+    - npx cypress run
+  artifacts:
+    paths:
+      - node_modules/
+```
+
 
 ### Methods
 
 Methods can be used to specify information about autotest.
 
-Description of metadata methods:
-- `testit.workItemIds` - a method that links autotests with manual tests. Receives the array of manual tests' IDs
-- `testit.displayName` - internal autotest name (used in Test IT)
-- `testit.externalId` - unique internal autotest ID (used in Test IT)
-- `testit.title` - autotest name specified in the autotest card. If not specified, the name from the displayName method is used
-- `testit.description` - autotest description specified in the autotest card
-- `testit.labels` - labels listed in the autotest card
-- `testit.tags` - tags listed in the autotest card
-- `testit.link` - links listed in the autotest card
-- `testit.namespace` - directory in the TMS system (default - directory's name of test)
-- `testit.classname` - subdirectory in the TMS system (default - file's name of test)
-
 Description of methods:
-- `testit.addLinks` - links in the autotest result
-- `testit.addAttachments` - uploading files in the autotest result
-- `testit.addMessage` - information about autotest in the autotest result
-- `testit.step` - add step of autotest
+- `tms.addWorkItemIds` - a dynamic method that links autotests with manual tests. Receives the array of manual tests' IDs
+- `tms.addDisplayName` - a dynamic method for adding internal autotest name (used in Test IT)
+- `tms.addTitle` - a dynamic method for adding autotest name specified in the autotest card. If not specified, the name from the displayName method is used
+- `tms.addDescription` - a dynamic method for adding autotest description specified in the autotest card
+- `tms.addLabels` - a dynamic method for adding labels listed in the autotest card
+- `tms.addTags` - a dynamic method for adding tags listed in the autotest card
+- `tms.addLinks` - links in the autotest result
+- `tms.addAttachments` - uploading files in the autotest result
+- `tms.addMessage` - information about autotest in the autotest result
+- `tms.addNameSpace` - a dynamic method for adding directory in the TMS system (default - file's name of test)
+- `tms.addClassName` - a dynamic method for adding subdirectory in the TMS system (default - class's name of test)
+- `tms.addParameter` - a dynamic method for adding parameter in the autotest result
+- `tms.step` - usage in the "with" construct to designation a step in the body of the test
 
 ### Examples
 
 #### Simple test
-```js
-test('All annotations', () => {
-  testit.externalId('all_annotations');
-  testit.displayName('All annotations');
-  testit.title('All annotations title');
-  testit.description('Test with all annotations');
-  testit.labels(['label1', 'label2']);
+```ts
+import { getTestRuntime } from "testit-adapter-cypress/runtime";
 
-  testit.addMessage('This is a message');
-  testit.addLinks([
-    {
-      url: 'https://www.google.com',
-      title: 'Google',
-      description: 'This is a link to Google',
-      type: 'Related',
-    },
-  ]);
+describe('example to-do app', () => {
+  it('displays two todo items by default', () => {
+    const tms = getTestRuntime();
 
-  testit.addAttachments([join(__dirname, 'attachment1.txt')]);
-  testit.addAttachments('This is a custom attachment', 'custom.txt');
+    tms.addWorkItemIds('123', '321');
+    tms.addDisplayName('display name');
+    tms.addTitle('test title');
+    tms.addDescription('Test description');
+    tms.addLabels('label1', 'label2');
+    tms.addTags('tag1', 'tag2');
+    tms.addLinks([
+      {
+        url: 'https://www.google.com',
+        title: 'Google',
+        description: 'This is a link to Google',
+        type: 'Related',
+      },
+    ]);
+    tms.addParameter("name", "value");
+    tms.addNameSpace("namespace");
+    tms.addClassName("classname");
 
-  expect(1).toBe(1);
+    tms.step("step title", () => {
+      // ...
+    }).then((user) => {
+      tms.step("inner step title", () => {
+        // ...
+      });
+    });
+  });
 });
 ```
 
-#### Parameterized test
+### Parameterized test
 
 > [!WARNING]
 > When linking a parameterized autotest to a parameterized test case, please consider the problematic points:
@@ -168,34 +190,40 @@ test('All annotations', () => {
 > - In TMS, the parameters are limited to the string type, so the adapter transmits absolutely all the autotest parameters as a string. This implies the following problematic point for the test case table
 > - TMS expects a complete **textual** match of the name and value of the parameters of the test case table with the autotest parameters
 
-```js
-test.each([1, 2, 3, 4])('Primitive params', (number) => {
-  testit.params(number);
-  expect(number).toBe(number);
-});
+```ts
+import { getTestRuntime } from "testit-adapter-cypress/runtime";
 
-test.each([
-  {
-    a: 1,
-    b: 2,
-    sum: 3,
-  },
-  {
-    a: 2,
-    b: 3,
-    sum: 5,
-  },
-  {
-    a: 4,
-    b: 3,
-    sum: 5,
-  }
-])('Object params', (params) => {
-  testit.params(params);
-  expect(params.a + params.b).toBe(params.sum);
+describe('example to-do app', () => {
+  const tests = [2, 3, "string", false];
+
+  tests.forEach((value) => {
+    it(`3 is ${value}`, () => {
+      const tms = getTestRuntime();
+
+      tms.addParameter("name", value);
+      // ...
+    });
+  });
 });
 ```
 
+#### Content types
+```
+  TEXT = "text/plain",
+  XML = "application/xml",
+  HTML = "text/html",
+  CSV = "text/csv",
+  TSV = "text/tab-separated-values",
+  CSS = "text/css",
+  URI = "text/uri-list",
+  SVG = "image/svg+xml",
+  PNG = "image/png",
+  JSON = "application/json",
+  ZIP = "application/zip",
+  WEBM = "video/webm",
+  JPEG = "image/jpeg",
+  MP4 = "video/mp4",
+```
 
 # Contributing
 
