@@ -1,10 +1,10 @@
-import { isPromise } from "../reporter-api/sdk-utils.js";
-import type { CypressSuiteFunction, DirectHookImplementation, HookImplementation } from "../types.js";
+import type { CypressSuiteFunction, DirectHookImplementation, HookImplementation } from "../models/types.js";
 import {
   completeSpecIfNoAfterHookLeft,
   completeSpecOnAfterHookFailure,
   throwAfterSpecCompletion,
 } from "./lifecycle.js";
+import { isPromise } from "./utils.js";
 
 type SuiteDepthCounter = {
   getSuiteDepth: () => number;

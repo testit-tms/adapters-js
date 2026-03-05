@@ -1,3 +1,8 @@
+/**
+ * Helpers that use Node.js built-in modules. Import only in Node context (e.g. reporter, plugins).
+ * Do not import in browser bundle (Cypress support/specs).
+ */
+
 import * as fs from "node:fs";
 import * as path from "node:path";
 import process from "node:process";
@@ -40,10 +45,10 @@ export interface TestPlanV1 {
 }
 
 export function parseTestPlan(): TestPlanV1 | undefined {
-  const path = process.env.TMS_TESTPLAN_PATH;
-  if (!path) return undefined;
+  const envPath = process.env.TMS_TESTPLAN_PATH;
+  if (!envPath) return undefined;
   try {
-    const content = fs.readFileSync(path, "utf-8");
+    const content = fs.readFileSync(envPath, "utf-8");
     const plan = JSON.parse(content) as TestPlanV1;
     if (!plan.tests?.length) return undefined;
     return plan;

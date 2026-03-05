@@ -1,13 +1,10 @@
-import { Label, Link } from "testit-js-commons";
-import type { AttachmentOptions, StatusDetails } from "../reporter-api/model.js";
-import { Status } from "../reporter-api/model.js";
-import { getMessageAndTraceFromError } from "../reporter-api/sdk-utils.js";
-import type { TestRuntime } from "../reporter-api/sdk-runtime.js";
-import { getGlobalTestRuntime, setGlobalTestRuntime } from "../reporter-api/sdk-runtime.js";
-import type { TmsCypressTaskArgs, CypressMessage } from "../types.js";
+import { Label, Link, Status } from "testit-js-commons";
+import type { AttachmentOptions, TestRuntime } from "./types.js";
+import type  { StatusDetails } from "../models/types.js";
+import type { TmsCypressTaskArgs, CypressMessage } from "../models/types.js";
 import { enqueueRuntimeMessage, getRuntimeMessages, setRuntimeMessages } from "./state.js";
 import { TMS_STEP_CMD_SUBJECT, startTmsApiStep, stopCurrentTmsApiStep } from "./steps.js";
-import { uint8ArrayToBase64 } from "./utils.js";
+import { getGlobalTestRuntime, getMessageAndTraceFromError, setGlobalTestRuntime, uint8ArrayToBase64 } from "./utils.js";
 
 export const initTestRuntime = () => setGlobalTestRuntime(new TmsCypressTestRuntime() as TestRuntime);
 

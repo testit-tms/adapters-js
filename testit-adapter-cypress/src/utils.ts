@@ -28,8 +28,6 @@ export const toReversed = <T = unknown>(arr: T[]): T[] => {
   return result;
 };
 
-export const last = <T = unknown>(arr: T[]): T | undefined => {
-  return arr[arr.length - 1];
-};
+export const last = <T = unknown>(arr: T[]): T | undefined => arr[arr.length - 1];
 
 export const isDefined = <T>(value: T | undefined): value is T => typeof value !== "undefined";

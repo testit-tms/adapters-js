@@ -7,15 +7,13 @@ import type {
 } from "testit-js-commons";
 import { Utils, Label, Link } from "testit-js-commons";
 
-export type OutcomeStatus = "passed" | "failed" | "broken" | "skipped";
-
 export interface StepData {
   id: string;
   name: string;
   start: number;
   stop?: number;
   duration?: number;
-  status?: OutcomeStatus;
+  status?: Outcome;
   statusDetails?: { message?: string; trace?: string };
   attachmentIds: string[];
   children: StepData[];
@@ -34,7 +32,7 @@ export interface TestData {
   workItemIds: string[];
   start?: number;
   stop?: number;
-  outcome?: OutcomeStatus;
+  outcome: Outcome;
   duration?: number;
   statusDetails?: { message?: string; trace?: string };
   steps: StepData[];
@@ -44,16 +42,10 @@ export interface TestData {
   externalKey: string;
 }
 
-function statusToOutcome(s?: OutcomeStatus): Outcome {
-  if (s === "skipped") return "Skipped";
-  if (s === "failed" || s === "broken") return "Failed";
-  return "Passed";
-}
-
 function stepDataToStep(s: StepData): Step {
   const step: Step = {
     title: s.name,
-    outcome: statusToOutcome(s.status),
+    outcome: s.status,
     attachments: s.attachmentIds.map((id) => ({ id })),
     steps: s.children.length ? s.children.map(stepDataToStep) : undefined,
   };

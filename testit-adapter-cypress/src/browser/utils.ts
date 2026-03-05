@@ -1,7 +1,6 @@
-import { Status } from "../reporter-api/model.js";
-import type { StatusDetails } from "../reporter-api/model.js";
-import { extractMetadataFromString, getMessageAndTraceFromError, getStatusFromError } from "../reporter-api/sdk-utils.js";
-import type {
+import { Status } from "testit-js-commons";
+import { StatusDetails } from "../models/types.js";
+import {
   CypressConsoleProps,
   CypressHook,
   CypressLogEntry,
@@ -10,10 +9,11 @@ import type {
   CypressSuite,
   CypressTest,
   StepDescriptor,
-} from "../types.js";
+} from "../models/types.js";
 import { TMS_REPORT_SYSTEM_HOOK } from "./events/mocha.js";
 import { getTmsState, getProjectDir } from "./state.js";
 import { resolveStepStatus } from "./steps.js";
+import { noopRuntime, TestRuntime } from "./types.js";
 
 const IS_WIN = Cypress.platform === "win32";
 
@@ -110,11 +110,9 @@ export const getSuiteTitlePath = (test: CypressTest): string[] =>
 export const generateApiStepId = () => (getTmsState().nextApiStepId++).toString();
 
 export const getTestMetadata = (test: CypressTest) => {
-  const rawName = test.title;
-  const { cleanTitle: name, labels, links } = extractMetadataFromString(rawName);
   const suites = test.titlePath().slice(0, -1);
-  const fullNameSuffix = `${[...suites, name].join(" ")}`;
-  return { name, labels, links, fullNameSuffix };
+  const fullNameSuffix = `${[...suites, test.title].join(" ")}`;
+  return { name: test.title, fullNameSuffix };
 };
 
 export const isTmsHook = (hook: CypressHook) => hook.title.includes(TMS_REPORT_SYSTEM_HOOK);
@@ -135,7 +133,7 @@ export const getStatusDataOfTestSkippedByHookError = (
   err: Error,
   suite: CypressSuite,
 ) => {
-  const status = isEachHook ? Status.SKIPPED : getStatusFromError(err);
+  const status = isEachHook ? Status.SKIPPED : Status.FAILED;
   const { message, trace } = getMessageAndTraceFromError(err);
   return {
     status,
@@ -163,4 +161,52 @@ export const resolveRenderProps = (entry: CypressLogEntry): CypressRenderProps =
   return typeof entry?.attributes?.renderProps === "function"
     ? entry.attributes.renderProps()
     : entry.attributes?.renderProps;
+};
+
+export const getMessageAndTraceFromError = (
+  error: Error | { message?: string; stack?: string },
+): StatusDetails => {
+  const message = error.message ?? undefined;
+  const trace = error.stack ?? undefined;
+  const v = error as Record<string, unknown>;
+  const actual = v.actual !== undefined ? serialize(v.actual) : undefined;
+  const expected = v.expected !== undefined ? serialize(v.expected) : undefined;
+  return { message, trace, actual, expected };
+};
+
+export const isPromise = (obj: unknown): obj is PromiseLike<unknown> =>
+  !!obj &&
+  (typeof obj === "object" || typeof obj === "function") &&
+  "then" in (obj as object) &&
+  typeof (obj as PromiseLike<unknown>).then === "function";
+
+export type SerializeOptions = { maxDepth?: number; maxLength?: number; replacer?: (key: string, value: unknown) => unknown };
+
+export const serialize = (value: unknown, opts: SerializeOptions = {}): string => {
+  const { maxLength = 0 } = opts;
+  let stringValue: string;
+  if (typeof value === "object" && value !== null) {
+    try {
+      stringValue = JSON.stringify(value);
+    } catch {
+      stringValue = String(value);
+    }
+  } else {
+    stringValue = String(value);
+  }
+  if (maxLength && stringValue.length > maxLength) {
+    return stringValue.slice(0, maxLength) + "...";
+  }
+  return stringValue;
+};
+
+const KEY = "tmsTestRuntime";
+
+export const setGlobalTestRuntime = (r: TestRuntime): void => {
+  (globalThis as Record<string, unknown>)[KEY] = () => r;
+};
+
+export const getGlobalTestRuntime = (): TestRuntime => {
+  const fn = (globalThis as Record<string, unknown>)[KEY] as (() => TestRuntime | undefined) | undefined;
+  return fn?.() ?? noopRuntime;
 };

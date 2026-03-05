@@ -1,4 +1,4 @@
-import type { CypressLogEntry } from "../../types.js";
+import type { CypressLogEntry } from "../../models/types.js";
 import {
   setupScreenshotAttachmentStep,
   shouldCreateStepFromCommandLogEntry,
@@ -35,4 +35,15 @@ const onFail = (error: Cypress.CypressError) => {
   }
 };
 
-const noSubsequentFailListeners = () => Object.is(Cypress.listeners("fail").at(-1), onFail);
+/**
+ * Returns true if this handler is the last registered "fail" listener in Cypress.
+ *
+ * In that case we rethrow the error so that Cypress can apply its default error handling.
+ * If there are other listeners after ours, we assume they will handle the error.
+ */
+const noSubsequentFailListeners = () => {
+  const failListeners = Cypress.listeners("fail");
+  const lastFailListener = failListeners.at(-1);
+
+  return Object.is(lastFailListener, onFail);
+};

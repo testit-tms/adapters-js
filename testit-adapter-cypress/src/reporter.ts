@@ -1,10 +1,9 @@
 import type Cypress from "cypress";
 import { ConfigComposer, StrategyFactory, type IStrategy, Additions, type AdapterConfig, type Attachment } from "testit-js-commons";
-import { getRelativePath, getProjectRoot, parseTestPlan } from "./reporter-api/path-utils.js";
-import type { TestData, StepData, OutcomeStatus } from "./converter.js";
+import type { TestData, StepData } from "./converter.js";
 import { toAutotestPost, toAutotestResult } from "./converter.js";
-import type { RuntimeMessage } from "./reporter-api/sdk-types.js";
 import type {
+  RuntimeMessage,
   TmsCypressConfig,
   TmsCypressTaskArgs,
   TmsSpecState,
@@ -19,8 +18,10 @@ import type {
   CypressTestEndMessage,
   CypressTestSkipMessage,
   CypressTestStartMessage,
-} from "./types.js";
+} from "./models/types.js";
 import { DEFAULT_RUNTIME_CONFIG, last } from "./utils.js";
+import { getRelativePath, getProjectRoot, parseTestPlan } from "./node-utils.js";
+import { Status } from "./models/status.js";
 
 interface TestItSpecContext {
   specPath: string;
@@ -99,10 +100,9 @@ export class TmsCypress {
     }
 
     for (const t of uniqueByFullName.values()) {
-      const outcome = (t.outcome === "skipped" ? "Skipped" : t.outcome === "failed" || t.outcome === "broken" ? "Failed" : "Passed") as "Passed" | "Failed" | "Skipped";
       const autotest = toAutotestPost(posixSpecPath, t);
-      await this.strategy.loadAutotest(autotest, outcome);
-      const result = toAutotestResult(autotest.externalId, t, outcome, videoAttachmentIds);
+      await this.strategy.loadAutotest(autotest, t.outcome);
+      const result = toAutotestResult(autotest.externalId, t, t.outcome, videoAttachmentIds);
       await this.strategy.loadTestRun([result]);
     }
 
@@ -218,6 +218,7 @@ export class TmsCypress {
     context.currentTestData = {
       displayName: data.name,
       fullNameSuffix: data.fullNameSuffix,
+      outcome: Status.PASSED,
       labels: data.labels ?? [],
       tags: data.tags ?? [],
       links: data.links ?? [],
@@ -230,20 +231,20 @@ export class TmsCypress {
   };
 
   #passTest = (context: TestItSpecContext) => {
-    if (context.currentTestData) context.currentTestData.outcome = "passed";
+    if (context.currentTestData) context.currentTestData.outcome = Status.PASSED;
   };
 
   #failTest = (context: TestItSpecContext, data: CypressFailMessage["data"]) => {
     context.failed = true;
     if (context.currentTestData) {
-      context.currentTestData.outcome = data.status === "skipped" ? "skipped" : "failed";
+      context.currentTestData.outcome = data.status === Status.SKIPPED ? Status.SKIPPED : Status.FAILED;
       context.currentTestData.statusDetails = data.statusDetails;
     }
   };
 
   #skipTest = (context: TestItSpecContext, data: CypressTestSkipMessage["data"]) => {
     if (context.currentTestData) {
-      context.currentTestData.outcome = "skipped";
+      context.currentTestData.outcome = Status.SKIPPED;
       if (data.statusDetails) context.currentTestData.statusDetails = data.statusDetails;
     }
   };
@@ -261,7 +262,7 @@ export class TmsCypress {
       tags: data.tags ?? [],
       links: data.links ?? [],
       workItemIds: data.workItemIds ?? [],
-      outcome: "skipped",
+      outcome: Status.SKIPPED,
       duration: data.duration,
       statusDetails: data.statusDetails,
       steps: [],
@@ -277,7 +278,7 @@ export class TmsCypress {
       if (context.currentTestData.start != null) {
         context.currentTestData.stop = context.currentTestData.start + data.duration;
       }
-      context.currentTestData.outcome ??= "passed";
+      context.currentTestData.outcome ??= Status.PASSED;
       context.completedTests.push(context.currentTestData);
       context.currentTestData = null;
     }
@@ -309,7 +310,7 @@ export class TmsCypress {
     const step = context.stepsByFrontEndId.get(data.id);
     if (step) {
       step.stop = data.stop;
-      step.status = (data.status === "skipped" ? "skipped" : data.status === "failed" || data.status === "broken" ? "failed" : "passed") as OutcomeStatus;
+      step.status = data.status;
       step.statusDetails = data.statusDetails;
     }
     if (context.stepStack.length) context.stepStack.pop();

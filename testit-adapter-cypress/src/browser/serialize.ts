@@ -1,5 +1,5 @@
-import { serialize } from "../reporter-api/sdk-utils.js";
 import { getConfig } from "./state.js";
+import { serialize } from "./utils.js";
 
 export default (value: unknown) => {
   return isDomObject(value) ? stringifyAsDom(value) : serializeAsObject(value);

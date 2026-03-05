@@ -1,4 +1,4 @@
-import type { CypressSuite, CypressTest } from "../types.js";
+import type { CypressSuite, CypressTest } from "../models/types.js";
 import { getTestMetadata, resolveSpecRelativePath } from "./utils.js";
 import { Utils } from "testit-js-commons";
 

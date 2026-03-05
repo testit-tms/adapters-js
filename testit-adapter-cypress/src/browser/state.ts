@@ -1,4 +1,4 @@
-import type { TmsSpecState, CypressMessage, CypressTest, StepDescriptor, StepFinalizer } from "../types.js";
+import type { TmsSpecState, CypressMessage, CypressTest, StepDescriptor, StepFinalizer } from "../models/types.js";
 import { DEFAULT_RUNTIME_CONFIG, last, toReversed } from "../utils.js";
 
 export const getTmsState = () => {

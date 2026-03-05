@@ -1,13 +1,11 @@
-import type { StatusDetails } from "../reporter-api/model.js";
-import { Status } from "../reporter-api/model.js";
-import { getMessageAndTraceFromError, getStatusFromError } from "../reporter-api/sdk-utils.js";
+import type { StatusDetails } from "../models/types.js";
 import type {
   ApiStepDescriptor,
   CypressStepFinalizeMessage,
   LogStepDescriptor,
   StepDescriptor,
   StepFinalizer,
-} from "../types.js";
+} from "../models/types.js";
 import { popUntilFindIncluded } from "../utils.js";
 import { reportStepStart, reportStepStop } from "./lifecycle.js";
 import {
@@ -19,7 +17,8 @@ import {
   pushStep,
   setupStepFinalization,
 } from "./state.js";
-import { generateApiStepId } from "./utils.js";
+import { generateApiStepId, getMessageAndTraceFromError } from "./utils.js";
+import { Status } from "../models/status.js";
 
 export const TMS_STEP_CMD_SUBJECT = {};
 
@@ -40,7 +39,7 @@ export const pushTmsStep = () => {
 };
 
 export const reportStepError = (error: Error) => {
-  const status = getStatusFromError(error);
+  const status = Status.FAILED;
   const statusDetails = getMessageAndTraceFromError(error);
 
   // Cypress will abort the test/hook execution soon. No subsequent commands will be run, including the ones that
@@ -84,7 +83,7 @@ export const finalizeSteps = () => {
 };
 
 export const resolveStepStatus = (step: StepDescriptor) =>
-  step.error ? getStatusFromError(step.error) : Status.PASSED;
+  step.error ? Status.FAILED : Status.PASSED;
 
 const finalizeOneStep = ([step, finalizer]: [StepDescriptor, StepFinalizer | undefined]) => {
   const { id, error } = step;

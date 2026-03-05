@@ -1,7 +1,6 @@
-import { ContentType, Status } from "../reporter-api/model.js";
-import type { StatusDetails } from "../reporter-api/model.js";
-import { getMessageAndTraceFromError, getStatusFromError } from "../reporter-api/sdk-utils.js";
-import type { CypressFailMessage, CypressHook, CypressSuite, CypressTest, StepDescriptor } from "../types.js";
+import { ContentType } from "./types.js";
+import { StatusDetails } from "../models/types.js";
+import { CypressFailMessage, CypressHook, CypressSuite, CypressTest, StepDescriptor } from "../models/types.js";
 import { getTestRuntime } from "./runtime.js";
 import { dropCurrentTest, enqueueRuntimeMessage, getCurrentTest, setCurrentTest } from "./state.js";
 import { finalizeSteps, stopAllSteps } from "./steps.js";
@@ -17,7 +16,9 @@ import {
   isTestReported,
   iterateTests,
   markTestAsReported,
+  getMessageAndTraceFromError,
 } from "./utils.js";
+import { Status } from "../models/status.js";
 
 export const reportRunStart = () => {
   enqueueRuntimeMessage({
@@ -105,7 +106,7 @@ export const reportTestPass = () => {
 };
 
 export const reportTestOrHookFail = (err: Error) => {
-  const status = getStatusFromError(err);
+  const status = Status.FAILED;
   const statusDetails = getMessageAndTraceFromError(err);
 
   stopAllSteps(status, statusDetails);

@@ -1,5 +1,4 @@
-import type { Parameter } from "../reporter-api/model.js";
-import type { CypressLogEntry, LogStepDescriptor } from "../types.js";
+import type { CypressLogEntry, LogStepDescriptor, Parameter } from "../models/types.js";
 import { isDefined } from "../utils.js";
 import { reportStepStart } from "./lifecycle.js";
 import serializePropValue from "./serialize.js";
@@ -83,6 +82,43 @@ const pushLogEntry = (entry: CypressLogEntry) => {
   });
 };
 
+/**
+ * Wraps `entry.endGroup` so that the Tms step created for a Command Log group
+ * is always stopped when Cypress finishes that group.
+ *
+* Behavior:
+* - Retains the original `entry.endGroup` handler.
+ * - Replaces it with a wrapper function that:
+* - first calls `stopCommandLogStep(id)`, completing the step in our state;
+ * - then calls the original `entry.endGroup` with the same `this` so as not to break Cypress.
+ */
+const overrideEntryEndGroup = (entry: CypressLogEntry, id: string) => {
+  const originalEndGroup = entry.endGroup;
+  entry.endGroup = function () {
+    stopCommandLogStep(id);
+    return originalEndGroup.call(this);
+  };
+};
+
+/**
+* Wraps `entry.end` for single Command Log entries to synchronize
+ * the lifecycle of a step in Tms with the completion of a log entry in Cypress.
+ *
+* Behavior:
+* - Saves the original `entry.end` (without context binding).
+* - Sets a new `entry.end`, which:
+* - first calls `stopCommandLogStep(id)` to stop the step;
+ * - then calls the original `end` with the correct `this', while maintaining the standard behavior of Cypress.
+ */
+const overrideEntryEnd = (entry: CypressLogEntry, id: string) => {
+  // eslint-disable-next-line @typescript-eslint/unbound-method
+  const originalEnd = entry.end;
+  entry.end = function () {
+    stopCommandLogStep(id);
+    return originalEnd.call(this);
+  };
+};
+
 const scheduleCommandLogStepStop = (entry: CypressLogEntry) => {
   const { groupStart, end, id } = entry.attributes;
   if (end) {
@@ -93,20 +129,11 @@ const scheduleCommandLogStepStop = (entry: CypressLogEntry) => {
   } else if (groupStart) {
     // A logging group must be stopped be the user via the Cypress.Log.endGroup() call.
     // If the call is missing, the corresponding step will be stopped either at the test's (the hook's) end.
-    const originalEndGroup = entry.endGroup;
-    entry.endGroup = function () {
-      stopCommandLogStep(id);
-      return originalEndGroup.call(this);
-    };
+    overrideEntryEndGroup(entry, id);
   } else {
     // Regular log entries are finalized by Cypress via the Cypress.Log.end() call. We're hooking into this function
     // to complete the step at the same time.
-    // eslint-disable-next-line @typescript-eslint/unbound-method
-    const originalEnd = entry.end;
-    entry.end = function () {
-      stopCommandLogStep(id);
-      return originalEnd.call(this);
-    };
+    overrideEntryEnd(entry, id);
   }
 };
 
@@ -162,7 +189,32 @@ const getLogProps = (entry: CypressLogEntry) => {
   // For assertion logs, we interpolate the 'Message' property, which contains unformatted assertion description,
   // directly into the step's name.
   // No need to keep the exact same information in the step's parameters.
-  return Object.entries(props).filter(([k, v]) => isDefined(v) && !(isAssertionWithMessage && k === "Message"));
+  const entries = Object.entries(props);
+  return entries.filter(([key, value]) =>
+    isLogPropIncludedInParameters({ key, value, isAssertionWithMessage }),
+  );
+};
+
+const isLogPropIncludedInParameters = ({
+  key,
+  value,
+  isAssertionWithMessage,
+}: {
+  key: string | number | symbol;
+  value: unknown;
+  isAssertionWithMessage: boolean;
+}) => {
+  if (!isDefined(value)) {
+    return false;
+  }
+
+  if (isAssertionWithMessage && key === "Message") {
+    // The same text is already included into the step's name.
+    // No need to duplicate it in parameters.
+    return false;
+  }
+
+  return true;
 };
 
 const maybeGetAssertionLogMessage = (entry: CypressLogEntry) => {
@@ -186,5 +238,20 @@ const shouldStopCurrentLogStep = (currentLogEntry: CypressLogEntry, newLogEntry:
   return !currentEntryIsGroup && (currentEntryType === "child" || newEntryType !== "child");
 };
 
-const getPropValueSetFilter = (entry: CypressLogEntry) =>
-  entry.attributes.name === "wrap" ? () => true : ({ name, value }: Parameter) => name !== "Yielded" || value !== "{}";
+/**
+ * Returns a predicate that decides whether a step parameter should be included.
+ * For "wrap" commands we include all parameters; for others we drop "Yielded" when it's "{}".
+ */
+const getPropValueSetFilter = (entry: CypressLogEntry) => {
+  const isWrapCommand = entry.attributes.name === "wrap";
+
+  if (isWrapCommand) {
+    return () => true;
+  }
+
+  return ({ name, value }: Parameter) => shouldIncludeParameter(name, value);
+};
+
+const shouldIncludeParameter = (name: string, value: string) => {
+  return name !== "Yielded" || value !== "{}";
+};

@@ -1,4 +1,4 @@
-import type { CypressHook, CypressSuite, CypressTest } from "../../types.js";
+import type { CypressHook, CypressSuite, CypressTest } from "../../models/types.js";
 import {
   completeHookErrorReporting,
   completeSpecIfNoAfterHookLeft,

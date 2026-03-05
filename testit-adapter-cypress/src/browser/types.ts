@@ -1,5 +1,20 @@
-import type { AttachmentOptions, StatusDetails } from "./model.js";
-import { Label, Link } from "testit-js-commons";
+import type { StatusDetails } from "../models/types.js";
+import { Label, Link, Status } from "testit-js-commons";
+
+export enum ContentType {
+  PNG = "image/png",
+  MP4 = "video/mp4",
+  JSON = "application/json",
+  TEXT = "text/plain",
+}
+
+export interface AttachmentOptions {
+  contentType: ContentType | string;
+  encoding?: BufferEncoding;
+  fileExtension?: string;
+  path?: string;
+  body?: Buffer;
+}
 
 export interface TestRuntime {
   addLabels(...labels: Label[]): PromiseLike<void>;
@@ -15,7 +30,7 @@ export interface TestRuntime {
   addGlobalAttachments(name: string, content: Buffer | string, options: AttachmentOptions): PromiseLike<void>;
   addGlobalAttachmentsFromPath(name: string, path: string, options: Omit<AttachmentOptions, "encoding">): PromiseLike<void>;
   addMessage(details: StatusDetails): PromiseLike<void>;
-  logStep(name: string, status?: import("./model.js").Status, error?: Error): PromiseLike<void>;
+  logStep(name: string, status?: Status, error?: Error): PromiseLike<void>;
   step<T>(name: string, body: () => T | PromiseLike<T>): PromiseLike<T>;
   stepDisplayName(name: string): PromiseLike<void>;
   stepParameter(name: string, value: string): PromiseLike<void>;
@@ -42,15 +57,4 @@ export const noopRuntime: TestRuntime = {
     (Promise.resolve(body()) as unknown) as PromiseLike<T>,
   stepDisplayName: () => noop,
   stepParameter: () => noop,
-};
-
-const KEY = "tmsTestRuntime";
-
-export const setGlobalTestRuntime = (r: TestRuntime): void => {
-  (globalThis as Record<string, unknown>)[KEY] = () => r;
-};
-
-export const getGlobalTestRuntime = (): TestRuntime => {
-  const fn = (globalThis as Record<string, unknown>)[KEY] as (() => TestRuntime | undefined) | undefined;
-  return fn?.() ?? noopRuntime;
 };
