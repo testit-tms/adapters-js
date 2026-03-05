@@ -25,9 +25,9 @@ Supported test frameworks :
  2. [Jest](https://github.com/testit-tms/adapters-js/tree/main/testit-adapter-jest)
  3. [Codecept](https://github.com/testit-tms/adapters-js/tree/main/testit-adapter-codecept)
  4. [Mocha](https://github.com/testit-tms/adapters-js/tree/main/testit-adapter-mocha)
- 4. [Playwright](https://github.com/testit-tms/adapters-js/tree/main/testit-adapter-playwright)
- 5. [TestCafe](https://github.com/testit-tms/adapters-js/tree/main/testcafe-reporter-testit)
- 6. [Cypress](https://github.com/testit-tms/adapters-js/tree/main/testit-adapter-cypress)
+ 5. [Playwright](https://github.com/testit-tms/adapters-js/tree/main/testit-adapter-playwright)
+ 6. [TestCafe](https://github.com/testit-tms/adapters-js/tree/main/testcafe-reporter-testit)
+ 7. [Cypress](https://github.com/testit-tms/adapters-js/tree/main/testit-adapter-cypress)
 
 # 🚀 Warning
 Since 3.0.0 version for Cucumber:
