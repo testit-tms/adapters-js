@@ -5,7 +5,8 @@ import type {
   ShortStep,
   Step,
 } from "testit-js-commons";
-import { Utils, Label, Link } from "testit-js-commons";
+import { Utils, Link } from "testit-js-commons";
+import { StatusDetails } from "./models/types";
 
 export interface StepData {
   id: string;
@@ -17,6 +18,7 @@ export interface StepData {
   statusDetails?: { message?: string; trace?: string };
   attachmentIds: string[];
   children: StepData[];
+  parameters?: Record<string, string>;
 }
 
 export interface TestData {
@@ -26,7 +28,7 @@ export interface TestData {
   title?: string;
   namespace?: string;
   classname?: string;
-  labels: Label[];
+  labels: string[];
   tags: string[];
   links: Link[];
   workItemIds: string[];
@@ -34,11 +36,11 @@ export interface TestData {
   stop?: number;
   outcome: Outcome;
   duration?: number;
-  statusDetails?: { message?: string; trace?: string };
+  statusDetails?: StatusDetails;
+  message?: string;
   steps: StepData[];
   attachmentIds: string[];
   parameters?: Record<string, string>;
-  properties?: Record<string, string>;
   externalKey: string;
 }
 
@@ -54,6 +56,7 @@ function stepDataToStep(s: StepData): Step {
   if (s.duration != null) step.duration = s.duration;
   else if (s.start != null && s.stop != null) step.duration = s.stop - s.start;
   if (s.statusDetails?.message) step.info = s.statusDetails.message;
+  if (s.parameters) step.parameters = s.parameters;
   return step;
 }
 
@@ -61,6 +64,7 @@ function stepDataToShortStep(s: StepData): ShortStep {
   return {
     title: s.name,
     steps: s.children.length ? s.children.map(stepDataToShortStep) : undefined,
+    
   };
 }
 
@@ -68,7 +72,6 @@ export function toAutotestPost(specPath: string, t: TestData): AutotestPost {
   const fullName = `${specPath}#${t.fullNameSuffix}`;
   const externalId = Utils.getHash(fullName);
   const name = (t.displayName ?? t.fullNameSuffix).replace(/#/g, " > ");
-  const labels = t.labels?.map((l) => ({ name: l.name })) ?? [];
   return {
     externalId,
     name,
@@ -77,9 +80,9 @@ export function toAutotestPost(specPath: string, t: TestData): AutotestPost {
     workItemIds: t.workItemIds,
     namespace: t.namespace,
     classname: t.classname,
-    links: t.links?.length ? t.links : undefined,
-    labels: labels.length ? labels : undefined,
-    tags: t.tags?.length ? t.tags : undefined,
+    links: t.links?.length ? t.links : [],
+    labels: t.labels?.map((l) => ({ name: l })) ?? [],
+    tags: t.tags?.length ? t.tags : [],
     steps: t.steps.map(s => stepDataToShortStep(s)),
     externalKey: t.externalKey,
   };
@@ -114,10 +117,14 @@ export function toAutotestResult(
   if (t.parameters) {
     result.parameters = t.parameters;
   }
-  if (t.properties) {
-    result.properties = t.properties;
+  if (t.message) {
+    result.message = t.message;
   }
-  if (t.statusDetails?.message) result.message = t.statusDetails.message;
-  if (t.statusDetails?.trace) result.traces = t.statusDetails.trace;
+  else if (t.statusDetails?.message) {
+    result.message = t.statusDetails.message;
+  }
+  if (t.statusDetails?.trace) {
+    result.traces = t.statusDetails.trace;
+  }
   return result;
 }

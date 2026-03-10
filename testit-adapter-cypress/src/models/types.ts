@@ -121,7 +121,7 @@ export type CypressTestStartMessage = {
     name: string;
     fullNameSuffix: string;
     start: number;
-    labels: Label[];
+    labels: string[];
     tags: string[];
     links: Link[];
     workItemIds: string[];

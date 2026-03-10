@@ -1,9 +1,9 @@
-import { Label, Link, Status } from "testit-js-commons";
+import { Link } from "testit-js-commons";
 import type { AttachmentOptions, TestRuntime } from "./types.js";
-import type { TmsCypressTaskArgs, CypressMessage, StatusDetails } from "../models/types.js";
+import type { TmsCypressTaskArgs, CypressMessage } from "../models/types.js";
 import { enqueueRuntimeMessage, getRuntimeMessages, setRuntimeMessages } from "./state.js";
 import { TMS_STEP_CMD_SUBJECT, startTmsApiStep, stopCurrentTmsApiStep } from "./steps.js";
-import { getGlobalTestRuntime, getMessageAndTraceFromError, setGlobalTestRuntime, uint8ArrayToBase64 } from "./utils.js";
+import { getGlobalTestRuntime, setGlobalTestRuntime, uint8ArrayToBase64 } from "./utils.js";
 
 export const initTestRuntime = () => setGlobalTestRuntime(new TmsCypressTestRuntime() as TestRuntime);
 
@@ -19,7 +19,7 @@ class TmsCypressTestRuntime implements TestRuntime {
     this.#resetMessages();
   }
 
-  addLabels(...labels: Label[]) {
+  addLabels(...labels: string[]) {
     return this.#enqueueMessageAsync({
       type: "metadata",
       data: {
@@ -69,47 +69,47 @@ class TmsCypressTestRuntime implements TestRuntime {
     });
   }
 
-  addDescription(markdown: string) {
+  addDescription(description: string) {
     return this.#enqueueMessageAsync({
       type: "metadata",
       data: {
-        description: markdown,
+        description,
       },
     });
   }
 
-  addTitle(markdown: string) {
+  addTitle(title: string) {
     return this.#enqueueMessageAsync({
       type: "metadata",
       data: {
-        title: markdown,
+        title,
       },
     });
   }
 
-  addDisplayName(name: string) {
+  addDisplayName(displayName: string) {
     return this.#enqueueMessageAsync({
       type: "metadata",
       data: {
-        displayName: name,
+        displayName,
       },
     });
   }
 
-  addNameSpace(name: string) {
+  addNameSpace(namespace: string) {
     return this.#enqueueMessageAsync({
       type: "metadata",
       data: {
-        namespace: name,
+        namespace,
       },
     });
   }
 
-  addClassName(name: string) {
+  addClassName(classname: string) {
     return this.#enqueueMessageAsync({
       type: "metadata",
       data: {
-        classname: name,
+        classname,
       },
     });
   }
@@ -172,30 +172,13 @@ class TmsCypressTestRuntime implements TestRuntime {
     });
   }
 
-  addMessage(details: StatusDetails) {
+  addMessage(message: string) {
     return this.#enqueueMessageAsync({
-      type: "global_error",
-      data: details,
+      type: "metadata",
+      data: {
+        message,
+      },
     });
-  }
-
-  logStep(name: string, status: Status = Status.PASSED, error?: Error): PromiseLike<void> {
-    if (this.#isInOriginContext()) {
-      startTmsApiStep(name);
-      stopCurrentTmsApiStep(status, error ? getMessageAndTraceFromError(error) : undefined);
-      return Cypress.Promise.resolve();
-    }
-
-    return cy
-      .wrap(TMS_STEP_CMD_SUBJECT, { log: false })
-      .then(() => {
-        startTmsApiStep(name);
-        return Cypress.Promise.resolve();
-      })
-      .then(() => {
-        stopCurrentTmsApiStep(status, error ? getMessageAndTraceFromError(error) : undefined);
-        return Cypress.Promise.resolve();
-      });
   }
 
   step<T = void>(name: string, body: () => T | PromiseLike<T>) {
@@ -209,24 +192,6 @@ class TmsCypressTestRuntime implements TestRuntime {
         stopCurrentTmsApiStep();
         return result;
       });
-  }
-
-  stepDisplayName(name: string) {
-    return this.#enqueueMessageAsync({
-      type: "step_metadata",
-      data: {
-        name,
-      },
-    });
-  }
-
-  stepParameter(name: string, value: string) {
-    return this.#enqueueMessageAsync({
-      type: "step_metadata",
-      data: {
-        parameters: [{ name, value }],
-      },
-    });
   }
 
   flushTmsMessagesToTask(taskName: string) {
@@ -289,45 +254,5 @@ class TmsCypressTestRuntime implements TestRuntime {
 
     const candidate = content as Partial<SerializedBuffer>;
     return candidate.type === "Buffer" && Array.isArray(candidate.data);
-  }
-
-  #isInOriginContext(): boolean {
-    try {
-      const hasOriginContext = !!(window as any).cypressOriginContext;
-      const hasOriginWindow = !!(window as any).cypressOriginWindow;
-
-      if (hasOriginContext || hasOriginWindow) {
-        return true;
-      }
-
-      const baseUrl = Cypress.config("baseUrl");
-      const currentOrigin = window.location.origin;
-
-      if (baseUrl && currentOrigin !== baseUrl) {
-        return true;
-      }
-
-      const cypressInstance = (window as any).Cypress;
-
-      if (cypressInstance && cypressInstance.state && cypressInstance.state("origin")) {
-        return true;
-      }
-
-      try {
-        const cyExists = typeof cy !== "undefined";
-        const cyTaskExists = typeof cy.task !== "undefined";
-
-        // In cy.origin context, cy.task may not be available or may throw
-        if (!cyExists || !cyTaskExists) {
-          return true;
-        }
-      } catch (error) {
-        return true;
-      }
-
-      return false;
-    } catch (error) {
-      return true;
-    }
   }
 }
