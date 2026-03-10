@@ -1,5 +1,5 @@
 import type Cypress from "cypress";
-import { ConfigComposer, StrategyFactory, type IStrategy, Additions, type AdapterConfig, type Attachment } from "testit-js-commons";
+import { ConfigComposer, StrategyFactory, type IStrategy, Additions, type AdapterConfig, type Attachment, Link } from "testit-js-commons";
 import type { TestData, StepData } from "./converter.js";
 import { toAutotestPost, toAutotestResult } from "./converter.js";
 import type {
@@ -18,6 +18,8 @@ import type {
   CypressTestEndMessage,
   CypressTestSkipMessage,
   CypressTestStartMessage,
+  Parameter,
+  StatusDetails,
 } from "./models/types.js";
 import { DEFAULT_RUNTIME_CONFIG, last } from "./utils.js";
 import { getRelativePath, getProjectRoot, parseTestPlan } from "./node-utils.js";
@@ -357,31 +359,32 @@ export class TmsCypress {
   #applyRuntimeMessage = (context: TestItSpecContext, message: RuntimeMessage) => {
     if (message.type !== "metadata" || !context.currentTestData) return;
     const data = message.data as {
-      labels?: Array<{ name: string; value: string }>;
-      links?: Array<{ url: string; title?: string; description?: string }>;
+      labels?: Array<string>;
+      links?: Array<Link>;
+      workItemIds?: string[];
       tags?: string[];
-      parameters?: Array<{ name: string; value: string }>;
+      parameters?: Array<Parameter>;
       description?: string;
-      descriptionHtml?: string;
       displayName?: string;
       title?: string;
+      namespace?: string;
+      classname?: string;
+      message?: string;
+      details?: StatusDetails;
     };
     const current = context.currentTestData;
 
     if (data.labels?.length) {
-      current.labels.push(...(data.labels as any));
+      current.labels.push(...data.labels);
     }
     if (data.tags?.length) {
       current.tags.push(...data.tags);
     }
+    if (data.workItemIds?.length) {
+      current.workItemIds.push(...data.workItemIds);
+    }
     if (data.links?.length) {
-      current.links.push(
-        ...data.links.map((l) => ({
-          url: l.url,
-          title: l.title ?? l.url,
-          description: l.description,
-        })) as any,
-      );
+      current.links.push(...data.links);
     }
     if (data.parameters?.length) {
       current.parameters ??= {};
@@ -391,14 +394,24 @@ export class TmsCypress {
     }
     if (data.description) {
       current.description = data.description;
-    } else if (data.descriptionHtml && !current.description) {
-      current.description = data.descriptionHtml;
     }
     if (data.displayName) {
       current.displayName = data.displayName;
     }
     if (data.title) {
       current.title = data.title;
+    }
+    if (data.message) {
+      current.message = data.message;
+    }
+    if (data.details) {
+      current.statusDetails = data.details;
+    }
+    if (data.namespace) {
+      current.namespace = data.namespace;
+    }
+    if (data.classname) {
+      current.classname = data.classname;
     }
   };
 }

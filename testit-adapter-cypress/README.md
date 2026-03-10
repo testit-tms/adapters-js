@@ -158,14 +158,14 @@ describe('example to-do app', () => {
     tms.addDescription('Test description');
     tms.addLabels('label1', 'label2');
     tms.addTags('tag1', 'tag2');
-    tms.addLinks([
+    tms.addLinks(
       {
         url: 'https://www.google.com',
         title: 'Google',
         description: 'This is a link to Google',
         type: 'Related',
       },
-    ]);
+    );
     tms.addParameter("name", "value");
     tms.addNameSpace("namespace");
     tms.addClassName("classname");

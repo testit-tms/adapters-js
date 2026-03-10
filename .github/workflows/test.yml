@@ -9,6 +9,7 @@ on:
       - "testit-adapter-jest/**"
       - "testit-adapter-mocha/**"
       - "testit-adapter-playwright/**"
+      - "testit-adapter-cypress/**"
       - ".github/**/test.yml"
 
   workflow_dispatch:
@@ -52,6 +53,10 @@ jobs:
             configuration_id: PLAYWRIGHT_CONFIGURATION_ID
             project_id: PLAYWRIGHT_PROJECT_ID
             project_name: playwright
+          - adapter_name: testit-adapter-cypress
+            configuration_id: CYPRESS_CONFIGURATION_ID
+            project_id: CYPRESS_PROJECT_ID
+            project_name: cypress
     env:
       TMS_CONFIGURATION_ID: ${{ secrets[matrix.configuration_id] }}
       TMS_PROJECT_ID: ${{ secrets[matrix.project_id] }}
