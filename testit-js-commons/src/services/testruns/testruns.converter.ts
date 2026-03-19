@@ -2,9 +2,10 @@ import {
   AutoTestResultsForTestRunModel,
   TestRunState,
   TestRunV2ApiResult,
+  TestStatusType,
   // @ts-ignore
 } from "testit-api-client";
-import { BaseConverter, AdapterConfig } from "../../common";
+import { BaseConverter, AdapterConfig, Outcome } from "../../common";
 import { AutotestConverter, IAutotestConverter } from "../autotests";
 import { AutotestResult, RunState, TestRunGet } from "./testruns.type";
 
@@ -33,12 +34,23 @@ export class TestRunConverter extends BaseConverter implements ITestRunConverter
     return TestRunState[state];
   }
 
+  mapToStatusType(status: Outcome): string {
+    const statusMap: Record<Outcome, string> = {
+      Passed: "Succeeded",
+      Failed: "Failed",
+      Blocked: "Incomplete",
+      Skipped: "Incomplete"
+    };
+    return statusMap[status];
+  }
+
   toOriginAutotestResult(autotest: AutotestResult): AutoTestResultsForTestRunModel {
     const model: AutoTestResultsForTestRunModel = {
       configurationId: this.config.configurationId,
       autoTestExternalId: autotest.autoTestExternalId,
       links: autotest.links?.map((link) => this.toOriginLink(link)),
-      statusCode: autotest.outcome,
+      statusType: this.mapToStatusType(autotest.outcome),
+      statusCode: null,
       stepResults: autotest.stepResults?.map((step) => this.toOriginStep(step)),
       setupResults: autotest.setupResults?.map((step) => this.toOriginStep(step)),
       teardownResults: autotest.teardownResults?.map((step) => this.toOriginStep(step)),
