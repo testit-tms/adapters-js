@@ -1,8 +1,8 @@
 import { TestError, TestStep } from "@playwright/test/reporter";
 import { Step } from "testit-js-commons";
 import { Status } from "./converter";
-import {ResultAttachment} from "./models/result";
-import {ContentType, Extensions} from "./labels";
+import { ResultAttachment } from "./models/result";
+import { ContentType, Extensions } from "./labels";
 
 export type StatusDetails = {
     message?: string;
@@ -41,15 +41,15 @@ const asciiRegex = new RegExp(
     "g",
 );
 
-export function processAttachmentExtensions(attachment: ResultAttachment): ResultAttachment {
-    const extensionMap: { [key: string]: string } = {
-        [ContentType.ZIP]: Extensions.ZIP,
-        [ContentType.PNG]: Extensions.PNG,
-        [ContentType.WEBM]: Extensions.WEBM,
-        [ContentType.MD]: Extensions.MD,
-        [ContentType.JPEG]: Extensions.JPEG,
-    };
+const extensionMap: { [key: string]: string } = {
+    [ContentType.ZIP]: Extensions.ZIP,
+    [ContentType.PNG]: Extensions.PNG,
+    [ContentType.WEBM]: Extensions.WEBM,
+    [ContentType.MD]: Extensions.MD,
+    [ContentType.JPEG]: Extensions.JPEG,
+};
 
+export function processAttachmentExtensions(attachment: ResultAttachment): ResultAttachment {
     const extension = extensionMap[attachment.contentType];
 
     if (extension && !attachment.name.includes(extension)) {
@@ -60,4 +60,14 @@ export function processAttachmentExtensions(attachment: ResultAttachment): Resul
     }
 
     return attachment;
+}
+
+export function processAttachmentNameExtensions(name: string, contentType: string): string {
+    const extension = extensionMap[contentType];
+
+    if (extension && !name.includes(extension)) {
+        return name + extension;
+    }
+
+    return name;
 }

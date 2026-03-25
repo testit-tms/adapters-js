@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import test from "@playwright/test";
 import { Link, Label, Attachment } from "testit-js-commons";
+import { processAttachmentNameExtensions } from "./utils";
 
 export interface MetadataMessage {
   workItemIds?: string[];
@@ -66,9 +67,12 @@ export class testit {
     content: Buffer | string,
     options: ContentType | string | Pick<AttachmentOptions, "contentType">,
   ) {
-    const stepName = `stepattach_${randomUUID()}_${name}`;
-
     const contentType = typeof options === "string" ? options : options.contentType;
+    const stepName = processAttachmentNameExtensions(
+      `stepattach_${randomUUID()}_${name}`,
+      contentType
+    );
+
     await this.step(stepName, async () => {
       await test.info().attach(stepName, {
         body: content,
