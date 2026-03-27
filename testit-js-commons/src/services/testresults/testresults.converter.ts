@@ -15,7 +15,7 @@ export class TestResultsConverter extends BaseConverter implements ITestResultsC
     const model: TestResultsFilterApiModel = {
         testRunIds: [this.config.testRunId],
         configurationIds: [this.config.configurationId],
-        statusCodes: ["InProgress"],
+        statusTypes: ["InProgress"],
         outcomes: undefined,
         failureCategories: undefined,
         namespace: undefined,
