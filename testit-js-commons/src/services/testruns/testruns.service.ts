@@ -36,7 +36,7 @@ export class TestRunsService extends BaseService implements ITestRunsService {
         }
         return data.id;
       })
-      .catch((err) => {
+      .catch((err: any) => {
         console.error("Error in createTestRun:", err);
         throw err;
       });

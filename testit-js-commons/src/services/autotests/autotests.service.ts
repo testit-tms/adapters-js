@@ -167,7 +167,7 @@ export class AutotestsService extends BaseService implements IAutotestService {
       .then((autotest: any | undefined) => {
         return autotest ? this._converter.toLocalAutotest(autotest) : null;
       })
-      .catch((reason) => {
+      .catch((reason: any) => {
         console.error(reason);
         return null;
       });
