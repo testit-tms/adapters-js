@@ -16,6 +16,7 @@ export class TestResultsConverter extends BaseConverter implements ITestResultsC
         testRunIds: [this.config.testRunId],
         configurationIds: [this.config.configurationId],
         statusTypes: ["InProgress"],
+        statusCodes: undefined,
         outcomes: undefined,
         failureCategories: undefined,
         namespace: undefined,
