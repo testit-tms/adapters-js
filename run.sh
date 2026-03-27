@@ -1,7 +1,7 @@
 #!/bin/bash
 
 VERSION=3.7.8
-API_CLIENT_VERSION=7.2.4
+API_CLIENT_VERSION=7.2.3
 
 node update_version.js $VERSION
 
