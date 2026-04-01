@@ -1,5 +1,5 @@
 # Test IT TMS adapters for Codecept
-![Test IT](https://raw.githubusercontent.com/testit-tms/adapters-js/master/images/banner.png)
+![Test IT](https://raw.githubusercontent.com/testit-tms/adapters-js/main/images/banner.png)
 
 ## Getting Started
 
