@@ -3,6 +3,8 @@ const NO_ESCAPE_HTML_ENV_VAR = 'NO_ESCAPE_HTML';
 // Regex pattern to detect HTML tags
 const HTML_TAG_PATTERN = /<\S.*?(?:>|\/>)/;
 
+const NO_ESCAPE_KEYS = new Set(['externalId', 'autoTestExternalId']);
+
 // Regex patterns to escape only non-escaped characters
 const LESS_THAN_PATTERN = /</;
 const GREATER_THAN_PATTERN = />/;
@@ -97,6 +99,9 @@ function processProperties(obj: any): void {
         const value = obj[key];
 
         if (typeof value === 'string') {
+          if (NO_ESCAPE_KEYS.has(key)) {
+            continue;
+          }
           // Escape string properties
           obj[key] = escapeHtmlTags(value);
         } else if (Array.isArray(value) && value.length > 0) {
