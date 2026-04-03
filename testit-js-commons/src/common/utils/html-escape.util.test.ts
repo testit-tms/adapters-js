@@ -9,19 +9,19 @@ describe('HtmlEscapeUtils', () => {
   describe('escapeHtmlTags', () => {
     it('should escape < and > characters', () => {
       const input = 'Hello <script>alert("XSS")</script> world';
-      const expected = 'Hello \\<script\\>alert("XSS")\\</script\\> world';
+      const expected = 'Hello &lt;script&gt;alert("XSS")</script> world';
       expect(escapeHtmlTags(input)).toBe(expected);
     });
 
     it('should not escape already escaped characters', () => {
       const input = 'Already \\<escaped\\> tags';
-      const expected = 'Already \\<escaped\\> tags';
+      const expected = 'Already \\&lt;escaped\\&gt; tags';
       expect(escapeHtmlTags(input)).toBe(expected);
     });
 
     it('should handle mixed escaped and unescaped characters', () => {
       const input = 'Mixed \\<escaped\\> and <unescaped> tags';
-      const expected = 'Mixed \\<escaped\\> and \\<unescaped\\> tags';
+      const expected = 'Mixed \\&lt;escaped\\&gt; and <unescaped> tags';
       expect(escapeHtmlTags(input)).toBe(expected);
     });
 
@@ -54,19 +54,19 @@ describe('HtmlEscapeUtils', () => {
 
     it('should escape only when HTML tags are present', () => {
       const input = 'Price < $100 and <script>alert("test")</script>';
-      const expected = 'Price \\< $100 and \\<script\\>alert("test")\\</script\\>';
+      const expected = 'Price &lt; $100 and <script&gt;alert("test")</script>';
       expect(escapeHtmlTags(input)).toBe(expected);
     });
 
     it('should detect self-closing tags', () => {
       const input = 'Image: <img src="test.jpg"/> and text';
-      const expected = 'Image: \\<img src="test.jpg"/\\> and text';
+      const expected = 'Image: &lt;img src="test.jpg"/&gt; and text';
       expect(escapeHtmlTags(input)).toBe(expected);
     });
 
     it('should detect tags with attributes', () => {
       const input = 'Link: <a href="http://example.com">click here</a>';
-      const expected = 'Link: \\<a href="http://example.com"\\>click here\\</a\\>';
+      const expected = 'Link: &lt;a href="http://example.com"&gt;click here</a>';
       expect(escapeHtmlTags(input)).toBe(expected);
     });
 
@@ -86,9 +86,23 @@ describe('HtmlEscapeUtils', () => {
       
       const result = escapeHtmlInObject(input);
       
-      expect(result.name).toBe('Test \\<script\\>');
-      expect(result.description).toBe('Description with \\<tags\\>');
+      expect(result.name).toBe('Test &lt;script&gt;');
+      expect(result.description).toBe('Description with &lt;tags&gt;');
       expect(result.count).toBe(123);
+    });
+
+    it('should not escape externalId and autoTestExternalId', () => {
+      const input = {
+        externalId: '<test>',
+        autoTestExternalId: '<auto>',
+        name: 'Name <b>bold</b>',
+      };
+
+      const result = escapeHtmlInObject(input);
+
+      expect(result.externalId).toBe('<test>');
+      expect(result.autoTestExternalId).toBe('<auto>');
+      expect(result.name).toBe('Name &lt;b&gt;bold</b>');
     });
 
     it('should handle nested objects', () => {
@@ -102,8 +116,8 @@ describe('HtmlEscapeUtils', () => {
       
       const result = escapeHtmlInObject(input);
       
-      expect(result.title).toBe('Main \\<title\\>');
-      expect(result.nested.subtitle).toBe('Sub \\<title\\>');
+      expect(result.title).toBe('Main &lt;title&gt;');
+      expect(result.nested.subtitle).toBe('Sub &lt;title&gt;');
       expect(result.nested.value).toBe(42);
     });
 
@@ -114,7 +128,7 @@ describe('HtmlEscapeUtils', () => {
       
       const result = escapeHtmlInObject(input);
       
-      expect(result.tags).toEqual(['\\<tag1\\>', '\\<tag2\\>', 'normal']);
+      expect(result.tags).toEqual(['&lt;tag1&gt;', '&lt;tag2&gt;', 'normal']);
     });
 
     it('should handle arrays of objects', () => {
@@ -127,8 +141,8 @@ describe('HtmlEscapeUtils', () => {
       
       const result = escapeHtmlInObject(input);
       
-      expect(result.items[0].name).toBe('\\<item1\\>');
-      expect(result.items[1].name).toBe('\\<item2\\>');
+      expect(result.items[0].name).toBe('&lt;item1&gt;');
+      expect(result.items[1].name).toBe('&lt;item2&gt;');
     });
 
     it('should handle null and undefined values', () => {
@@ -142,7 +156,7 @@ describe('HtmlEscapeUtils', () => {
       
       expect(result.nullValue).toBeNull();
       expect(result.undefinedValue).toBeUndefined();
-      expect(result.text).toBe('\\<script\\>');
+      expect(result.text).toBe('&lt;script&gt;');
     });
 
     it('should return null for null input', () => {
@@ -172,7 +186,7 @@ describe('HtmlEscapeUtils', () => {
       
       const result = escapeHtmlInObject(input);
       
-      expect(result.name).toBe('Test \\<script\\>');
+      expect(result.name).toBe('Test &lt;script&gt;');
     });
 
     it('should handle simple types without modification', () => {
@@ -192,9 +206,9 @@ describe('HtmlEscapeUtils', () => {
       
       const result = escapeHtmlInObjectArray(input);
       
-      expect(result?.[0].name).toBe('\\<item1\\>');
+      expect(result?.[0].name).toBe('&lt;item1&gt;');
       expect(result?.[0].value).toBe(1);
-      expect(result?.[1].name).toBe('\\<item2\\>');
+      expect(result?.[1].name).toBe('&lt;item2&gt;');
       expect(result?.[1].value).toBe(2);
     });
 
@@ -240,10 +254,10 @@ describe('HtmlEscapeUtils', () => {
       
       const result = escapeHtmlInObjectArray(input);
       
-      expect(result?.[0].title).toBe('\\<Title\\>');
-      expect(result?.[0].items).toEqual(['\\<tag1\\>', '\\<tag2\\>']);
-      expect(result?.[0].nested.subtitle).toBe('\\<Subtitle\\>');
-      expect(result?.[0].nested.data[0].field).toBe('\\<Field\\>');
+      expect(result?.[0].title).toBe('&lt;Title&gt;');
+      expect(result?.[0].items).toEqual(['&lt;tag1&gt;', '&lt;tag2&gt;']);
+      expect(result?.[0].nested.subtitle).toBe('&lt;Subtitle&gt;');
+      expect(result?.[0].nested.data[0].field).toBe('&lt;Field&gt;');
     });
   });
 
@@ -273,7 +287,7 @@ describe('HtmlEscapeUtils', () => {
       };
       
       const result = escapeHtmlInObject(maliciousObj);
-      expect(result.name).toBe('\\<test\\>');
+      expect(result.name).toBe('&lt;test&gt;');
     });
 
     it('should handle mixed content with and without HTML tags', () => {
@@ -286,7 +300,7 @@ describe('HtmlEscapeUtils', () => {
       const result = escapeHtmlInObject(mixedContent);
       
       expect(result.safeText).toBe('Price: 10 < 20'); // No escaping
-      expect(result.htmlContent).toBe('Click \\<button\\>here\\</button\\>'); // Escaped
+      expect(result.htmlContent).toBe('Click &lt;button&gt;here</button>'); // Escaped
       expect(result.mathExpression).toBe('Result: x > 5'); // No escaping
     });
   });
