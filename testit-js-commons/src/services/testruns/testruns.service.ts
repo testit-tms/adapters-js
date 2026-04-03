@@ -73,7 +73,7 @@ export class TestRunsService extends BaseService implements ITestRunsService {
   public async startTestRun(testRunId: TestRunId): Promise<void> {
     try {
       const testRun = await this.getTestRun(testRunId);
-      if (testRun.stateName !== "Completed" && testRun.stateName !== "InProgress") {
+      if (testRun.stateName === "NotStarted") {
         await this._client.startTestRun(testRunId);
       }
     } catch (err) {
