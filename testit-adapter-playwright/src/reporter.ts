@@ -229,13 +229,14 @@ class TmsReporter implements Reporter {
     );
     if (!origin) {
       const dictionaries = this.getDictionariesByTest(test);
-      const namespace = dictionaries.slice(0, -1).join(path.sep);
-      const classname = dictionaries[dictionaries.length - 1];
-      if (namespace.length > 0) {
-        autotestData.namespace = namespace;
+      const pathNamespace = dictionaries.slice(0, -1).join(path.sep);
+      const pathClassname = dictionaries[dictionaries.length - 1];
+      // Prefer testit.namespace / testit.classname from attachments; file path is the default only when missing.
+      if (pathNamespace.length > 0 && autotestData.namespace == null) {
+        autotestData.namespace = pathNamespace;
       }
-      if (classname?.length) {
-        autotestData.classname = classname;
+      if (pathClassname?.length && autotestData.classname == null) {
+        autotestData.classname = pathClassname;
       }
     }
 
