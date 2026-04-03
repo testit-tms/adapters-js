@@ -71,9 +71,15 @@ export class Converter {
     }
 
     static convertTestStepsToShortSteps(steps: TestStep[]): ShortStep[] {
-      return steps
-        .filter((step: TestStep) => isStep(step))
-        .map(step => this.convertTestStepToShortStep(step));
+      const out: ShortStep[] = [];
+      for (const step of steps) {
+        if (isStep(step)) {
+          out.push(this.convertTestStepToShortStep(step));
+        } else if (step.steps?.length) {
+          out.push(...this.convertTestStepsToShortSteps(step.steps));
+        }
+      }
+      return out;
     }
 
     static convertTestStepToShortStep(step: TestStep): ShortStep {
@@ -84,9 +90,15 @@ export class Converter {
     }
 
     static convertTestStepsToSteps(steps: TestStep[], attachmentsMap: Map<Attachment, TestStep>): Step[] {
-      return steps
-        .filter((step: TestStep) => isStep(step))
-        .map(step => this.convertTestStepToStep(step, attachmentsMap));
+      const out: Step[] = [];
+      for (const step of steps) {
+        if (isStep(step)) {
+          out.push(this.convertTestStepToStep(step, attachmentsMap));
+        } else if (step.steps?.length) {
+          out.push(...this.convertTestStepsToSteps(step.steps, attachmentsMap));
+        }
+      }
+      return out;
     }
 
     static convertTestStepToStep(step: TestStep, attachmentsMap: Map<Attachment, TestStep>): Step {

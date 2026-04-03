@@ -51,16 +51,22 @@ export class AutotestsService extends BaseService implements IAutotestService {
       return;
     }
 
+    const mergedAutotest: AutotestPost = {
+      ...autotest,
+      namespace: autotest.namespace ?? originAutotest.namespace,
+      classname: autotest.classname ?? originAutotest.classname,
+    };
+
     switch (status) {
       case Status.PASSED:
-        await this.updateAutotest(autotest);
+        await this.updateAutotest(mergedAutotest);
         return;
       case Status.FAILED:
-        await this.updateAutotestFromFailed(originAutotest, autotest);
+        await this.updateAutotestFromFailed(originAutotest, mergedAutotest);
         return;
       case Status.SKIPPED:
         if (originAutotest.name != undefined && originAutotest.externalId != undefined) {
-          await this.updateAutotestFromFailed(originAutotest, autotest);
+          await this.updateAutotestFromFailed(originAutotest, mergedAutotest);
           return;
         }
         console.log(`Cannot update skipped autotest ${autotest.name} without name or externalId`);
