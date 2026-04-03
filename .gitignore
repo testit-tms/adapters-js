@@ -25,3 +25,4 @@ lib
 package-lock.json
 coverage/
 testing
+.scannerwork

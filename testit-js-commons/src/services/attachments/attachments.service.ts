@@ -96,6 +96,6 @@ export class AttachmentsService extends BaseService implements IAttachmentsServi
     );
 
     // Convert array of IDs to array of Attachment objects
-    return attachmentIds.map((id) => ({ id }));
+    return attachmentIds.map((id: any) => ({ id }));
   }
 }

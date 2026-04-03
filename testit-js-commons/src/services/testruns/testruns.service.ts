@@ -36,7 +36,7 @@ export class TestRunsService extends BaseService implements ITestRunsService {
         }
         return data.id;
       })
-      .catch((err) => {
+      .catch((err: any) => {
         console.error("Error in createTestRun:", err);
         throw err;
       });
@@ -92,11 +92,11 @@ export class TestRunsService extends BaseService implements ITestRunsService {
     }
   }
 
-  public async loadAutotests(testRunId: string, autotests: Array<AutotestResult>) {
-    const autotestResults = autotests.map((test) => this._converter.toOriginAutotestResult(test));
-    escapeHtmlInObjectArray(autotestResults);
+  public async loadAutotests(testRunId: string, results: Array<AutotestResult>) {
+    const autotestResultsForTestRun = results.map((result) => this._converter.toOriginAutotestResult(result));
+    escapeHtmlInObjectArray(autotestResultsForTestRun);
 
-    for (const autotestResult of autotestResults) {
+    for (const autotestResult of autotestResultsForTestRun) {
       await this._client.setAutoTestResultsForTestRun(testRunId, { autoTestResultsForTestRunModel: [autotestResult] });
     }
   }
