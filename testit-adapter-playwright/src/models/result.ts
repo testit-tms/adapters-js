@@ -1,5 +1,5 @@
 import { TestStatus } from "@playwright/test";
-import { TestError } from "@playwright/test/reporter";
+import { TestError, TestStep } from "@playwright/test/reporter";
 
 export interface Result {
   status: TestStatus;
@@ -7,6 +7,8 @@ export interface Result {
   duration: number;
   error?: TestError;
   errors: Array<TestError>;
+  /** Full Playwright step tree (fixtures, hooks, test.step); preferred over reporter cache. */
+  steps?: TestStep[];
 }
 
 export interface ResultAttachment {

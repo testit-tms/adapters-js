@@ -6,7 +6,7 @@ import {
   TestResult,
   TestStep,
 } from "@playwright/test/reporter";
-import { ConfigComposer, StrategyFactory, IStrategy, Utils, Additions, Attachment, AdapterConfig } from "testit-js-commons";
+import { ConfigComposer, StrategyFactory, IStrategy, Utils, Additions, Attachment, AdapterConfig, BaseStrategy } from "testit-js-commons";
 import { Converter } from "./converter";
 import { MetadataMessage } from "./labels";
 import { isAllStepsWithPassedOutcome, processAttachmentExtensions, stepAttachRegexp } from "./utils";
@@ -59,6 +59,7 @@ class TmsReporter implements Reporter {
           duration: result.duration,
           errors: result.errors,
           error: result.error,
+          steps: result.steps,
         })
     );
   }
@@ -104,6 +105,7 @@ class TmsReporter implements Reporter {
         attachments: [],
         duration: 0,
         errors: [],
+        steps: [],
       });
     });
   }
@@ -132,20 +134,6 @@ class TmsReporter implements Reporter {
       addAttachments: [],
       externalKey: test.title,
     };
-
-    const dictionaries: string[] = this.getDictionariesByTest(test);
-    const namespace: string = dictionaries
-      .slice(0, -1)
-      .join(path.sep);
-    const classname: string = dictionaries[dictionaries.length - 1];
-
-    if (namespace != undefined && namespace.length > 0) {
-      autotestData.namespace = namespace;
-    }
-
-    if (classname != undefined && classname.length > 0) {
-      autotestData.classname = classname;
-    }
 
     for (const attachment of result.attachments) {
       if (!attachment.body) {
@@ -235,15 +223,34 @@ class TmsReporter implements Reporter {
 
   private async loadTest(test: TestCase, result: Result): Promise<void> {
     const autotestData = await this.getAutotestData(test, result);
+
+    const origin = await (this.strategy as BaseStrategy).client.autoTests.getAutotestByExternalId(
+      autotestData.externalId!
+    );
+    if (!origin) {
+      const dictionaries = this.getDictionariesByTest(test);
+      const namespace = dictionaries.slice(0, -1).join(path.sep);
+      const classname = dictionaries[dictionaries.length - 1];
+      if (namespace.length > 0) {
+        autotestData.namespace = namespace;
+      }
+      if (classname?.length) {
+        autotestData.classname = classname;
+      }
+    }
+
     const autotest = Converter.convertTestCaseToAutotestPost(autotestData);
-    const steps = [...this.stepsMap.keys()].filter((step: TestStep) => this.stepsMap.get(step) === test);
-    const stepResults = Converter.convertTestStepsToSteps(steps, this.attachmentsMap);
+    const rawSteps =
+      result.steps?.length
+        ? result.steps
+        : [...this.stepsMap.keys()].filter((step: TestStep) => this.stepsMap.get(step) === test);
+    const stepResults = Converter.convertTestStepsToSteps(rawSteps, this.attachmentsMap);
 
     if (!isAllStepsWithPassedOutcome(stepResults)) {
       result.status = "failed";
     }
 
-    autotest.steps = Converter.convertTestStepsToShortSteps(steps);
+    autotest.steps = Converter.convertTestStepsToShortSteps(rawSteps);
 
     await this.strategy.loadAutotest(
       autotest,
