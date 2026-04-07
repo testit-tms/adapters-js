@@ -14,6 +14,7 @@ The repository contains new versions of adapters for JS test frameworks.
 | 5.4     | 3.2.8-TMS-5.4   | 3.2.8-TMS-5.4   | 3.2.8-TMS-5.4   | 3.2.8-TMS-5.4   | 3.2.8-TMS-5.4   | 3.2.8-TMS-5.4   | -               |
 | 5.5     | 3.4.3-TMS-5.5   | 3.4.3-TMS-5.5   | 3.4.3-TMS-5.5   | 3.4.3-TMS-5.5   | 3.4.3-TMS-5.5   | 3.4.3-TMS-5.5   | -               |
 | 5.6     | 3.6.0-TMS-5.6   | 3.6.0-TMS-5.6   | 3.6.0-TMS-5.6   | 3.6.0-TMS-5.6   | 3.6.0-TMS-5.6   | 3.6.0-TMS-5.6   | -               |
+| 5.7     | 3.7.9-TMS-5.7   | 3.7.9-TMS-5.7   | 3.7.9-TMS-5.7   | 3.7.9-TMS-5.7   | 3.7.9-TMS-5.7   | 3.7.9-TMS-5.7   | 3.7.9-TMS-5.7   |
 | Cloud   | 3.7.0 +         | 3.7.0 +         | 3.7.0 +         | 3.7.0 +         | 3.7.0 +         | 3.7.0 +         | 3.7.7 +         |
 
 1. For current versions, see the releases tab. 
