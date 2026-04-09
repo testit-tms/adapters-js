@@ -11,6 +11,8 @@ export interface CliOptions {
   tmsConfigFile: string;
   tmsAutomaticCreationTestCases: boolean;
   tmsAutomaticUpdationLinksToTestCases: boolean;
+  tmsSyncStorageEnabled: boolean;
+  tmsSyncStoragePort: string;
 }
 
 export interface EnvironmentOptions {
@@ -25,6 +27,8 @@ export interface EnvironmentOptions {
   TMS_AUTOMATIC_CREATION_TEST_CASES: string;
   TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES: string;
   TMS_CERT_VALIDATION: string;
+  TMS_SYNC_STORAGE_ENABLED: string;
+  TMS_SYNC_STORAGE_PORT: string;
 }
 
 export interface ProcessEnvOptions {
@@ -39,6 +43,8 @@ export interface ProcessEnvOptions {
   TMS_AUTOMATIC_CREATION_TEST_CASES?: string;
   TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES?: string;
   TMS_CERT_VALIDATION?: string;
+  TMS_SYNC_STORAGE_ENABLED?: string;
+  TMS_SYNC_STORAGE_PORT?: string;
 }
 
 export interface AdapterConfig {
@@ -52,4 +58,6 @@ export interface AdapterConfig {
   automaticCreationTestCases?: boolean;
   automaticUpdationLinksToTestCases?: boolean;
   certValidation?: boolean;
+  syncStorageEnabled?: boolean;
+  syncStoragePort?: string;
 }

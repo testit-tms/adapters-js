@@ -1,11 +1,13 @@
 import { Client, IClient } from "../client";
 import { AdapterConfig } from "../common";
 import { AutotestPost, AutotestResult, TestRunId } from "../services";
+import { SyncStorageRunner, toTestResultCutModel } from "../services/syncstorage";
 import { IStrategy } from "./strategy.type";
 
 export class BaseStrategy implements IStrategy {
   client: IClient;
   testRunId: Promise<TestRunId>;
+  private syncStorageRunner?: SyncStorageRunner;
 
   protected constructor(protected config: AdapterConfig) {
     this.client = new Client(config);
@@ -14,11 +16,14 @@ export class BaseStrategy implements IStrategy {
 
   async setup(): Promise<void> {
     const testRunId = await this.testRunId;
+    await this.tryStartSyncStorage(testRunId);
+    await this.syncStorageRunner?.setWorkerStatus("in_progress");
     await this.client.testRuns.startTestRun(testRunId);
   }
 
   async teardown(): Promise<void> {
     const testRunId = await this.testRunId;
+    await this.syncStorageRunner?.setWorkerStatus("completed");
     await this.client.testRuns.completeTestRun(testRunId);
   }
 
@@ -66,8 +71,27 @@ export class BaseStrategy implements IStrategy {
   }
 
   async loadTestRun(autotests: AutotestResult[]): Promise<void> {
+    const firstResult = autotests[0];
+    if (firstResult) {
+      await this.syncStorageRunner?.sendInProgressTestResult(toTestResultCutModel(firstResult));
+    }
+
     const testRunId = await this.testRunId;
     return await this.client.testRuns.loadAutotests(testRunId, autotests);
+  }
+
+  private async tryStartSyncStorage(testRunId: string): Promise<void> {
+    if (!this.config.syncStorageEnabled) {
+      return;
+    }
+
+    const runner = new SyncStorageRunner(testRunId, this.config);
+    const started = await runner.start();
+    if (!started) {
+      return;
+    }
+
+    this.syncStorageRunner = runner;
   }
 
   protected async updateTestRun(config: AdapterConfig): Promise<void> {
