@@ -62,6 +62,7 @@ jobs:
       TMS_PROJECT_ID: ${{ secrets[matrix.project_id] }}
       TMS_TEST_RUN_NAME: ${{ matrix.project_name }} TestRun
       TMS_IMPORT_REALTIME: false
+      TMS_ADAPTER_MODE: 2
     steps:
       - name: Checkout adapters-js
         uses: actions/checkout@v6
@@ -128,30 +129,30 @@ jobs:
 
       - name: Create TestRun
         run: |
-          testit testrun create --token ${{ env.TMS_PRIVATE_TOKEN }} --output ${{ env.TEMP_FILE }}
-          echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> $GITHUB_ENV
-          echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> .env
-          export TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})
-          echo "{{ $(cat .env) }}"
-          echo "${{ env.TMS_TEST_RUN_ID }}"
-          echo "${{ env.TMS_URL }}"
-          echo "${{ env.TMS_ADAPTER_MODE }}"
+          # testit testrun create --token ${{ env.TMS_PRIVATE_TOKEN }} --output ${{ env.TEMP_FILE }}
+          # echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> $GITHUB_ENV
+          # echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> .env
+          # export TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})
+          # echo "{{ $(cat .env) }}"
+          # echo "${{ env.TMS_TEST_RUN_ID }}"
+          # echo "${{ env.TMS_URL }}"
+          # echo "${{ env.TMS_ADAPTER_MODE }}"
           echo "$GITHUB_ENV"
       - name: Test
         run: |
 
-          chmod +x ./scripts/get_sync_storage.sh
+          # chmod +x ./scripts/get_sync_storage.sh
 
-          export SYNC_STORAGE_VERSION=$(grep -o 'VERSION = "[^"]*"' testit-js-commons/src/services/syncstorage/syncstorage.runner.ts | cut -d'"' -f2)
+          # export SYNC_STORAGE_VERSION=$(grep -o 'VERSION = "[^"]*"' testit-js-commons/src/services/syncstorage/syncstorage.runner.ts | cut -d'"' -f2)
          
 
           cd js-examples/${{ matrix.project_name }}
           
-          # start sync storage before all other processes
-          ../../scripts/get_sync_storage.sh $SYNC_STORAGE_VERSION
-          nohup .caches/syncstorage-linux-amd64 --testRunId ${{ env.TMS_TEST_RUN_ID }} --port 49152 \
-          --baseURL ${{ env.TMS_URL }} --privateToken ${{ env.TMS_PRIVATE_TOKEN }}  > service.log 2>&1 &  
-          curl -v http://127.0.0.1:49152/health || true
+          # # start sync storage before all other processes
+          # ../../scripts/get_sync_storage.sh $SYNC_STORAGE_VERSION
+          # nohup .caches/syncstorage-linux-amd64 --testRunId ${{ env.TMS_TEST_RUN_ID }} --port 49152 \
+          # --baseURL ${{ env.TMS_URL }} --privateToken ${{ env.TMS_PRIVATE_TOKEN }}  > service.log 2>&1 &  
+          # curl -v http://127.0.0.1:49152/health || true
           
           
           npm run test || true 
