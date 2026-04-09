@@ -92,6 +92,12 @@ export class TestRunsService extends BaseService implements ITestRunsService {
     }
   }
 
+  public async postInProgressAutotestResult(testRunId: string, result: AutotestResult): Promise<void> {
+    const model = this._converter.toOriginAutotestResultInProgress(result);
+    escapeHtmlInObjectArray([model]);
+    await this._client.setAutoTestResultsForTestRun(testRunId, { autoTestResultsForTestRunModel: [model] });
+  }
+
   public async loadAutotests(testRunId: string, results: Array<AutotestResult>) {
     const autotestResultsForTestRun = results.map((result) => this._converter.toOriginAutotestResult(result));
     escapeHtmlInObjectArray(autotestResultsForTestRun);
