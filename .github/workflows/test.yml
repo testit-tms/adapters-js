@@ -63,29 +63,29 @@ jobs:
       TMS_TEST_RUN_NAME: ${{ matrix.project_name }} TestRun
     steps:
       - name: Checkout adapters-js
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Checkout api-validator-dotnet
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: testit-tms/api-validator-dotnet
           token: ${{ env.GITHUB_PAT }}
           path: api-validator-dotnet
       - name: Checkout js-examples
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: testit-tms/js-examples
           ref: examples_for_tests
           path: js-examples
       - name: Setup dotnet
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
       - name: Setup node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Setup python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Setup environment
@@ -154,22 +154,10 @@ jobs:
           curl -v http://127.0.0.1:49152/health || true
           
           
-
-          # # Search for testit references in package-lock.json
-          # if [ -f "package-lock.json" ]; then
-          #   echo "=== Searching for testit references in package-lock.json ==="
-          #   echo "Found testit packages:"
-          #   grep -i "\"testit" package-lock.json || echo "No testit package references found"
-          #   echo ""
-          # else
-          #   echo "package-lock.json not found"
-          # fi
-
-          npm run test || true #ignore error code
+          npm run test || true 
 
           sleep 1
-          sleep 10
-          #curl -v http://127.0.0.1:49152/wait-completion?testRunId=${{ env.TMS_TEST_RUN_ID }} || true
+          curl -v http://127.0.0.1:49152/wait-completion?testRunId=${{ env.TMS_TEST_RUN_ID }} || true
           cat service.log
 
       - name: Validate

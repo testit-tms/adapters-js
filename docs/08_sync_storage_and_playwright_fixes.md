@@ -1,169 +1,41 @@
-# Sync Storage Integration and Playwright Stability Fixes
+# Sync Storage, TMS, and adapter stability
 
-This document describes the key changes made in `adapters-js` for:
+Technical reference for the `adapters-js` monorepo: Sync Storage in commons, TMS result flow, and adapter-specific behavior.
 
-- default Sync Storage workflow in `testit-js-commons`
-- Playwright step rendering from fixtures/hooks
-- safe namespace/classname updates when tests fail in fixtures
-- `externalId` / `autoTestExternalId` escaping behavior
+## 1. Commons: Sync Storage + `BaseStrategy`
 
-The goal is to preserve backward compatibility for existing adapters while making distributed/realtime reporting more robust.
+- Code: `src/services/syncstorage/*`, wired in `base.strategy.ts`.
+- Cut payload includes **`statusType`** (with `statusCode`), aligned with final result mapping (Succeeded / Failed / Incomplete).
+- After **successful** master cut: `TestRunsService.postInProgressAutotestResult` (TMS `InProgress`), then `loadAutotests`.
+- **`toOriginAutotestResultInProgress`** drops **`links`**: two `setAutoTestResultsForTestRun` calls in a row otherwise **merge** links server-side (symptom: expected 2, got 4).
+- Runner: HTTP timeout/retry, GitHub binary (`SyncStorageRunner.VERSION`), `wait_completion` → `force_completion`.
 
-## 1) Sync Storage in `testit-js-commons` (now default)
+## 2. Playwright
 
-### What was added
+- Prefer `TestResult.steps` and recursive `test.step` extraction so fixture hooks contribute steps.
+- New autotest: metadata `namespace`/`classname`, else path defaults; updates avoid forced path overwrite + commons merge on update.
+- Attachment uploads: failures logged, no unhandled rejections.
+- Metadata API: `testit.links` → autotest definition; `testit.addLinks` → **run result** (different payload fields).
 
-- New service module:
-  - `testit-js-commons/src/services/syncstorage/syncstorage.runner.ts`
-  - `testit-js-commons/src/services/syncstorage/syncstorage.type.ts`
-  - `testit-js-commons/src/services/syncstorage/index.ts`
-- Export wired in:
-  - `testit-js-commons/src/services/index.ts`
-- Integration point:
-  - `testit-js-commons/src/strategy/base.strategy.ts`
+## 3. Jest
 
-### Runtime behavior
+- `globalSetup` sets `globalThis.strategy` after `setup()`; environment uses `globalThis.strategy ?? StrategyFactory.create(...)`.
+- Attachment queue: per-promise `.catch` + `Promise.allSettled` before persisting / sending results.
+- **Workers:** child processes do not share parent `globalThis` → use **`--runInBand`** (or single worker) if `globalSetup` must own the only `strategy`.
 
-`BaseStrategy` now orchestrates Sync Storage lifecycle:
+## 4. Mocha
 
-- `setup()`:
-  - starts or connects to Sync Storage
-  - registers worker
-  - sets worker status to `in_progress`
-  - starts test run in Test IT
-- `loadTestRun()`:
-  - sends one in-progress cut result (`/in_progress_test_result`) from master worker, with both **`statusCode`** (local `Outcome`) and **`statusType`** (same mapping as `loadAutotests`: `Succeeded` / `Failed` / `Incomplete`)
-  - after a **successful** Sync Storage publish, sends the **first** autotest result to Test IT with **`statusType: "InProgress"`** via `TestRunsService.postInProgressAutotestResult` (then final payloads via `loadAutotests` as before)
-- `teardown()`:
-  - sets worker status to `completed`
-  - tries `/wait_completion`, falls back to `/force_completion`
-  - completes test run in Test IT
+- `catch` on `deasync-promise` `setup` / `teardown`; guarded `onEndRun` to reduce `superagent: double callback` on TLS/socket errors.
 
-### Process management
+## 5. Other adapters
 
-`SyncStorageRunner` now supports:
+- Cucumber / TestCafe: await `setup` before final upload; teardown at end of run.
 
-- health check for external service (`/health`)
-- local process auto-start if service is not running
-- binary download from GitHub Releases (version in `SyncStorageRunner.VERSION`, currently `v0.2.4-rc1`) to `build/.caches`
-- OS/arch-aware executable selection:
-  - OS: `windows`, `linux`, `darwin`
-  - Arch: `amd64`, `arm64`
+## 6. HTML escape (commons)
 
-### Configuration
+- Skip escaping for **`externalId`** and **`autoTestExternalId`** (`html-escape.util.ts`).
 
-Added to `AdapterConfig`:
+## 7. Maintenance
 
-- `syncStorageEnabled?: boolean`
-- `syncStoragePort?: string`
-
-Added env variables:
-
-- `TMS_SYNC_STORAGE_ENABLED`
-- `TMS_SYNC_STORAGE_PORT`
-
-Default values:
-
-- `syncStorageEnabled = true`
-- `syncStoragePort = "49152"`
-
-To disable Sync Storage explicitly:
-
-```bash
-TMS_SYNC_STORAGE_ENABLED=false
-```
-
-## 2) Playwright: steps from fixtures/hooks are now included
-
-### Problem
-
-Steps from fixture wrappers (`Before Hooks` / `After Hooks`) were missed because top-level caching in reporter filtered out nested steps by `step.parent`.
-
-### Fix
-
-- `testit-adapter-playwright/src/reporter.ts` now prefers `TestResult.steps` (full Playwright step tree) in `onTestEnd`.
-- `testit-adapter-playwright/src/models/result.ts` now carries `steps?: TestStep[]`.
-- `testit-adapter-playwright/src/converter.ts` recursively traverses non-`test.step` wrappers and extracts nested `test.step` nodes.
-
-Result: user-defined `testit.step(...)` in fixture flow is rendered in Test IT.
-
-### Attachment upload resilience
-
-In `testit-adapter-playwright/src/reporter.ts`, per-test promises and attachment uploads are wrapped so network errors (e.g. `ECONNRESET` on text/file upload) are logged but do not surface as unhandled rejections or fail the reporter run.
-
-## 3) Playwright: safe namespace/classname behavior on fixture failures
-
-### Problem
-
-If a test failed before metadata calls were executed, reporter could fall back to file path namespace/classname and overwrite existing Test IT tree during updates.
-
-### Fix
-
-In `testit-adapter-playwright/src/reporter.ts`:
-
-- on **new autotest creation**:
-  - use `testit.namespace` / `testit.classname` from metadata if present
-  - use path-based defaults only when metadata values are missing
-- on **existing autotest update**:
-  - do not force path fallback
-  - let commons merge logic preserve existing tree if no explicit values were sent
-
-In `testit-js-commons/src/services/autotests/autotests.service.ts`:
-
-- added merge before update:
-  - `namespace = incoming ?? origin.namespace`
-  - `classname = incoming ?? origin.classname`
-
-This prevents accidental tree corruption when failures happen in hooks/fixtures.
-
-## 4) `externalId` / `autoTestExternalId` are not escaped
-
-### Problem
-
-Escaping logic in commons could alter `<` / `>` in identifiers, creating duplicates and wrong mapping.
-
-### Fix
-
-`testit-js-commons/src/common/utils/html-escape.util.ts` now skips HTML escaping for keys:
-
-- `externalId`
-- `autoTestExternalId`
-
-All other string fields keep existing escape behavior.
-
-## 5) Jest and Mocha robustness
-
-### Jest (`testit-adapter-jest`)
-
-- `globalSetup` stores the strategy on `globalThis.strategy` after `setup()`; `TestItEnvironment` uses that instance when present (same process — typical with `jest --runInBand`). Parallel default workers still instantiate their own strategy without `setup()`; document `--runInBand` when Sync Storage must align with `globalSetup`.
-- `testitEnvironment.ts`: attachment upload promises use `.catch` and `Promise.allSettled` where the queue is drained, so a failed TMS attachment upload does not reject `saveResult` / `loadResults` or drop subsequent test cases (e.g. `js-examples/jest/tests/steps.test.js`).
-
-### Mocha (`testit-adapter-mocha`)
-
-- `TmsReporter`: guarded `EVENT_RUN_END` handler and `.catch` on `setup` / `teardown` paths used with `deasync-promise`, reducing `superagent: double callback` noise when TLS/socket errors occur.
-
-## 6) Tests and verification
-
-Added tests:
-
-- `testit-js-commons/src/services/syncstorage/syncstorage.runner.test.ts`
-- `testit-js-commons/src/helpers/config/config.helper.test.ts`
-- updated html escaping tests for identifier behavior
-
-Validated by:
-
-- `npm test` in `testit-js-commons`
-- `npm run build` in:
-  - `testit-js-commons`
-  - `testit-adapter-playwright`
-  - `testit-adapter-jest`
-  - `testit-adapter-mocha`
-  - `testit-adapter-cypress`
-
-## 7) Operational notes for future maintenance
-
-- Keep Sync Storage optional at runtime via env override, even if enabled by default.
-- If Sync Storage binary release version changes, update `SyncStorageRunner.VERSION` in `syncstorage.runner.ts`.
-- Do not bypass metadata precedence for Playwright namespace/classname.
-- Keep merge-on-update in commons for `namespace`/`classname` to avoid test tree regressions on partial metadata runs.
-- For new adapters, prefer integrating through `BaseStrategy` only (single shared behavior point).
+- Bump **`SyncStorageRunner.VERSION`** when changing the Sync Storage release.
+- Prefer integrating new adapters through **`BaseStrategy`** only.
