@@ -75,12 +75,11 @@ export class BaseStrategy implements IStrategy {
     const testRunId = await this.testRunId;
     const firstResult = autotests[0];
     if (firstResult) {
-      const published = await this.syncStorageRunner?.sendInProgressTestResult(
+      await this.syncStorageRunner?.sendInProgressTestResult(
         toTestResultCutModel(firstResult, this.config.projectId),
       );
-      if (published) {
-        await this.client.testRuns.postInProgressAutotestResult(testRunId, firstResult);
-      }
+      // Always post InProgress to TMS first: sync storage may be off, non-master, or cut may fail.
+      await this.client.testRuns.postInProgressAutotestResult(testRunId, firstResult);
     }
 
     return await this.client.testRuns.loadAutotests(testRunId, autotests);

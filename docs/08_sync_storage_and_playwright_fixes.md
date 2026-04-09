@@ -6,7 +6,7 @@ Technical reference for the `adapters-js` monorepo: Sync Storage in commons, TMS
 
 - Code: `src/services/syncstorage/*`, wired in `base.strategy.ts`.
 - Cut payload includes **`statusType`** (with `statusCode`), aligned with final result mapping (Succeeded / Failed / Incomplete).
-- After **successful** master cut: `TestRunsService.postInProgressAutotestResult` (TMS `InProgress`), then `loadAutotests`.
+- **`postInProgressAutotestResult`** (TMS `InProgress` for `autotests[0]`) runs **whenever** there is a first result — not gated on Sync Storage publish (covers disabled sync, non-master, failed cut). Then `loadAutotests`.
 - **`toOriginAutotestResultInProgress`** drops **`links`**: two `setAutoTestResultsForTestRun` calls in a row otherwise **merge** links server-side (symptom: expected 2, got 4).
 - Runner: HTTP timeout/retry, GitHub binary (`SyncStorageRunner.VERSION`), `wait_completion` → `force_completion`.
 

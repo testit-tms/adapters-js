@@ -2,7 +2,7 @@
 
 | Topic | What changed |
 |--------|----------------|
-| Sync Storage | Default on; cut includes `statusType`; master posts TMS **InProgress**, then final results. |
+| Sync Storage + TMS | Cut to sync when master; **TMS InProgress** for first result in `loadTestRun` always, then final `loadAutotests` (not only if sync cut succeeded). |
 | Duplicate TMS links | InProgress model has **no `links`** — avoids merge doubling on the second POST. |
 | TMS attachments | **Retries** (3×, backoff) + **≥120 s** HTTP timeout in `attachments.service.ts` for transient errors (`ECONNRESET`, 5xx, …). |
 | Jest | `globalThis.strategy`; `.catch` / `allSettled` on queue; use **`--runInBand`** for one shared strategy. |
