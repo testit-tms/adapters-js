@@ -1,7 +1,7 @@
 // @ts-ignore
 import * as TestitApiClient from "testit-api-client";
 import { AdapterConfig, BaseService } from "../../common";
-import { escapeHtmlInObject, escapeHtmlInObjectArray } from "../../common/utils";
+import { escapeHtmlInObject, escapeHtmlInObjectArray, logTmsLoadTestRun } from "../../common/utils";
 import { type ITestRunsService, TestRunId, AutotestResult, TestRunGet } from "./testruns.type";
 import { type ITestRunConverter, TestRunConverter } from "./testruns.converter";
 import { TestRunErrorHandler } from "./testruns.handler";
@@ -95,7 +95,17 @@ export class TestRunsService extends BaseService implements ITestRunsService {
   public async postInProgressAutotestResult(testRunId: string, result: AutotestResult): Promise<void> {
     const model = this._converter.toOriginAutotestResultInProgress(result);
     escapeHtmlInObjectArray([model]);
+    logTmsLoadTestRun("POST setAutoTestResults (InProgress stub)", {
+      testRunId,
+      autoTestExternalId: model.autoTestExternalId,
+      statusType: model.statusType,
+      statusCode: model.statusCode,
+      hasStartedOn: Boolean(model.startedOn),
+    });
     await this._client.setAutoTestResultsForTestRun(testRunId, { autoTestResultsForTestRunModel: [model] });
+    logTmsLoadTestRun("POST setAutoTestResults (InProgress stub) done", {
+      autoTestExternalId: model.autoTestExternalId,
+    });
   }
 
   public async loadAutotests(testRunId: string, results: Array<AutotestResult>) {
@@ -103,6 +113,13 @@ export class TestRunsService extends BaseService implements ITestRunsService {
     escapeHtmlInObjectArray(autotestResultsForTestRun);
 
     for (const autotestResult of autotestResultsForTestRun) {
+      logTmsLoadTestRun("POST setAutoTestResults (final)", {
+        testRunId,
+        autoTestExternalId: autotestResult.autoTestExternalId,
+        statusType: autotestResult.statusType,
+        statusCode: autotestResult.statusCode,
+        stepCount: autotestResult.stepResults?.length ?? 0,
+      });
       await this._client.setAutoTestResultsForTestRun(testRunId, { autoTestResultsForTestRunModel: [autotestResult] });
     }
   }

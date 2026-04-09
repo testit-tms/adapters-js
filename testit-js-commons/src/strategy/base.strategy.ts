@@ -1,5 +1,6 @@
 import { Client, IClient } from "../client";
 import { AdapterConfig } from "../common";
+import { logTmsLoadTestRun } from "../common/utils";
 import { AutotestPost, AutotestResult, TestRunId } from "../services";
 import { SyncStorageRunner, toTestResultCutModel } from "../services/syncstorage";
 import { IStrategy } from "./strategy.type";
@@ -74,12 +75,26 @@ export class BaseStrategy implements IStrategy {
   async loadTestRun(autotests: AutotestResult[]): Promise<void> {
     const testRunId = await this.testRunId;
     const firstResult = autotests[0];
+    logTmsLoadTestRun("loadTestRun enter", {
+      testRunId,
+      batchSize: autotests.length,
+      firstExternalId: firstResult?.autoTestExternalId,
+      syncRunnerActive: Boolean(this.syncStorageRunner?.isActive?.()),
+      isMaster: Boolean(this.syncStorageRunner?.isMasterWorker?.()),
+    });
     if (firstResult) {
-      await this.syncStorageRunner?.sendInProgressTestResult(
+      const published = await this.syncStorageRunner?.sendInProgressTestResult(
         toTestResultCutModel(firstResult, this.config.projectId),
       );
-      // Always post InProgress to TMS first: sync storage may be off, non-master, or cut may fail.
-      await this.client.testRuns.postInProgressAutotestResult(testRunId, firstResult);
+      logTmsLoadTestRun("syncStorage sendInProgressTestResult", { published: Boolean(published) });
+      try {
+        await this.client.testRuns.postInProgressAutotestResult(testRunId, firstResult);
+      } catch (err: unknown) {
+        logTmsLoadTestRun("postInProgressAutotestResult FAILED", {
+          message: err instanceof Error ? err.message : String(err),
+        });
+        throw err;
+      }
     }
 
     return await this.client.testRuns.loadAutotests(testRunId, autotests);

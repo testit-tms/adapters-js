@@ -63,6 +63,7 @@ jobs:
       TMS_TEST_RUN_NAME: ${{ matrix.project_name }} TestRun
       TMS_IMPORT_REALTIME: false
       TMS_ADAPTER_MODE: 1
+      TMS_DEBUG_LOAD_TEST_RUN: 1
     steps:
       - name: Checkout adapters-js
         uses: actions/checkout@v6

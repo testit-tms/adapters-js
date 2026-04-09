@@ -3,7 +3,8 @@
 | Topic | What changed |
 |--------|----------------|
 | Sync Storage + TMS | Cut to sync when master; **TMS InProgress** for first result in `loadTestRun` always, then final `loadAutotests` (not only if sync cut succeeded). |
-| Duplicate TMS links | InProgress model has **no `links`** — avoids merge doubling on the second POST. |
+| InProgress TMS payload | **Minimal** (no steps/attachments/duration/completedOn); no **`links`** on stub (merge-safe). |
+| Debug loadTestRun | Env **`TMS_DEBUG_LOAD_TEST_RUN=1`** → `[testit-js-commons:loadTestRun]` logs. |
 | TMS attachments | **Retries** (3×, backoff) + **≥120 s** HTTP timeout in `attachments.service.ts` for transient errors (`ECONNRESET`, 5xx, …). |
 | Jest | `globalThis.strategy`; `.catch` / `allSettled` on queue; use **`--runInBand`** for one shared strategy. |
 | Playwright | Full step tree, namespace/classname rules; reporter still catches failures after commons retries. |
