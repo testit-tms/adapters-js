@@ -142,7 +142,8 @@ jobs:
           chmod +x ./scripts/get_sync_storage_version.sh
           chmod +x ./scripts/get_sync_storage.sh
 
-          export SYNC_STORAGE_VERSION=v0.2.3
+          export SYNC_STORAGE_VERSION=$(grep -o 'VERSION = "[^"]*"' testit-js-commons/src/services/syncstorage/syncstorage.runner.ts | cut -d'"' -f2)
+         
 
           cd js-examples/${{ matrix.project_name }}
           
