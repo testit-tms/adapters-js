@@ -6,7 +6,7 @@ Technical reference for the `adapters-js` monorepo: Sync Storage in commons, TMS
 
 - Code: `src/services/syncstorage/*`, wired in `base.strategy.ts`.
 - Cut payload includes **`statusType`** (with `statusCode`), aligned with final result mapping (Succeeded / Failed / Incomplete).
-- **`postInProgressAutotestResult`** (TMS `InProgress` for `autotests[0]`) runs **whenever** there is a first result — not gated on Sync Storage publish (covers disabled sync, non-master, failed cut). Then `loadAutotests`.
+- **`loadTestRun`**: for **each** autotest in the batch — `postInProgressAutotestResult` then `loadAutotests([that one])` (Jest one batch of N tests → N InProgress + N finals; Playwright one test → unchanged). Sync Storage cut still **once**, first test only.
 - **InProgress TMS payload is minimal** (`configurationId`, `autoTestExternalId`, `statusType: "InProgress"`, `statusCode: null`, optional `startedOn` only): no steps, attachments, duration, or `completedOn` — some TMS versions infer “finished” if those are present. **`links`** omitted on the stub (final POST merges links; avoids doubling).
 - **Debug:** set env **`TMS_DEBUG_LOAD_TEST_RUN=1`** (or `true`) to log order of `setAutoTestResultsForTestRun` calls (`[testit-js-commons:loadTestRun] …`).
 - Runner: HTTP timeout/retry, GitHub binary (`SyncStorageRunner.VERSION`), `wait_completion` → `force_completion`.

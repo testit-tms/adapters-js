@@ -82,22 +82,28 @@ export class BaseStrategy implements IStrategy {
       syncRunnerActive: Boolean(this.syncStorageRunner?.isActive?.()),
       isMaster: Boolean(this.syncStorageRunner?.isMasterWorker?.()),
     });
-    if (firstResult) {
-      const published = await this.syncStorageRunner?.sendInProgressTestResult(
-        toTestResultCutModel(firstResult, this.config.projectId),
-      );
-      logTmsLoadTestRun("syncStorage sendInProgressTestResult", { published: Boolean(published) });
+
+    // Per autotest: TMS InProgress then final. Jest sends one batch (N>1); only the first had InProgress before.
+    // Playwright sends [one] per call — same loop. Sync Storage cut stays single (master), first test only.
+    for (let i = 0; i < autotests.length; i++) {
+      const result = autotests[i];
+      if (i === 0) {
+        const published = await this.syncStorageRunner?.sendInProgressTestResult(
+          toTestResultCutModel(result, this.config.projectId),
+        );
+        logTmsLoadTestRun("syncStorage sendInProgressTestResult", { published: Boolean(published) });
+      }
       try {
-        await this.client.testRuns.postInProgressAutotestResult(testRunId, firstResult);
+        await this.client.testRuns.postInProgressAutotestResult(testRunId, result);
       } catch (err: unknown) {
         logTmsLoadTestRun("postInProgressAutotestResult FAILED", {
+          autoTestExternalId: result.autoTestExternalId,
           message: err instanceof Error ? err.message : String(err),
         });
         throw err;
       }
+      await this.client.testRuns.loadAutotests(testRunId, [result]);
     }
-
-    return await this.client.testRuns.loadAutotests(testRunId, autotests);
   }
 
   private async tryStartSyncStorage(testRunId: string): Promise<void> {
