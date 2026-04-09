@@ -30,6 +30,8 @@ Supported test frameworks :
  6. [TestCafe](https://github.com/testit-tms/adapters-js/tree/main/testcafe-reporter-testit)
  7. [Cypress](https://github.com/testit-tms/adapters-js/tree/main/testit-adapter-cypress)
 
+### TODO: notes about new version with sync-storage (4.0.0)
+
 # 🚀 Warning
 Since 3.0.0 version for Cucumber:
 - If the externalId annotation is not specified, then its contents will be a hash of the Scenario name.
