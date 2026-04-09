@@ -37,11 +37,13 @@ describe("SyncStorageRunner", () => {
 
     await runner.start();
     const first = await runner.sendInProgressTestResult({
+      projectId: "11111111-1111-1111-1111-111111111111",
       autoTestExternalId: "A",
       statusCode: "Passed",
       startedOn: new Date(),
     });
     const second = await runner.sendInProgressTestResult({
+      projectId: "11111111-1111-1111-1111-111111111111",
       autoTestExternalId: "B",
       statusCode: "Passed",
       startedOn: new Date(),
@@ -49,5 +51,25 @@ describe("SyncStorageRunner", () => {
 
     expect(first).toBe(true);
     expect(second).toBe(false);
+  });
+
+  it("should skip publish when payload is incomplete", async () => {
+    const runner = new SyncStorageRunner("run-1", makeConfig());
+    const internal = runner as any;
+    internal.healthcheck = jest.fn().mockResolvedValue(true);
+    internal.workersApi = { registerPost: jest.fn().mockResolvedValue({ is_master: true }) };
+    internal.testResultsApi = { inProgressTestResultPost: jest.fn().mockResolvedValue({ status: "ok" }) };
+    internal.testResultCutModel = { constructFromObject: (obj: any) => obj };
+
+    await runner.start();
+    const ok = await runner.sendInProgressTestResult({
+      projectId: "",
+      autoTestExternalId: "A",
+      statusCode: "Passed",
+      startedOn: new Date(),
+    });
+
+    expect(ok).toBe(false);
+    expect(internal.testResultsApi.inProgressTestResultPost).not.toHaveBeenCalled();
   });
 });

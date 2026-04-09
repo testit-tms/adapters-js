@@ -105,8 +105,16 @@ export class SyncStorageRunner implements ISyncStorageRunner {
       return false;
     }
 
+    if (!model.projectId || !model.autoTestExternalId || !model.statusCode) {
+      console.warn(
+        "Sync storage in-progress payload is incomplete; skipping publish.",
+      );
+      return false;
+    }
+
     try {
       const request = this.testResultCutModel.constructFromObject({
+        projectId: model.projectId,
         autoTestExternalId: model.autoTestExternalId,
         statusCode: model.statusCode,
         startedOn: model.startedOn,

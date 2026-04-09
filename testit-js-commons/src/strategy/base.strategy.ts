@@ -74,7 +74,7 @@ export class BaseStrategy implements IStrategy {
   async loadTestRun(autotests: AutotestResult[]): Promise<void> {
     const firstResult = autotests[0];
     if (firstResult) {
-      await this.syncStorageRunner?.sendInProgressTestResult(toTestResultCutModel(firstResult));
+      await this.syncStorageRunner?.sendInProgressTestResult(toTestResultCutModel(firstResult, this.config.projectId));
     }
 
     const testRunId = await this.testRunId;
