@@ -16,6 +16,7 @@ export interface ISyncStorageRunner {
   isAlreadyInProgress(): boolean;
   sendInProgressTestResult(model: TestResultCutModel): Promise<boolean>;
   setWorkerStatus(status: WorkerStatus): Promise<void>;
+  completeProcessing(): Promise<void>;
 }
 
 export function toTestResultCutModel(result: AutotestResult): TestResultCutModel {

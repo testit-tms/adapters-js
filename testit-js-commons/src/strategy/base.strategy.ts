@@ -24,6 +24,7 @@ export class BaseStrategy implements IStrategy {
   async teardown(): Promise<void> {
     const testRunId = await this.testRunId;
     await this.syncStorageRunner?.setWorkerStatus("completed");
+    await this.syncStorageRunner?.completeProcessing();
     await this.client.testRuns.completeTestRun(testRunId);
   }
 

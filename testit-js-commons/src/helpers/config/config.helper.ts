@@ -43,7 +43,7 @@ export class ConfigComposer implements IConfigComposer {
       automaticCreationTestCases: file.automaticCreationTestCases ?? stringToBoolean(env?.TMS_AUTOMATIC_CREATION_TEST_CASES) ?? base?.automaticCreationTestCases ?? false,
       automaticUpdationLinksToTestCases: file.automaticUpdationLinksToTestCases ?? stringToBoolean(env?.TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES) ?? base?.automaticUpdationLinksToTestCases ?? false,
       certValidation: file.certValidation ?? stringToBoolean(env?.TMS_CERT_VALIDATION) ?? base?.certValidation ?? true,
-      syncStorageEnabled: file.syncStorageEnabled ?? stringToBoolean(env?.TMS_SYNC_STORAGE_ENABLED) ?? base?.syncStorageEnabled ?? false,
+      syncStorageEnabled: file.syncStorageEnabled ?? stringToBoolean(env?.TMS_SYNC_STORAGE_ENABLED) ?? base?.syncStorageEnabled ?? true,
       syncStoragePort: this.resolveAllProperties(file.syncStoragePort, env?.TMS_SYNC_STORAGE_PORT, base?.syncStoragePort) || "49152",
     };
   }
@@ -60,7 +60,7 @@ export class ConfigComposer implements IConfigComposer {
       automaticCreationTestCases: stringToBoolean(env?.TMS_AUTOMATIC_CREATION_TEST_CASES) ?? base?.automaticCreationTestCases ?? false,
       automaticUpdationLinksToTestCases: stringToBoolean(env?.TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES) ?? base?.automaticUpdationLinksToTestCases ?? false,
       certValidation: stringToBoolean(env?.TMS_CERT_VALIDATION) ?? base?.certValidation ?? true,
-      syncStorageEnabled: stringToBoolean(env?.TMS_SYNC_STORAGE_ENABLED) ?? base?.syncStorageEnabled ?? false,
+      syncStorageEnabled: stringToBoolean(env?.TMS_SYNC_STORAGE_ENABLED) ?? base?.syncStorageEnabled ?? true,
       syncStoragePort: this.resolveProperties(env?.TMS_SYNC_STORAGE_PORT, base?.syncStoragePort) || "49152",
     };
   }
