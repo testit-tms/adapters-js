@@ -45,6 +45,7 @@ const StateConstants = {
 export class TmsReporter extends Reporter {
   private readonly strategy: IStrategy;
   private readonly additions: IAdditions;
+  private isRunEnded = false;
 
   private attachmentsQueue: Promise<Attachment[]>[] = [];
   private autotestsQueue: Promise<any>[] = [];
@@ -82,25 +83,39 @@ export class TmsReporter extends Reporter {
   };
 
   onStartRun = () => {
-    deasyncPromise(this.strategy.setup());
+    deasyncPromise(this.strategy.setup().catch((err) => {
+      console.log("Error setup test run. \n", err?.body ?? err);
+    }));
   };
 
   onEndRun = () => {
-    deasyncPromise(this.teardown());
+    if (this.isRunEnded) {
+      return;
+    }
+
+    this.isRunEnded = true;
+
+    deasyncPromise(this.teardown().catch((err) => {
+      console.log("Error during teardown. \n", err?.body ?? err);
+    }));
   };
 
   private async teardown(): Promise<void> {
     await Promise.all(this.attachmentsQueue).catch((err) => {
-      console.log("Error loading attachments. \n", err.body);
+      console.log("Error loading attachments. \n", err?.body ?? err);
     });
 
-    await Promise.all(this.autotestsQueue);
+    await Promise.all(this.autotestsQueue).catch((err) => {
+      console.log("Error load autotests. \n", err?.body ?? err);
+    });
 
     await this.strategy.loadTestRun(this.autotestsForTestRun).catch((err) => {
-      console.log("Error load test run. \n", err.body);
+      console.log("Error load test run. \n", err?.body ?? err);
     });
 
-    await this.strategy.teardown();
+    await this.strategy.teardown().catch((err) => {
+      console.log("Error complete test run. \n", err?.body ?? err);
+    });
   }
 
   clearContext(ctx: Context) {

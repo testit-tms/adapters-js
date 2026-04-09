@@ -62,7 +62,9 @@ class TmsReporter implements Reporter {
           errors: result.errors,
           error: result.error,
           steps: result.steps,
-        }))
+        })).catch((err) => {
+          console.log("Error processing test result. \n", err?.body ?? err?.error ?? err);
+        })
     );
   }
 
@@ -143,11 +145,12 @@ class TmsReporter implements Reporter {
       if (!attachment.body) {
         if (attachment.path && attachment.name !== "screenshot") {
           const content = Utils.readBufferSync(attachment.path);
-
-          await this.additions.addAttachments(content, attachment.name)
-            .then((ids: any) => {
-              autotestData.addAttachments?.push(...ids);
-            });
+          try {
+            const ids: any = await this.additions.addAttachments(content, attachment.name);
+            autotestData.addAttachments?.push(...ids);
+          } catch (err: any) {
+            console.log("Error uploading file attachment. \n", err?.body ?? err?.error ?? err);
+          }
         }
         
         continue;
@@ -213,16 +216,19 @@ class TmsReporter implements Reporter {
 
       if (attachment.name.match(stepAttachRegexp)) {
         const step = this.attachmentStepsCache.find((step: TestStep) => step.title === attachment.name);
-
-        await this.additions.addAttachments(attachment.body,
-            attachment.name.replace(stepAttachRegexp, ""))
-            .then((ids: any[]) => {
+        try {
+          const ids: any[] = await this.additions.addAttachments(
+            attachment.body,
+            attachment.name.replace(stepAttachRegexp, "")
+          );
           if (step?.parent) {
             this.attachmentsMap.set(ids[0], step.parent);
-            return;
+            continue;
           }
           autotestData.addAttachments?.push(...ids);
-        });
+        } catch (err: any) {
+          console.log("Error uploading text attachment. \n", err?.body ?? err?.error ?? err);
+        }
       }
     }
 
