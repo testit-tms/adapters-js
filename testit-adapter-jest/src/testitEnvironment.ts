@@ -1,7 +1,7 @@
 import type { EnvironmentContext, JestEnvironmentConfig } from "@jest/environment";
 import { Event } from "jest-circus";
 import NodeEnvironment from "jest-environment-node";
-import { AutotestPost, AutotestResult, Link, Step, Additions, ConfigComposer, Utils, StrategyFactory, IStrategy } from "testit-js-commons";
+import { Attachment, AutotestPost, AutotestResult, Link, Step, Additions, ConfigComposer, Utils, StrategyFactory, IStrategy } from "testit-js-commons";
 import { debug } from "debug";
 import { AutotestData } from "./types";
 import { excludePath, mapParams } from "./utils";
@@ -38,7 +38,7 @@ export default class TestItEnvironment extends NodeEnvironment {
   private autotestResults: AutotestResult[] = [];
   private autotests: AutotestData[] = [];
   private readonly testPath: string;
-  private attachmentsQueue: Promise<void>[] = [];
+  private attachmentsQueue: Promise<Attachment[]>[] = [];
 
   private readonly strategy: IStrategy;
   private readonly additions: Additions;
@@ -177,7 +177,7 @@ export default class TestItEnvironment extends NodeEnvironment {
   async saveResult(test: Extract<Event, { name: "test_done" }>["test"]) {
     log("Saving result for %s", test.name);
 
-    await Promise.all(this.attachmentsQueue);
+    await Promise.allSettled(this.attachmentsQueue);
 
     const errorMessage = test.errors.length > 0 ? test.errors.map((err) => err[0]?.message).join("\n") : undefined;
 
@@ -201,7 +201,7 @@ export default class TestItEnvironment extends NodeEnvironment {
 
   async loadResults() {
     log("Waiting for attachments to be uploaded");
-    await Promise.all(this.attachmentsQueue);
+    await Promise.allSettled(this.attachmentsQueue);
 
     const results: AutotestResult[] = [];
     for (let i = 0; i < this.autotests.length; i++) {
@@ -297,10 +297,16 @@ export default class TestItEnvironment extends NodeEnvironment {
     const step = this.currentStepData;
     const currentType = this.currentType;
 
-    // @ts-ignore
-    const promise = this.additions.addAttachments(attachments, name).then((ids) => {
-      currentType === "test" ? autotest.attachments.push(...ids) : step.attachments?.push(...ids);
-    });
+    // @ts-ignore — overload: paths[] | text content + fileName
+    const promise = this.additions.addAttachments(attachments, name)
+      .then((ids) => {
+        currentType === "test" ? autotest.attachments.push(...ids) : step.attachments?.push(...ids);
+        return ids;
+      })
+      .catch((err: any) => {
+        console.log("Error uploading attachment (Jest). \n", err?.body ?? err?.error ?? err);
+        return [] as Attachment[];
+      });
 
     this.attachmentsQueue.push(promise);
     return promise;
