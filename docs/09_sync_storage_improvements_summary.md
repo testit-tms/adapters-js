@@ -21,8 +21,9 @@ The goal was to make Sync Storage a reliable default execution path across JS ad
     - registers worker
     - sets worker status to `in_progress`
   - `loadTestRun()`:
-    - sends in-progress cut result via Sync Storage
-    - then sends normal results to Test IT
+    - sends in-progress cut result via Sync Storage (includes **`statusType`** on the cut model, consistent with final result mapping)
+    - after successful Sync Storage publish: **`postInProgressAutotestResult`** — first TMS write with `statusType: "InProgress"`
+    - then sends final results to Test IT (`loadAutotests`)
   - `teardown()`:
     - sets worker status to `completed`
     - executes `wait_completion` with `force_completion` fallback
@@ -64,10 +65,16 @@ To ensure Sync Storage logic actually runs everywhere, lifecycle gaps were fixed
   - added teardown at run end
 - **Mocha**
   - made setup blocking in run-begin handler
+  - hardened teardown path with `deasync-promise` (guarded run end, errors caught) to avoid superagent double-callback issues on network failures
+
+- **Jest**
+  - `globalThis.strategy` from `globalSetup` reused in environment when in the same process; use `--runInBand` when a single shared `strategy` / Sync Storage registration is required
+  - resilient attachment queue: failed uploads no longer reject `saveResult` / `loadResults` or lose remaining tests
 
 ### 5) Stability fixes related to reporting behavior
 
 - Playwright step collection now uses full `TestResult.steps` tree and recursive conversion, so fixture hook steps are preserved.
+- Playwright reporter catches attachment / per-test async failures so TLS resets do not crash the process with unhandled rejections.
 - Namespace/classname update logic no longer corrupts existing hierarchy when metadata is missing in fixture-failure scenarios.
 - `externalId` and `autoTestExternalId` are excluded from HTML escaping to prevent identifier distortion.
 
@@ -98,3 +105,5 @@ TMS_SYNC_STORAGE_PORT=49152
 ```
 
 - If Sync Storage is unavailable, integration gracefully degrades without blocking standard Test IT result upload.
+
+- **Jest + Sync Storage:** without `--runInBand` (or another single-worker setup), workers may not share the `globalSetup` strategy instance; plan CI accordingly.

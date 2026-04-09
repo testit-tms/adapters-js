@@ -6,6 +6,8 @@ This MR introduces a production-focused Sync Storage integration in `testit-js-c
 
 In parallel, it includes critical Playwright and commons fixes to prevent reporting/data regressions.
 
+Follow-up changes document: **Sync Storage cut model `statusType`**, explicit **InProgress** first write to Test IT, **Jest** `globalThis.strategy` + attachment resilience, and **Mocha/Playwright** hardening around transient network errors (`ECONNRESET`).
+
 ## Why
 
 We needed to:
@@ -36,8 +38,9 @@ Behavior:
   - registers worker,
   - sets worker status to `in_progress`.
 - `loadTestRun()`:
-  - sends in-progress cut result through Sync Storage (master/dedupe guarded),
-  - then sends normal results to Test IT.
+  - sends in-progress cut result through Sync Storage (master/dedupe guarded), including **`statusType`** on the cut model (aligned with `TestRunConverter.mapToStatusType`: `Succeeded` / `Failed` / `Incomplete`),
+  - after a **successful** Sync Storage publish, sends a **first** result to Test IT via `setAutoTestResultsForTestRun` with **`statusType: "InProgress"`** (`postInProgressAutotestResult`),
+  - then sends final results to Test IT as before (`loadAutotests`).
 - `teardown()`:
   - sets worker status to `completed`,
   - tries `wait_completion`, then falls back to `force_completion`,
@@ -75,13 +78,18 @@ Updated adapters to ensure Sync Storage lifecycle is actually executed:
 - **Playwright**
   - runs `setup()` on `onBegin`,
   - runs `teardown()` on `onEnd`,
-  - fixed skipped-tests async race (`Promise.all`).
+  - fixed skipped-tests async race (`Promise.all`),
+  - attachment upload failures (`ECONNRESET`, etc.) are caught so they do not cause `ERR_UNHANDLED_REJECTION` or fail the run.
 - **Cucumber**
   - added setup promise and await before final processing.
 - **TestCafe reporter**
   - added setup at initialization and teardown at run end.
 - **Mocha**
-  - made run-begin setup blocking.
+  - made run-begin setup blocking,
+  - hardened `onEndRun` / `teardown` with `catch` and a one-shot guard so network errors do not trigger `deasync-promise` / `superagent` double-callback noise.
+- **Jest**
+  - `globalSetup` assigns `globalThis.strategy` after `setup()`; `TestItEnvironment` reuses it when defined (same Node process, e.g. `jest --runInBand`),
+  - attachment queue: `.catch` on upload promises and `Promise.allSettled` before `saveResult` / `loadResults` so transient `ECONNRESET` does not drop test cases or fail the file.
 
 ### 5) Reporting/data integrity fixes
 
@@ -124,6 +132,7 @@ Builds passed for:
 
 - Sync Storage binary download relies on GitHub availability in CI/runtime environments.
 - For locked-down environments, set `TMS_SYNC_STORAGE_ENABLED=false` or provide a pre-running Sync Storage instance.
+- **Jest workers:** child processes do not share `globalThis.strategy` from `globalSetup`. For full Sync Storage + shared `strategy` instance, prefer **`jest --runInBand`** (or equivalent single-worker execution) when using `globalSetup` + this reporter pattern.
 
 ## Rollback Plan
 

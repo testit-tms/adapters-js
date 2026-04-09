@@ -45,7 +45,11 @@ export class TestRunConverter extends BaseConverter implements ITestRunConverter
   }
 
   toOriginAutotestResultInProgress(autotest: AutotestResult): AutoTestResultsForTestRunModel {
-    return { ...this.toOriginAutotestResult(autotest), statusType: "InProgress" };
+    const model = this.toOriginAutotestResult(autotest);
+    // Omit links on the interim TMS post: final setAutoTestResultsForTestRun merges links;
+    // sending the same links twice (InProgress + final) doubles them on the result.
+    delete (model as { links?: unknown }).links;
+    return { ...model, statusType: "InProgress" };
   }
 
   toOriginAutotestResult(autotest: AutotestResult): AutoTestResultsForTestRunModel {
