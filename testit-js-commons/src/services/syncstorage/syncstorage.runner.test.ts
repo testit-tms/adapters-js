@@ -18,7 +18,7 @@ describe("SyncStorageRunner", () => {
     const runner = new SyncStorageRunner("run-1", makeConfig());
     const internal = runner as any;
     internal.healthcheck = jest.fn().mockResolvedValue(true);
-    internal.post = jest.fn().mockResolvedValue({ is_master: true });
+    internal.workersApi = { registerPost: jest.fn().mockResolvedValue({ is_master: true }) };
 
     const started = await runner.start();
 
@@ -31,9 +31,9 @@ describe("SyncStorageRunner", () => {
     const runner = new SyncStorageRunner("run-1", makeConfig());
     const internal = runner as any;
     internal.healthcheck = jest.fn().mockResolvedValue(true);
-    internal.post = jest.fn()
-      .mockResolvedValueOnce({ is_master: true })
-      .mockResolvedValueOnce({ status: "ok" });
+    internal.workersApi = { registerPost: jest.fn().mockResolvedValue({ is_master: true }) };
+    internal.testResultsApi = { inProgressTestResultPost: jest.fn().mockResolvedValue({ status: "ok" }) };
+    internal.testResultCutModel = { constructFromObject: (obj: any) => obj };
 
     await runner.start();
     const first = await runner.sendInProgressTestResult({
