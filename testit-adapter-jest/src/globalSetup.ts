@@ -6,6 +6,7 @@ export default async (globalConfig: Config.GlobalConfig, projectConfig: Config.P
   const strategy = StrategyFactory.create(config);
 
   await strategy.setup();
+  globalThis.strategy = strategy;
   const testRunId = await strategy.testRunId;
 
   projectConfig.testEnvironmentOptions["testRunId"] = testRunId;

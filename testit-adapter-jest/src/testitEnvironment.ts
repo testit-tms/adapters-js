@@ -48,7 +48,7 @@ export default class TestItEnvironment extends NodeEnvironment {
     const config = new ConfigComposer().compose(jestConfig.projectConfig.testEnvironmentOptions);
 
     this.additions = new Additions(config);
-    this.strategy = StrategyFactory.create(config);
+    this.strategy = globalThis.strategy ?? StrategyFactory.create(config);
 
     this.testPath = excludePath(jestContext.testPath, jestConfig.globalConfig.rootDir);
   }

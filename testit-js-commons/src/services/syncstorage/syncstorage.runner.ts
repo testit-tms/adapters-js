@@ -105,7 +105,7 @@ export class SyncStorageRunner implements ISyncStorageRunner {
       return false;
     }
 
-    if (!model.projectId || !model.autoTestExternalId || !model.statusCode) {
+    if (!model.projectId || !model.autoTestExternalId || !model.statusCode || !model.statusType) {
       console.warn(
         "Sync storage in-progress payload is incomplete; skipping publish.",
       );
@@ -117,6 +117,7 @@ export class SyncStorageRunner implements ISyncStorageRunner {
         projectId: model.projectId,
         autoTestExternalId: model.autoTestExternalId,
         statusCode: model.statusCode,
+        statusType: model.statusType,
         startedOn: model.startedOn,
       });
       await this.withRetry(

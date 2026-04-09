@@ -40,12 +40,14 @@ describe("SyncStorageRunner", () => {
       projectId: "11111111-1111-1111-1111-111111111111",
       autoTestExternalId: "A",
       statusCode: "Passed",
+      statusType: "Succeeded",
       startedOn: new Date(),
     });
     const second = await runner.sendInProgressTestResult({
       projectId: "11111111-1111-1111-1111-111111111111",
       autoTestExternalId: "B",
       statusCode: "Passed",
+      statusType: "Succeeded",
       startedOn: new Date(),
     });
 
@@ -66,6 +68,7 @@ describe("SyncStorageRunner", () => {
       projectId: "",
       autoTestExternalId: "A",
       statusCode: "Passed",
+      statusType: "Succeeded",
       startedOn: new Date(),
     });
 
