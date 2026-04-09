@@ -12,10 +12,12 @@ type RegisterResponse = {
 };
 
 export class SyncStorageRunner implements ISyncStorageRunner {
-  private static readonly VERSION = "v0.1.18";
+  private static readonly VERSION = "v0.2.3";
   private static readonly STARTUP_TIMEOUT_MS = 30000;
   private static readonly STARTUP_POLL_MS = 1000;
   private static readonly PROCESS_WARMUP_MS = 2000;
+  private static readonly REQUEST_TIMEOUT_MS = 15000;
+  private static readonly RETRY_COUNT = 3;
   private static readonly REPO_BASE =
     "https://github.com/testit-tms/sync-storage-public/releases/download";
 
@@ -50,7 +52,7 @@ export class SyncStorageRunner implements ISyncStorageRunner {
         testRunId: this.testRunId,
         baseUrl: this.baseUrl,
         privateToken: this.config.privateToken,
-      });
+      }, SyncStorageRunner.RETRY_COUNT);
 
       this.isMaster = Boolean(response?.is_master);
       this.running = true;
@@ -79,7 +81,7 @@ export class SyncStorageRunner implements ISyncStorageRunner {
     }
 
     try {
-      await this.post(`/in_progress_test_result?testRunId=${encodeURIComponent(this.testRunId)}`, model);
+      await this.post(`/in_progress_test_result?testRunId=${encodeURIComponent(this.testRunId)}`, model, SyncStorageRunner.RETRY_COUNT);
       this.alreadyInProgress = true;
       return true;
     } catch (error) {
@@ -98,7 +100,7 @@ export class SyncStorageRunner implements ISyncStorageRunner {
         pid: this.workerPid,
         status,
         testRunId: this.testRunId,
-      });
+      }, SyncStorageRunner.RETRY_COUNT);
     } catch (error) {
       console.warn(`Sync storage set worker status failed: ${error}`);
     }
@@ -110,14 +112,14 @@ export class SyncStorageRunner implements ISyncStorageRunner {
     }
 
     try {
-      await this.get(`/wait_completion?testRunId=${encodeURIComponent(this.testRunId)}`);
+      await this.get(`/wait_completion?testRunId=${encodeURIComponent(this.testRunId)}`, SyncStorageRunner.RETRY_COUNT);
       return;
     } catch {
       // Fallback to force completion when wait endpoint is unavailable or times out.
     }
 
     try {
-      await this.get(`/force_completion?testRunId=${encodeURIComponent(this.testRunId)}`);
+      await this.get(`/force_completion?testRunId=${encodeURIComponent(this.testRunId)}`, SyncStorageRunner.RETRY_COUNT);
     } catch (error) {
       console.warn(`Sync storage completion failed: ${error}`);
     }
@@ -213,7 +215,19 @@ export class SyncStorageRunner implements ISyncStorageRunner {
     await new Promise<void>((resolve, reject) => {
       const file = createWriteStream(targetPath);
       const request = get(url, { headers: { "User-Agent": "testit-js-commons" } }, (response) => {
+        if (
+          response.statusCode &&
+          response.statusCode >= 300 &&
+          response.statusCode < 400 &&
+          response.headers.location
+        ) {
+          file.close();
+          this.downloadFile(response.headers.location, targetPath).then(resolve).catch(reject);
+          return;
+        }
+
         if (!response.statusCode || response.statusCode >= 400) {
+          file.close();
           reject(new Error(`Download failed: HTTP ${response.statusCode}`));
           return;
         }
@@ -234,25 +248,70 @@ export class SyncStorageRunner implements ISyncStorageRunner {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  private async post<T = unknown>(path: string, body: unknown): Promise<T> {
-    const response = await fetch(`${this.serviceUrl}${path}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    return response.json() as Promise<T>;
+  private async post<T = unknown>(path: string, body: unknown, retries = 1): Promise<T> {
+    return await this.withRetry(async () => {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), SyncStorageRunner.REQUEST_TIMEOUT_MS);
+      try {
+        const response = await fetch(`${this.serviceUrl}${path}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+          signal: controller.signal,
+        });
+        return await this.parseResponse<T>(response);
+      } finally {
+        clearTimeout(timeout);
+      }
+    }, retries);
   }
 
-  private async get<T = unknown>(path: string): Promise<T> {
-    const response = await fetch(`${this.serviceUrl}${path}`, { method: "GET" });
+  private async get<T = unknown>(path: string, retries = 1): Promise<T> {
+    return await this.withRetry(async () => {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), SyncStorageRunner.REQUEST_TIMEOUT_MS);
+      try {
+        const response = await fetch(`${this.serviceUrl}${path}`, {
+          method: "GET",
+          signal: controller.signal,
+        });
+        return await this.parseResponse<T>(response);
+      } finally {
+        clearTimeout(timeout);
+      }
+    }, retries);
+  }
+
+  private async parseResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
-    return response.json() as Promise<T>;
+
+    const contentType = response.headers.get("content-type") ?? "";
+    if (!contentType.includes("application/json")) {
+      return {} as T;
+    }
+
+    const text = await response.text();
+    if (!text.trim()) {
+      return {} as T;
+    }
+
+    return JSON.parse(text) as T;
+  }
+
+  private async withRetry<T>(fn: () => Promise<T>, retries: number): Promise<T> {
+    let lastError: unknown;
+    for (let i = 0; i < retries; i++) {
+      try {
+        return await fn();
+      } catch (error) {
+        lastError = error;
+        if (i < retries - 1) {
+          await this.delay(300);
+        }
+      }
+    }
+    throw lastError;
   }
 }

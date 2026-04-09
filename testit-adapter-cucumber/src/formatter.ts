@@ -19,6 +19,7 @@ export default class TestItFormatter extends Formatter implements IFormatter {
   private readonly strategy: IStrategy;
   private readonly additions: Additions;
   private readonly storage: IStorage;
+  private readonly setupPromise: Promise<void>;
 
   private currentTestCaseId: string | undefined;
   private attachmentsQueue: Promise<void>[] = [];
@@ -29,6 +30,7 @@ export default class TestItFormatter extends Formatter implements IFormatter {
     this.strategy = StrategyFactory.create(config);
     this.additions = new Additions(config);
     this.storage = new Storage();
+    this.setupPromise = this.strategy.setup();
 
     options.eventBroadcaster.on("envelope", async (envelope: Envelope) => {
       if (envelope.gherkinDocument) {
@@ -107,6 +109,7 @@ export default class TestItFormatter extends Formatter implements IFormatter {
   }
 
   async onTestRunFinished(_testRunFinished: TestRunFinished): Promise<void> {
+    await this.setupPromise;
     await this.strategy.testRunId;
 
     await Promise.all(this.attachmentsQueue);

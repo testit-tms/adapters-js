@@ -82,7 +82,7 @@ export class TmsReporter extends Reporter {
   };
 
   onStartRun = () => {
-    this.strategy.setup();
+    deasyncPromise(this.strategy.setup());
   };
 
   onEndRun = () => {

@@ -32,6 +32,7 @@ class TmsReporter implements Reporter {
   private attachmentStepsCache = new Array<TestStep>();
   private attachmentsMap = new Map<Attachment, TestStep>();
   private loadTestPromises = new Array<Promise<void>>();
+  private setupPromise: Promise<void> = Promise.resolve();
 
   constructor(options: ReporterOptions) {
     this.options = { suiteTitle: true, detail: true, ...options };
@@ -43,6 +44,7 @@ class TmsReporter implements Reporter {
   onBegin(config: FullConfig, suite: Suite): void {
     this.config = config;
     this.suite = suite;
+    this.setupPromise = this.strategy.setup();
   }
 
   onTestBegin(test: TestCase): void {
@@ -51,7 +53,7 @@ class TmsReporter implements Reporter {
 
   onTestEnd(test: TestCase, result: TestResult): void {
     this.loadTestPromises.push(
-      this.loadTest(
+      this.setupPromise.then(() => this.loadTest(
         test,
         {
           status: result.status,
@@ -60,7 +62,7 @@ class TmsReporter implements Reporter {
           errors: result.errors,
           error: result.error,
           steps: result.steps,
-        })
+        }))
     );
   }
 
@@ -90,8 +92,10 @@ class TmsReporter implements Reporter {
   }
 
   async onEnd(): Promise<void> {
+    await this.setupPromise;
     await Promise.all(this.loadTestPromises);
     await this.addSkippedResults();
+    await this.strategy.teardown();
   }
 
   async addSkippedResults(): Promise<void> {
@@ -99,7 +103,7 @@ class TmsReporter implements Reporter {
       .allTests()
       .filter((testCase: any) => !this.testCache.includes(testCase));
 
-    unprocessedCases.forEach(async (testCase: any) => {
+    await Promise.all(unprocessedCases.map(async (testCase: any) => {
       await this.loadTest(testCase, {
         status: "skipped",
         attachments: [],
@@ -107,7 +111,7 @@ class TmsReporter implements Reporter {
         errors: [],
         steps: [],
       });
-    });
+    }));
   }
 
   printsToStdio(): boolean {
