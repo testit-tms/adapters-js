@@ -44,33 +44,11 @@ export class TestRunConverter extends BaseConverter implements ITestRunConverter
     return statusMap[status];
   }
 
-  /**
-   * Minimal TMS payload for InProgress: do not send steps/attachments/duration/completedOn —
-   * some TMS builds treat those as a finished result and show final status immediately.
-   * Links omitted: final POST merges links (avoid doubling).
-   */
   toOriginAutotestResultInProgress(autotest: AutotestResult): AutoTestResultsForTestRunModel {
-    const model: AutoTestResultsForTestRunModel = {
-      configurationId: this.config.configurationId,
-      autoTestExternalId: autotest.autoTestExternalId,
+    return {
+      ...this.toOriginAutotestResult(autotest),
       statusType: "InProgress",
-      statusCode: null,
-      links: undefined,
-      stepResults: undefined,
-      setupResults: undefined,
-      teardownResults: undefined,
-      attachments: undefined,
-      message: undefined,
-      traces: undefined,
-      parameters: undefined,
-      properties: undefined,
-      failureReasonNames: undefined,
-      outcome: undefined,
-      startedOn: autotest.startedOn,
-      completedOn: undefined,
-      duration: undefined,
     };
-    return model;
   }
 
   toOriginAutotestResult(autotest: AutotestResult): AutoTestResultsForTestRunModel {
