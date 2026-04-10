@@ -29,10 +29,10 @@ export class BaseStrategy implements IStrategy {
     await this.syncStorageRunner?.completeProcessing();
     // With active sync-storage, run completion is finalized by sync-storage itself.
     // Calling completeTestRun from adapters can finish the run too early and skip late results.
-    if (this.syncStorageRunner?.isActive()) {
-      logTmsLoadTestRun("skip completeTestRun in adapter teardown: sync-storage is active");
-      return;
-    }
+    // if (this.syncStorageRunner?.isActive()) {
+    //   logTmsLoadTestRun("skip completeTestRun in adapter teardown: sync-storage is active");
+    //   return;
+    // }
     //await this.client.testRuns.completeTestRun(testRunId);
   }
 
