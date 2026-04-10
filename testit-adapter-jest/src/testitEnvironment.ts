@@ -60,6 +60,8 @@ export default class TestItEnvironment extends NodeEnvironment {
   }
 
   async setup() {
+    // Register as early as possible for this worker process.
+    process.on("unhandledRejection", this.unhandledRejectionHandler);
     await super.setup();
     const testRunId = await this.strategy.testRunId;
     const syncRunner = (this.strategy as any).syncStorageRunner;
@@ -70,7 +72,6 @@ export default class TestItEnvironment extends NodeEnvironment {
       syncRunnerActive: Boolean(syncRunner?.isActive?.()),
       syncRunnerMaster: Boolean(syncRunner?.isMasterWorker?.()),
     });
-    process.on("unhandledRejection", this.unhandledRejectionHandler);
     // Jest workers run in separate processes and do not share globalThis.strategy from globalSetup.
     // For those workers, run setup locally to register in sync storage (master will publish in-progress).
     if (!this.usesGlobalStrategy) {

@@ -1,7 +1,13 @@
 import { Config } from "@jest/reporters";
 import { ConfigComposer, StrategyFactory } from "testit-js-commons";
 
+const globalUnhandledRejectionLogger = (reason: unknown) => {
+  const normalized = (reason as any)?.body ?? (reason as any)?.error ?? reason;
+  console.error("[jest-globalSetup] unhandledRejection:", normalized);
+};
+
 export default async (globalConfig: Config.GlobalConfig, projectConfig: Config.ProjectConfig) => {
+  process.on("unhandledRejection", globalUnhandledRejectionLogger);
   try {
     const config = new ConfigComposer().compose(projectConfig.testEnvironmentOptions);
     const strategy = StrategyFactory.create(config);
