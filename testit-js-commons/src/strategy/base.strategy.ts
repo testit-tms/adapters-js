@@ -10,6 +10,8 @@ export class BaseStrategy implements IStrategy {
   testRunId: Promise<TestRunId>;
   private syncStorageRunner?: SyncStorageRunner;
   private deferredFirstFinalResult?: AutotestResult;
+  private checkedExistingInProgress = false;
+  private hasExistingInProgress = false;
 
   protected constructor(protected config: AdapterConfig) {
     this.client = new Client(config);
@@ -105,8 +107,9 @@ export class BaseStrategy implements IStrategy {
         isMasterWorker,
         published: Boolean(published),
       });
-      if (!isMasterWorker) {
-        logTmsLoadTestRun("skip InProgress stub: current worker is not sync master");
+      const shouldPostInProgress = await this.shouldPostInProgressStub(isMasterWorker);
+      if (!shouldPostInProgress) {
+        logTmsLoadTestRun("skip InProgress stub: current worker is not sync master and fallback already satisfied");
         await this.client.testRuns.loadAutotests(testRunId, autotests);
         return;
       }
@@ -130,6 +133,25 @@ export class BaseStrategy implements IStrategy {
 
     // Normal path: no placeholder created here — upload finals as-is.
     await this.client.testRuns.loadAutotests(testRunId, autotests);
+  }
+
+  private async shouldPostInProgressStub(isMasterWorker: boolean): Promise<boolean> {
+    if (isMasterWorker) {
+      return true;
+    }
+
+    // Jest workers may all have isMaster=false in local context. Fallback: allow one non-master
+    // worker to create the initial TMS InProgress stub if none exists yet in this run.
+    if (!this.checkedExistingInProgress) {
+      const inProgressExternalIds = await this.client.testResults.getExternalIdsForRun();
+      this.hasExistingInProgress = inProgressExternalIds.length > 0;
+      this.checkedExistingInProgress = true;
+      logTmsLoadTestRun("checked existing InProgress results in TMS", {
+        count: inProgressExternalIds.length,
+      });
+    }
+
+    return !this.hasExistingInProgress;
   }
 
   private async tryStartSyncStorage(testRunId: string): Promise<void> {
