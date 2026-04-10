@@ -120,7 +120,40 @@ export class TestRunsService extends BaseService implements ITestRunsService {
         statusCode: autotestResult.statusCode,
         stepCount: autotestResult.stepResults?.length ?? 0,
       });
-      await this._client.setAutoTestResultsForTestRun(testRunId, { autoTestResultsForTestRunModel: [autotestResult] });
+      await this.sendAutotestResultWithRetry(testRunId, autotestResult).catch((err: any) => {
+        const normalized = err?.body ?? err?.error ?? err;
+        console.error("[testit-js-commons:loadTestRun] FAILED to post final result", {
+          testRunId,
+          autoTestExternalId: autotestResult.autoTestExternalId,
+          error: normalized,
+        });
+      });
+    }
+  }
+
+  private async sendAutotestResultWithRetry(testRunId: string, autotestResult: any): Promise<void> {
+    const maxAttempts = 3;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        await this._client.setAutoTestResultsForTestRun(testRunId, { autoTestResultsForTestRunModel: [autotestResult] });
+        return;
+      } catch (err: any) {
+        const code = err?.code;
+        const status = err?.status ?? err?.statusCode;
+        const msg = String(err?.message ?? err ?? "");
+        const transient =
+          code === "ECONNRESET" ||
+          code === "ETIMEDOUT" ||
+          code === "EPIPE" ||
+          code === "ECONNABORTED" ||
+          msg.includes("socket hang up") ||
+          msg.includes("read ECONNRESET") ||
+          (typeof status === "number" && status >= 500);
+        if (!transient || attempt === maxAttempts) {
+          throw err;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 300 * attempt));
+      }
     }
   }
 }
