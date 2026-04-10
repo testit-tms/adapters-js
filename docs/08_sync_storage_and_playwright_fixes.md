@@ -20,7 +20,10 @@ Short technical reference for `adapters-js` after the latest sync-storage fixes.
   - `notRunning`
   - `notMaster`
   - `alreadyInProgress`
+  - `publishingInFlight`
   - incomplete payload fields
+- Race guard: `inProgressPublishing` blocks concurrent in-flight publish so only one first `InProgress` cut is sent even under parallel adapter calls.
+- After first successful publish, `alreadyInProgress` is set and logged (`[syncstorage] alreadyInProgress set`).
 - Successful and failed publishes are logged with `workerPid` and `autoTestExternalId`.
 
 ## 3) Debugging
@@ -28,6 +31,7 @@ Short technical reference for `adapters-js` after the latest sync-storage fixes.
 - Enable `TMS_DEBUG_LOAD_TEST_RUN=1` (or `true`) for ordered commons logs:
   - `loadTestRun enter`
   - sync publish result
+  - `InProgress slot acquired` (the exact autotest that captured the single in-progress slot)
   - InProgress stub sent/skipped reason
   - final uploads
 
@@ -38,18 +42,23 @@ Short technical reference for `adapters-js` after the latest sync-storage fixes.
 - New file stream is used for every retry attempt.
 - Attachments client timeout is increased to 120s.
 
-## 5) Jest
+## 5) Final result delivery resilience (commons)
+
+- `loadAutotests()` now retries each final-result POST up to 3 attempts for transient errors (`ECONNRESET`, `ETIMEDOUT`, `EPIPE`, `ECONNABORTED`, socket hang-up/read reset, 5xx).
+- If one final result still fails after retries, it is logged and processing continues with the next result (one network failure no longer aborts the whole tail of the batch).
+
+## 6) Jest
 
 - `globalSetup` does not run `strategy.setup()`; workers run setup locally.
 - Environment registers early `unhandledRejection` handler before `super.setup()`.
 - `run_finish` uses `try/finally`: `strategy.teardown()` is called even when result upload fails.
 - Added setup diagnostics (`pid`, `testRunId`, sync active/master flags).
 
-## 6) Playwright and Mocha
+## 7) Playwright and Mocha
 
 - Playwright reporter catches async upload/reporting failures to avoid crash from unhandled promise rejections.
 - Mocha wraps sync setup/teardown paths with guarded error handling (`deasync-promise` path included).
 
-## 7) Misc
+## 8) Misc
 
 - `externalId` and `autoTestExternalId` are excluded from HTML escaping in commons.
