@@ -181,5 +181,5 @@ jobs:
 
       - name: Validate Again
         run: |
-          export TMS_TEST_RUN_ID=
+          export TMS_TEST_RUN_ID=skip
           dotnet test --configuration Debug --no-build --logger:"console;verbosity=detailed" api-validator-dotnet
