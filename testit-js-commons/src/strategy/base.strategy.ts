@@ -97,12 +97,16 @@ export class BaseStrategy implements IStrategy {
     // InProgress is only for the first result (the one used for sync storage cut).
     // Its final payload is deferred until teardown, so TMS does not immediately flip to final status.
     if (firstResult && !this.deferredFirstFinalResult) {
+      const isMasterWorker = Boolean(this.syncStorageRunner?.isMasterWorker?.());
       const published = await this.syncStorageRunner?.sendInProgressTestResult(
         toTestResultCutModel(firstResult, this.config.projectId),
       );
-      logTmsLoadTestRun("syncStorage sendInProgressTestResult", { published: Boolean(published) });
-      if (!published) {
-        logTmsLoadTestRun("skip InProgress stub: sync cut not published");
+      logTmsLoadTestRun("syncStorage sendInProgressTestResult", {
+        isMasterWorker,
+        published: Boolean(published),
+      });
+      if (!isMasterWorker) {
+        logTmsLoadTestRun("skip InProgress stub: current worker is not sync master");
         await this.client.testRuns.loadAutotests(testRunId, autotests);
         return;
       }
