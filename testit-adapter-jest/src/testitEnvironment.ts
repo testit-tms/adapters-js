@@ -42,12 +42,14 @@ export default class TestItEnvironment extends NodeEnvironment {
 
   private readonly strategy: IStrategy;
   private readonly additions: Additions;
+  private readonly usesGlobalStrategy: boolean;
 
   constructor(jestConfig: JestEnvironmentConfig, jestContext: EnvironmentContext) {
     super(jestConfig, jestContext);
     const config = new ConfigComposer().compose(jestConfig.projectConfig.testEnvironmentOptions);
 
     this.additions = new Additions(config);
+    this.usesGlobalStrategy = Boolean(globalThis.strategy);
     this.strategy = globalThis.strategy ?? StrategyFactory.create(config);
 
     this.testPath = excludePath(jestContext.testPath, jestConfig.globalConfig.rootDir);
@@ -55,6 +57,15 @@ export default class TestItEnvironment extends NodeEnvironment {
 
   async setup() {
     await super.setup();
+    // Jest workers run in separate processes and do not share globalThis.strategy from globalSetup.
+    // For those workers, run setup locally to register in sync storage (master will publish in-progress).
+    if (!this.usesGlobalStrategy) {
+      try {
+        await this.strategy.setup();
+      } catch (err: any) {
+        console.error("Failed local strategy.setup() in Jest environment:", this.formatError(err));
+      }
+    }
     this.global.testit = {
       externalId: this.setExternalId.bind(this),
       displayName: this.setDisplayName.bind(this),
