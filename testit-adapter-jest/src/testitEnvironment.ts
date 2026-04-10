@@ -61,15 +61,39 @@ export default class TestItEnvironment extends NodeEnvironment {
 
   async setup() {
     await super.setup();
+    const testRunId = await this.strategy.testRunId;
+    const syncRunner = (this.strategy as any).syncStorageRunner;
+    console.log("[jest-env] setup start", {
+      pid: process.pid,
+      testRunId,
+      usesGlobalStrategy: this.usesGlobalStrategy,
+      syncRunnerActive: Boolean(syncRunner?.isActive?.()),
+      syncRunnerMaster: Boolean(syncRunner?.isMasterWorker?.()),
+    });
     process.on("unhandledRejection", this.unhandledRejectionHandler);
     // Jest workers run in separate processes and do not share globalThis.strategy from globalSetup.
     // For those workers, run setup locally to register in sync storage (master will publish in-progress).
     if (!this.usesGlobalStrategy) {
       try {
         await this.strategy.setup();
+        const localSyncRunner = (this.strategy as any).syncStorageRunner;
+        console.log("[jest-env] local setup done", {
+          pid: process.pid,
+          testRunId,
+          syncRunnerActive: Boolean(localSyncRunner?.isActive?.()),
+          syncRunnerMaster: Boolean(localSyncRunner?.isMasterWorker?.()),
+        });
       } catch (err: any) {
         console.error("Failed local strategy.setup() in Jest environment:", this.formatError(err));
       }
+    } else {
+      const sharedSyncRunner = (this.strategy as any).syncStorageRunner;
+      console.log("[jest-env] shared strategy mode", {
+        pid: process.pid,
+        testRunId,
+        syncRunnerActive: Boolean(sharedSyncRunner?.isActive?.()),
+        syncRunnerMaster: Boolean(sharedSyncRunner?.isMasterWorker?.()),
+      });
     }
     this.global.testit = {
       externalId: this.setExternalId.bind(this),

@@ -5,7 +5,9 @@ export default async (
   projectConfig: Config.ProjectConfig
 ) => {
   try {
-    await globalThis.strategy.teardown();
+    if (globalThis.strategy) {
+      await globalThis.strategy.teardown();
+    }
   } catch (err) {
     console.error('Failed to complete test run');
   }

@@ -6,8 +6,8 @@ export default async (globalConfig: Config.GlobalConfig, projectConfig: Config.P
     const config = new ConfigComposer().compose(projectConfig.testEnvironmentOptions);
     const strategy = StrategyFactory.create(config);
 
-    await strategy.setup();
-    globalThis.strategy = strategy;
+    // Do not run setup in globalSetup: Jest workers run in separate processes and would then
+    // send results from non-master contexts. Let each worker environment run setup locally.
     const testRunId = await strategy.testRunId;
 
     projectConfig.testEnvironmentOptions["testRunId"] = testRunId;
