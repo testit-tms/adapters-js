@@ -124,6 +124,20 @@ declare module 'sync-storage-client/api/TestResultsApi' {
       constructor(apiClient?: any);
       apiClient: any;
       /**
+       * Get in-progress published state
+       *  Get whether in-progress status has already been published by master node.
+       * @param {String} testRunId Test Run ID
+       * @return {Promise} a {@link https://www.promisejs.org/|Promise}, with an object containing data of type {@link module:model/InProgressPublishedResponse} and HTTP response
+       */
+      inProgressPublishedGetWithHttpInfo(testRunId: string): Promise<any>;
+      /**
+       * Get in-progress published state
+       *  Get whether in-progress status has already been published by master node.
+       * @param {String} testRunId Test Run ID
+       * @return {Promise} a {@link https://www.promisejs.org/|Promise}, with data of type {@link module:model/InProgressPublishedResponse}
+       */
+      inProgressPublishedGet(testRunId: string): Promise<any>;
+      /**
        * Save in-progress test result
        *  Save a test result with InProgress status.
        * @param {String} testRunId Test Run ID
@@ -398,6 +412,7 @@ declare module 'sync-storage-client/index' {
   import ApiClient from 'sync-storage-client/ApiClient';
   import CompletionResponse from 'sync-storage-client/model/CompletionResponse';
   import HealthStatusResponse from 'sync-storage-client/model/HealthStatusResponse';
+  import InProgressPublishedResponse from 'sync-storage-client/model/InProgressPublishedResponse';
   import RegisterRequest from 'sync-storage-client/model/RegisterRequest';
   import RegisterResponse from 'sync-storage-client/model/RegisterResponse';
   import SetWorkerStatusRequest from 'sync-storage-client/model/SetWorkerStatusRequest';
@@ -410,7 +425,7 @@ declare module 'sync-storage-client/index' {
   import SystemApi from 'sync-storage-client/api/SystemApi';
   import TestResultsApi from 'sync-storage-client/api/TestResultsApi';
   import WorkersApi from 'sync-storage-client/api/WorkersApi';
-  export { ApiClient, CompletionResponse, HealthStatusResponse, RegisterRequest, RegisterResponse, SetWorkerStatusRequest, SetWorkerStatusResponse, ShutdownResponse, TestResultCutApiModel, TestResultSaveResponse, CompletionApi, HealthApi, SystemApi, TestResultsApi, WorkersApi };
+  export { ApiClient, CompletionResponse, HealthStatusResponse, InProgressPublishedResponse, RegisterRequest, RegisterResponse, SetWorkerStatusRequest, SetWorkerStatusResponse, ShutdownResponse, TestResultCutApiModel, TestResultSaveResponse, CompletionApi, HealthApi, SystemApi, TestResultsApi, WorkersApi };
 
 }
 declare module 'sync-storage-client/model/CompletionResponse' {
@@ -476,6 +491,38 @@ declare module 'sync-storage-client/model/HealthStatusResponse' {
       static validateJSON(data: any): boolean;
       status: any;
       last_update: any;
+  }
+
+}
+declare module 'sync-storage-client/model/InProgressPublishedResponse' {
+  export default InProgressPublishedResponse;
+  /**
+   * The InProgressPublishedResponse model module.
+   * @module model/InProgressPublishedResponse
+   * @version 0.1.0
+   */
+  class InProgressPublishedResponse {
+      /**
+       * Initializes the fields of this object.
+       * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
+       * Only for internal use.
+       */
+      static initialize(obj: any): void;
+      /**
+       * Constructs a <code>InProgressPublishedResponse</code> from a plain JavaScript object, optionally creating a new instance.
+       * Copies all relevant properties from <code>data</code> to <code>obj</code> if supplied or a new instance if not.
+       * @param {Object} data The plain JavaScript object bearing properties of interest.
+       * @param {module:model/InProgressPublishedResponse} obj Optional instance to populate.
+       * @return {module:model/InProgressPublishedResponse} The populated <code>InProgressPublishedResponse</code> instance.
+       */
+      static constructFromObject(data: any, obj: any): any;
+      /**
+       * Validates the JSON data with respect to <code>InProgressPublishedResponse</code>.
+       * @param {Object} data The plain JavaScript object bearing properties of interest.
+       * @return {boolean} to indicate whether the JSON data is valid with respect to <code>InProgressPublishedResponse</code>.
+       */
+      static validateJSON(data: any): boolean;
+      published: any;
   }
 
 }

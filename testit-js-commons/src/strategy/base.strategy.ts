@@ -6,6 +6,7 @@ import { SyncStorageRunner, toTestResultCutModel } from "../services/syncstorage
 import { IStrategy } from "./strategy.type";
 
 export class BaseStrategy implements IStrategy {
+  private static readonly INPROGRESS_FIRST_GRACE_MS = 3000;
   client: IClient;
   testRunId: Promise<TestRunId>;
   private syncStorageRunner?: SyncStorageRunner;
@@ -101,6 +102,13 @@ export class BaseStrategy implements IStrategy {
         published: Boolean(published),
       });
       if (!isMasterWorker) {
+        // Global ordering: non-master waits for sync-storage published flag from master.
+        const timeoutMs = this.getInProgressFirstGraceMs();
+        if (timeoutMs > 0 && this.syncStorageRunner) {
+          logTmsLoadTestRun("non-master wait for in-progress published", { timeoutMs });
+          const publishedByMaster = await this.syncStorageRunner.waitForInProgressPublished(timeoutMs);
+          logTmsLoadTestRun("non-master wait result", { publishedByMaster });
+        }
         logTmsLoadTestRun("skip InProgress stub: current worker is not sync master");
         await this.client.testRuns.loadAutotests(testRunId, autotests);
         return;
@@ -166,5 +174,16 @@ export class BaseStrategy implements IStrategy {
     testRun.name = config.testRunName;
 
     this.client.testRuns.updateTestRun(testRun);
+  }
+
+  private getInProgressFirstGraceMs(): number {
+    const raw = process.env.TMS_SYNC_INPROGRESS_FIRST_GRACE_MS;
+    if (!raw) {
+      return BaseStrategy.INPROGRESS_FIRST_GRACE_MS;
+    }
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) && parsed >= 0
+      ? parsed
+      : BaseStrategy.INPROGRESS_FIRST_GRACE_MS;
   }
 }

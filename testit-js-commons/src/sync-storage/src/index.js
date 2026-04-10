@@ -15,6 +15,7 @@
 import ApiClient from './ApiClient';
 import CompletionResponse from './model/CompletionResponse';
 import HealthStatusResponse from './model/HealthStatusResponse';
+import InProgressPublishedResponse from './model/InProgressPublishedResponse';
 import RegisterRequest from './model/RegisterRequest';
 import RegisterResponse from './model/RegisterResponse';
 import SetWorkerStatusRequest from './model/SetWorkerStatusRequest';
@@ -78,6 +79,12 @@ export {
      * @property {module:model/HealthStatusResponse}
      */
     HealthStatusResponse,
+
+    /**
+     * The InProgressPublishedResponse model constructor.
+     * @property {module:model/InProgressPublishedResponse}
+     */
+    InProgressPublishedResponse,
 
     /**
      * The RegisterRequest model constructor.

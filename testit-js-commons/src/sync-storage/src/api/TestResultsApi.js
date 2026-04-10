@@ -13,6 +13,7 @@
 
 
 import ApiClient from "../ApiClient";
+import InProgressPublishedResponse from '../model/InProgressPublishedResponse';
 import TestResultCutApiModel from '../model/TestResultCutApiModel';
 import TestResultSaveResponse from '../model/TestResultSaveResponse';
 
@@ -34,6 +35,54 @@ export default class TestResultsApi {
         this.apiClient = apiClient || ApiClient.instance;
     }
 
+
+
+    /**
+     * Get in-progress published state
+     *  Get whether in-progress status has already been published by master node.
+     * @param {String} testRunId Test Run ID
+     * @return {Promise} a {@link https://www.promisejs.org/|Promise}, with an object containing data of type {@link module:model/InProgressPublishedResponse} and HTTP response
+     */
+    inProgressPublishedGetWithHttpInfo(testRunId) {
+      let postBody = null;
+      // verify the required parameter 'testRunId' is set
+      if (testRunId === undefined || testRunId === null) {
+        throw new Error("Missing the required parameter 'testRunId' when calling inProgressPublishedGet");
+      }
+
+      let pathParams = {
+      };
+      let queryParams = {
+        'testRunId': testRunId
+      };
+      let headerParams = {
+      };
+      let formParams = {
+      };
+
+      let authNames = [];
+      let contentTypes = [];
+      let accepts = ['application/json'];
+      let returnType = InProgressPublishedResponse;
+      return this.apiClient.callApi(
+        '/in_progress_published', 'GET',
+        pathParams, queryParams, headerParams, formParams, postBody,
+        authNames, contentTypes, accepts, returnType, null
+      );
+    }
+
+    /**
+     * Get in-progress published state
+     *  Get whether in-progress status has already been published by master node.
+     * @param {String} testRunId Test Run ID
+     * @return {Promise} a {@link https://www.promisejs.org/|Promise}, with data of type {@link module:model/InProgressPublishedResponse}
+     */
+    inProgressPublishedGet(testRunId) {
+      return this.inProgressPublishedGetWithHttpInfo(testRunId)
+        .then(function(response_and_data) {
+          return response_and_data.data;
+        });
+    }
 
 
     /**

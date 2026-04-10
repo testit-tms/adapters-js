@@ -24,6 +24,7 @@ export interface ISyncStorageRunner {
   isActive(): boolean;
   isMasterWorker(): boolean;
   isAlreadyInProgress(): boolean;
+  waitForInProgressPublished(timeoutMs: number): Promise<boolean>;
   sendInProgressTestResult(model: TestResultCutModel): Promise<boolean>;
   setWorkerStatus(status: WorkerStatus): Promise<void>;
   completeProcessing(): Promise<void>;

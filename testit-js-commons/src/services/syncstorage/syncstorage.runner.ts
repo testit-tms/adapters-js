@@ -16,12 +16,13 @@ type RegisterResponse = {
 const SyncStorageClient = require("../../sync-storage/dist/index");
 
 export class SyncStorageRunner implements ISyncStorageRunner {
-  private static readonly VERSION = "v0.2.4";
+  private static readonly VERSION = "v0.2.6";
   private static readonly STARTUP_TIMEOUT_MS = 30000;
   private static readonly STARTUP_POLL_MS = 1000;
   private static readonly PROCESS_WARMUP_MS = 2000;
   private static readonly REQUEST_TIMEOUT_MS = 15000;
   private static readonly RETRY_COUNT = 3;
+  private static readonly IN_PROGRESS_POLL_MS = 200;
   private static readonly REPO_BASE =
     "https://github.com/testit-tms/sync-storage-public/releases/download";
 
@@ -99,6 +100,29 @@ export class SyncStorageRunner implements ISyncStorageRunner {
 
   public isAlreadyInProgress(): boolean {
     return this.alreadyInProgress;
+  }
+
+  public async waitForInProgressPublished(timeoutMs: number): Promise<boolean> {
+    if (!this.running) {
+      return false;
+    }
+    if (this.alreadyInProgress) {
+      return true;
+    }
+    const deadline = Date.now() + Math.max(0, timeoutMs);
+    while (Date.now() < deadline) {
+      try {
+        const state = await this.testResultsApi.inProgressPublishedGet(this.testRunId);
+        if (Boolean(state?.published)) {
+          this.alreadyInProgress = true;
+          return true;
+        }
+      } catch {
+        // Endpoint can be temporarily unavailable; continue best-effort polling.
+      }
+      await this.delay(SyncStorageRunner.IN_PROGRESS_POLL_MS);
+    }
+    return false;
   }
 
   public async sendInProgressTestResult(model: TestResultCutModel): Promise<boolean> {
