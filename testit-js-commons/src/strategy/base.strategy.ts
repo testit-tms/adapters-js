@@ -37,7 +37,7 @@ export class BaseStrategy implements IStrategy {
       // await this.client.testRuns.loadAutotests(testRunId, [this.deferredFirstFinalResult]);
       // this.deferredFirstFinalResult = undefined;
     }
-    //await this.client.testRuns.completeTestRun(testRunId);
+    // await this.client.testRuns.completeTestRun(testRunId);
   }
 
   async loadAutotest(autotest: AutotestPost, status: string): Promise<void> {
@@ -101,6 +101,11 @@ export class BaseStrategy implements IStrategy {
         toTestResultCutModel(firstResult, this.config.projectId),
       );
       logTmsLoadTestRun("syncStorage sendInProgressTestResult", { published: Boolean(published) });
+      if (!published) {
+        logTmsLoadTestRun("skip InProgress stub: sync cut not published");
+        await this.client.testRuns.loadAutotests(testRunId, autotests);
+        return;
+      }
       try {
         await this.client.testRuns.postInProgressAutotestResult(testRunId, firstResult);
       } catch (err: unknown) {
