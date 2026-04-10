@@ -137,7 +137,7 @@ jobs:
             --arg name "${{ env.TMS_TEST_RUN_NAME }}" \
             '{projectId: $projectId, name: $name}')
           
-          curl -sS -f -X POST "${BASE_URL}/api/v2/testRuns/empty" \
+          curl -sS -f -X POST "${BASE_URL}/api/v2/testRuns" \
             -H "accept: application/json" \
             -H "Content-Type: application/json" \
             -H "Authorization: PrivateToken ${{ env.TMS_PRIVATE_TOKEN }}" \
