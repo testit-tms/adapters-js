@@ -33,7 +33,7 @@ export class BaseStrategy implements IStrategy {
       logTmsLoadTestRun("skip completeTestRun in adapter teardown: sync-storage is active");
       return;
     }
-    await this.client.testRuns.completeTestRun(testRunId);
+    //await this.client.testRuns.completeTestRun(testRunId);
   }
 
   async loadAutotest(autotest: AutotestPost, status: string): Promise<void> {
