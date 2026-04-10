@@ -31,6 +31,7 @@ export class SyncStorageRunner implements ISyncStorageRunner {
   private readonly port: string;
   private isMaster = false;
   private alreadyInProgress = false;
+  private inProgressPublishing = false;
   private running = false;
   private syncStorageProcess?: ChildProcess;
   private readonly healthApi: any;
@@ -101,12 +102,13 @@ export class SyncStorageRunner implements ISyncStorageRunner {
   }
 
   public async sendInProgressTestResult(model: TestResultCutModel): Promise<boolean> {
-    if (!this.running || !this.isMaster || this.alreadyInProgress) {
+    if (!this.running || !this.isMaster || this.alreadyInProgress || this.inProgressPublishing) {
       console.log("[syncstorage] skip in-progress cut publish", {
         reason: {
           notRunning: !this.running,
           notMaster: !this.isMaster,
           alreadyInProgress: this.alreadyInProgress,
+          publishingInFlight: this.inProgressPublishing,
         },
         workerPid: this.workerPid,
       });
@@ -126,6 +128,7 @@ export class SyncStorageRunner implements ISyncStorageRunner {
       return false;
     }
 
+    this.inProgressPublishing = true;
     try {
       const request = this.testResultCutModel.constructFromObject({
         projectId: model.projectId,
@@ -139,6 +142,10 @@ export class SyncStorageRunner implements ISyncStorageRunner {
         SyncStorageRunner.RETRY_COUNT
       );
       this.alreadyInProgress = true;
+      console.log("[syncstorage] alreadyInProgress set", {
+        workerPid: this.workerPid,
+        autoTestExternalId: model.autoTestExternalId,
+      });
       console.log("[syncstorage] in-progress cut published", {
         workerPid: this.workerPid,
         autoTestExternalId: model.autoTestExternalId,
@@ -151,6 +158,8 @@ export class SyncStorageRunner implements ISyncStorageRunner {
         autoTestExternalId: model.autoTestExternalId,
       });
       return false;
+    } finally {
+      this.inProgressPublishing = false;
     }
   }
 

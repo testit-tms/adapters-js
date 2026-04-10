@@ -110,6 +110,10 @@ export class BaseStrategy implements IStrategy {
         await this.client.testRuns.loadAutotests(testRunId, autotests);
         return;
       }
+      logTmsLoadTestRun("InProgress slot acquired", {
+        autoTestExternalId: firstResult.autoTestExternalId,
+        testRunId,
+      });
       try {
         await this.client.testRuns.postInProgressAutotestResult(testRunId, firstResult);
       } catch (err: unknown) {

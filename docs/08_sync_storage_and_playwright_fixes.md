@@ -1,48 +1,55 @@
-# Sync Storage, TMS, and adapter stability
+# Sync Storage and adapters: current behavior
 
-Technical reference for the `adapters-js` monorepo: Sync Storage in commons, TMS result flow, and adapter-specific behavior.
+Short technical reference for `adapters-js` after the latest sync-storage fixes.
 
-## 1. Commons: Sync Storage + `BaseStrategy`
+## 1) Commons (`BaseStrategy`)
 
-- Code: `src/services/syncstorage/*`, wired in `base.strategy.ts`.
-- Cut payload includes **`statusType`** (with `statusCode`), aligned with final result mapping (Succeeded / Failed / Incomplete).
-- **`loadTestRun`**: for **each** autotest in the batch — `postInProgressAutotestResult` then `loadAutotests([that one])` (Jest one batch of N tests → N InProgress + N finals; Playwright one test → unchanged). Sync Storage cut still **once**, first test only.
-- **InProgress TMS payload is minimal** (`configurationId`, `autoTestExternalId`, `statusType: "InProgress"`, `statusCode: null`, optional `startedOn` only): no steps, attachments, duration, or `completedOn` — some TMS versions infer “finished” if those are present. **`links`** omitted on the stub (final POST merges links; avoids doubling).
-- **Debug:** set env **`TMS_DEBUG_LOAD_TEST_RUN=1`** (or `true`) to log order of `setAutoTestResultsForTestRun` calls (`[testit-js-commons:loadTestRun] …`).
-- Runner: HTTP timeout/retry, GitHub binary (`SyncStorageRunner.VERSION`), `wait_completion` → `force_completion`.
+- `setup()` starts sync-storage (if enabled), registers worker, sets worker status to `in_progress`, then starts test run in TMS.
+- `loadTestRun()` processes **first result only** as sync candidate:
+  - calls `sendInProgressTestResult(...)` to sync-storage,
+  - posts TMS `InProgress` only when worker is sync **master** and cut publish returned `true`,
+  - uploads finals for the rest of the batch (`autotests.slice(1)`).
+- If worker is not master or cut publish failed, adapter uploads finals as-is (no TMS `InProgress` stub).
+- `teardown()` always sets worker `completed` and calls sync completion flow.
+- With active sync-storage, adapter **skips** `completeTestRun` in teardown (run completion belongs to sync-storage).
 
-## 2. Commons: TMS attachment uploads (`attachments.service.ts`)
+## 2) Sync-storage payload/logging
 
-- **Retries:** up to **3** attempts, linear backoff (base **500 ms** × attempt) on transient errors (`ECONNRESET`, `ETIMEDOUT`, `EPIPE`, `ECONNABORTED`, typical TLS/socket messages, **5xx**). **No retry** on **4xx**.
-- Each attempt uses a **new** read stream (file paths and text-via-temp-file uploads are safe to repeat).
-- **HTTP timeout** for the attachments API client: at least **120 s** (reduces premature cuts on slow TLS/large files).
+- Cut payload includes `statusType` + `statusCode` (mapped from outcome).
+- `sendInProgressTestResult()` logs explicit skip reasons:
+  - `notRunning`
+  - `notMaster`
+  - `alreadyInProgress`
+  - incomplete payload fields
+- Successful and failed publishes are logged with `workerPid` and `autoTestExternalId`.
 
-## 3. Playwright
+## 3) Debugging
 
-- Prefer `TestResult.steps` and recursive `test.step` extraction so fixture hooks contribute steps.
-- New autotest: metadata `namespace`/`classname`, else path defaults; updates avoid forced path overwrite + commons merge on update.
-- Reporter still **catches** upload failures so the run does not crash; commons retries run **before** that layer gives up.
-- Metadata API: `testit.links` → autotest definition; `testit.addLinks` → **run result** (different payload fields).
+- Enable `TMS_DEBUG_LOAD_TEST_RUN=1` (or `true`) for ordered commons logs:
+  - `loadTestRun enter`
+  - sync publish result
+  - InProgress stub sent/skipped reason
+  - final uploads
 
-## 4. Jest
+## 4) Attachments (commons)
 
-- `globalSetup` sets `globalThis.strategy` after `setup()`; environment uses `globalThis.strategy ?? StrategyFactory.create(...)`.
-- Attachment queue: per-promise `.catch` + `Promise.allSettled` before persisting / sending results (after commons retries exhaust).
-- **Workers:** child processes do not share parent `globalThis` → use **`--runInBand`** (or single worker) if `globalSetup` must own the only `strategy`.
+- Upload retries: up to 3 attempts, linear backoff (500ms * attempt) for transient network/server errors.
+- No retries for 4xx responses.
+- New file stream is used for every retry attempt.
+- Attachments client timeout is increased to 120s.
 
-## 5. Mocha
+## 5) Jest
 
-- `catch` on `deasync-promise` `setup` / `teardown`; guarded `onEndRun` to reduce `superagent: double callback` on TLS/socket errors.
+- `globalSetup` does not run `strategy.setup()`; workers run setup locally.
+- Environment registers early `unhandledRejection` handler before `super.setup()`.
+- `run_finish` uses `try/finally`: `strategy.teardown()` is called even when result upload fails.
+- Added setup diagnostics (`pid`, `testRunId`, sync active/master flags).
 
-## 6. Other adapters
+## 6) Playwright and Mocha
 
-- Cucumber / TestCafe: await `setup` before final upload; teardown at end of run.
+- Playwright reporter catches async upload/reporting failures to avoid crash from unhandled promise rejections.
+- Mocha wraps sync setup/teardown paths with guarded error handling (`deasync-promise` path included).
 
-## 7. HTML escape (commons)
+## 7) Misc
 
-- Skip escaping for **`externalId`** and **`autoTestExternalId`** (`html-escape.util.ts`).
-
-## 8. Maintenance
-
-- Bump **`SyncStorageRunner.VERSION`** when changing the Sync Storage release.
-- Prefer integrating new adapters through **`BaseStrategy`** only.
+- `externalId` and `autoTestExternalId` are excluded from HTML escaping in commons.
