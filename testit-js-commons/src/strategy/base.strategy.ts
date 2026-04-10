@@ -9,6 +9,7 @@ export class BaseStrategy implements IStrategy {
   client: IClient;
   testRunId: Promise<TestRunId>;
   private syncStorageRunner?: SyncStorageRunner;
+  private deferredFirstFinalResult?: AutotestResult;
 
   protected constructor(protected config: AdapterConfig) {
     this.client = new Client(config);
@@ -26,7 +27,17 @@ export class BaseStrategy implements IStrategy {
     const testRunId = await this.testRunId;
     await this.syncStorageRunner?.setWorkerStatus("completed");
     await this.syncStorageRunner?.completeProcessing();
-    await this.client.testRuns.completeTestRun(testRunId);
+    // If we created an InProgress placeholder for the first result, send its final payload only
+    // after completion processing, so TMS shows InProgress during the run.
+    if (this.deferredFirstFinalResult) {
+      // logTmsLoadTestRun("flush deferred first final result", {
+      //   testRunId,
+      //   autoTestExternalId: this.deferredFirstFinalResult.autoTestExternalId,
+      // });
+      // await this.client.testRuns.loadAutotests(testRunId, [this.deferredFirstFinalResult]);
+      // this.deferredFirstFinalResult = undefined;
+    }
+    //await this.client.testRuns.completeTestRun(testRunId);
   }
 
   async loadAutotest(autotest: AutotestPost, status: string): Promise<void> {
@@ -83,27 +94,33 @@ export class BaseStrategy implements IStrategy {
       isMaster: Boolean(this.syncStorageRunner?.isMasterWorker?.()),
     });
 
-    // Per autotest: TMS InProgress then final. Jest sends one batch (N>1); only the first had InProgress before.
-    // Playwright sends [one] per call — same loop. Sync Storage cut stays single (master), first test only.
-    for (let i = 0; i < autotests.length; i++) {
-      const result = autotests[i];
-      if (i === 0) {
-        const published = await this.syncStorageRunner?.sendInProgressTestResult(
-          toTestResultCutModel(result, this.config.projectId),
-        );
-        logTmsLoadTestRun("syncStorage sendInProgressTestResult", { published: Boolean(published) });
-      }
+    // InProgress is only for the first result (the one used for sync storage cut).
+    // Its final payload is deferred until teardown, so TMS does not immediately flip to final status.
+    if (firstResult && !this.deferredFirstFinalResult) {
+      const published = await this.syncStorageRunner?.sendInProgressTestResult(
+        toTestResultCutModel(firstResult, this.config.projectId),
+      );
+      logTmsLoadTestRun("syncStorage sendInProgressTestResult", { published: Boolean(published) });
       try {
-        await this.client.testRuns.postInProgressAutotestResult(testRunId, result);
+        await this.client.testRuns.postInProgressAutotestResult(testRunId, firstResult);
       } catch (err: unknown) {
         logTmsLoadTestRun("postInProgressAutotestResult FAILED", {
-          autoTestExternalId: result.autoTestExternalId,
+          autoTestExternalId: firstResult.autoTestExternalId,
           message: err instanceof Error ? err.message : String(err),
         });
         throw err;
       }
-      await this.client.testRuns.loadAutotests(testRunId, [result]);
+      this.deferredFirstFinalResult = firstResult;
+
+      const rest = autotests.slice(1);
+      if (rest.length > 0) {
+        await this.client.testRuns.loadAutotests(testRunId, rest);
+      }
+      return;
     }
+
+    // Normal path: no placeholder created here — upload finals as-is.
+    await this.client.testRuns.loadAutotests(testRunId, autotests);
   }
 
   private async tryStartSyncStorage(testRunId: string): Promise<void> {
