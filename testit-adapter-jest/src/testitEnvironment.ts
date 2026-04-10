@@ -44,6 +44,7 @@ export default class TestItEnvironment extends NodeEnvironment {
   private readonly additions: Additions;
   private readonly usesGlobalStrategy: boolean;
   private readonly unhandledRejectionHandler: (reason: unknown) => void;
+  private finalized = false;
 
   constructor(jestConfig: JestEnvironmentConfig, jestContext: EnvironmentContext) {
     super(jestConfig, jestContext);
@@ -158,7 +159,21 @@ export default class TestItEnvironment extends NodeEnvironment {
           break;
         }
         case "run_finish": {
-          await this.loadResults();
+          try {
+            await this.loadResults();
+          } catch (err: any) {
+            console.error("Failed to load results in Jest run_finish:", this.formatError(err));
+          } finally {
+            // In worker mode we run local setup, so finalization must happen here even if loadResults fails.
+            if (!this.finalized) {
+              this.finalized = true;
+              try {
+                await this.strategy.teardown();
+              } catch (err: any) {
+                console.error("Failed strategy.teardown() in Jest run_finish:", this.formatError(err));
+              }
+            }
+          }
           break;
         }
       }

@@ -9,7 +9,6 @@ export class BaseStrategy implements IStrategy {
   client: IClient;
   testRunId: Promise<TestRunId>;
   private syncStorageRunner?: SyncStorageRunner;
-  private deferredFirstFinalResult?: AutotestResult;
 
   protected constructor(protected config: AdapterConfig) {
     this.client = new Client(config);
@@ -27,17 +26,7 @@ export class BaseStrategy implements IStrategy {
     const testRunId = await this.testRunId;
     await this.syncStorageRunner?.setWorkerStatus("completed");
     await this.syncStorageRunner?.completeProcessing();
-    // If we created an InProgress placeholder for the first result, send its final payload only
-    // after completion processing, so TMS shows InProgress during the run.
-    if (this.deferredFirstFinalResult) {
-      // logTmsLoadTestRun("flush deferred first final result", {
-      //   testRunId,
-      //   autoTestExternalId: this.deferredFirstFinalResult.autoTestExternalId,
-      // });
-      // await this.client.testRuns.loadAutotests(testRunId, [this.deferredFirstFinalResult]);
-      // this.deferredFirstFinalResult = undefined;
-    }
-    // await this.client.testRuns.completeTestRun(testRunId);
+    await this.client.testRuns.completeTestRun(testRunId);
   }
 
   async loadAutotest(autotest: AutotestPost, status: string): Promise<void> {
@@ -96,7 +85,7 @@ export class BaseStrategy implements IStrategy {
 
     // InProgress is only for the first result (the one used for sync storage cut).
     // Its final payload is deferred until teardown, so TMS does not immediately flip to final status.
-    if (firstResult && !this.deferredFirstFinalResult) {
+    if (firstResult) {
       const isMasterWorker = Boolean(this.syncStorageRunner?.isMasterWorker?.());
       const published = await this.syncStorageRunner?.sendInProgressTestResult(
         toTestResultCutModel(firstResult, this.config.projectId),
@@ -124,8 +113,8 @@ export class BaseStrategy implements IStrategy {
         });
         throw err;
       }
-      this.deferredFirstFinalResult = firstResult;
 
+      // For published sync-storage InProgress, finalization of the first result is handled by sync-storage.
       const rest = autotests.slice(1);
       if (rest.length > 0) {
         await this.client.testRuns.loadAutotests(testRunId, rest);
