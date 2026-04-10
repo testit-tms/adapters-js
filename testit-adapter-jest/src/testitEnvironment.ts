@@ -43,6 +43,7 @@ export default class TestItEnvironment extends NodeEnvironment {
   private readonly strategy: IStrategy;
   private readonly additions: Additions;
   private readonly usesGlobalStrategy: boolean;
+  private readonly unhandledRejectionHandler: (reason: unknown) => void;
 
   constructor(jestConfig: JestEnvironmentConfig, jestContext: EnvironmentContext) {
     super(jestConfig, jestContext);
@@ -51,12 +52,16 @@ export default class TestItEnvironment extends NodeEnvironment {
     this.additions = new Additions(config);
     this.usesGlobalStrategy = Boolean(globalThis.strategy);
     this.strategy = globalThis.strategy ?? StrategyFactory.create(config);
+    this.unhandledRejectionHandler = (reason: unknown) => {
+      console.error("Unhandled promise rejection in Jest environment:", this.formatError(reason));
+    };
 
     this.testPath = excludePath(jestContext.testPath, jestConfig.globalConfig.rootDir);
   }
 
   async setup() {
     await super.setup();
+    process.on("unhandledRejection", this.unhandledRejectionHandler);
     // Jest workers run in separate processes and do not share globalThis.strategy from globalSetup.
     // For those workers, run setup locally to register in sync storage (master will publish in-progress).
     if (!this.usesGlobalStrategy) {
@@ -86,6 +91,7 @@ export default class TestItEnvironment extends NodeEnvironment {
   }
 
   async teardown() {
+    process.off("unhandledRejection", this.unhandledRejectionHandler);
     await super.teardown();
   }
 
