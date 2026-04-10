@@ -87,38 +87,46 @@ export default class TestItEnvironment extends NodeEnvironment {
   }
 
   async handleTestEvent(event: Event) {
-    switch (event.name) {
-      case "hook_start": {
-        this.startHookCapture(event.hook);
-        break;
+    try {
+      switch (event.name) {
+        case "hook_start": {
+          this.startHookCapture(event.hook);
+          break;
+        }
+        case "hook_success":
+        case "hook_failure": {
+          this.finishHookCapture(event.hook);
+          break;
+        }
+        case "test_fn_start": {
+          this.startTestCapture(event.test);
+          break;
+        }
+        case "test_fn_success":
+        case "test_fn_failure": {
+          this.finishTestCapture(event.test);
+          break;
+        }
+        case "test_done": {
+          await this.saveResult(event.test);
+          break;
+        }
+        case "test_skip": {
+          this.resetTest();
+          break;
+        }
+        case "run_finish": {
+          await this.loadResults();
+          break;
+        }
       }
-      case "hook_success":
-      case "hook_failure": {
-        this.finishHookCapture(event.hook);
-        break;
-      }
-      case "test_fn_start": {
-        this.startTestCapture(event.test);
-        break;
-      }
-      case "test_fn_success":
-      case "test_fn_failure": {
-        this.finishTestCapture(event.test);
-        break;
-      }
-      case "test_done": {
-        await this.saveResult(event.test);
-        break;
-      }
-      case "test_skip": {
-        this.resetTest();
-        break;
-      }
-      case "run_finish": {
-        await this.loadResults();
-        break;
-      }
+    } catch (err: any) {
+      console.error("Unhandled async error in Jest environment event handler:", this.formatError(err));
     }
+  }
+
+  private formatError(err: any): unknown {
+    return err?.body ?? err?.error ?? err;
   }
 
   startHookCapture(hook: Extract<Event, { name: "hook_start" }>["hook"]) {
@@ -228,7 +236,11 @@ export default class TestItEnvironment extends NodeEnvironment {
         externalKey: autotest.externalKey,
       };
 
-      await this.strategy.loadAutotest(autotestPost, result.outcome);
+      try {
+        await this.strategy.loadAutotest(autotestPost, result.outcome);
+      } catch (err: any) {
+        console.error("Failed to load autotest in Jest environment:", this.formatError(err));
+      }
 
       results.push({
         autoTestExternalId: autotestPost.externalId,
@@ -247,7 +259,11 @@ export default class TestItEnvironment extends NodeEnvironment {
     }
     log("Loading results");
 
-    await this.strategy.loadTestRun(results);
+    try {
+      await this.strategy.loadTestRun(results);
+    } catch (err: any) {
+      console.error("Failed to load test run in Jest environment:", this.formatError(err));
+    }
   }
 
   resetTest() {
