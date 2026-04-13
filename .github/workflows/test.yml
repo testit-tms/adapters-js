@@ -126,23 +126,26 @@ jobs:
           cd ../..
 
           dotnet build --configuration Debug --property WarningLevel=0 api-validator-dotnet
+          pip install testit-cli
 
       - name: Create TestRun
         run: |
-          mkdir -p "$(dirname "${{ env.TEMP_FILE }}")"
-          BASE_URL="${{ env.TMS_URL }}"
-          BASE_URL="${BASE_URL%/}"
-          BODY=$(jq -nc \
-            --arg projectId "${{ env.TMS_PROJECT_ID }}" \
-            --arg name "${{ env.TMS_TEST_RUN_NAME }}" \
-            '{projectId: $projectId, name: $name}')
+          testit testrun create --token ${{ env.TMS_PRIVATE_TOKEN }} --output ${{ env.TEMP_FILE }}
+
+          # mkdir -p "$(dirname "${{ env.TEMP_FILE }}")"
+          # BASE_URL="${{ env.TMS_URL }}"
+          # BASE_URL="${BASE_URL%/}"
+          # BODY=$(jq -nc \
+          #   --arg projectId "${{ env.TMS_PROJECT_ID }}" \
+          #   --arg name "${{ env.TMS_TEST_RUN_NAME }}" \
+          #   '{projectId: $projectId, name: $name}')
           
-          curl -sS -f -X POST "${BASE_URL}/api/v2/testRuns" \
-            -H "accept: application/json" \
-            -H "Content-Type: application/json" \
-            -H "Authorization: PrivateToken ${{ env.TMS_PRIVATE_TOKEN }}" \
-            -d "$BODY" \
-            | jq -er '.id' > "${{ env.TEMP_FILE }}"
+          # curl -sS -f -X POST "${BASE_URL}/api/v2/testRuns" \
+          #   -H "accept: application/json" \
+          #   -H "Content-Type: application/json" \
+          #   -H "Authorization: PrivateToken ${{ env.TMS_PRIVATE_TOKEN }}" \
+          #   -d "$BODY" \
+          #   | jq -er '.id' > "${{ env.TEMP_FILE }}"
 
           echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> $GITHUB_ENV
           echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> .env

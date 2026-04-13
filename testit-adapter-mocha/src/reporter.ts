@@ -20,6 +20,8 @@ import { extractHooks, resolveParallelModeSetupFile } from "./utils";
 
 const Reporter = reporters.Base;
 const Events = Runner.constants;
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const superagent: any = require("superagent");
 
 const emptyTest = (): AutotestResult => ({
   autoTestExternalId: "",
@@ -42,6 +44,27 @@ const StateConstants = {
   STATE_PENDING: 'pending',
 }
 
+let superagentCallbackGuardInstalled = false;
+
+const installSuperagentDoubleCallbackGuard = () => {
+  if (superagentCallbackGuardInstalled) {
+    return;
+  }
+  superagentCallbackGuardInstalled = true;
+  const RequestProto: any = (superagent as any).Request?.prototype;
+  const originalCallback = RequestProto?.callback;
+  if (typeof originalCallback !== "function") {
+    return;
+  }
+  RequestProto.callback = function guardedCallback(this: any, ...args: any[]) {
+    if (this.__tmsCallbackDone) {
+      return;
+    }
+    this.__tmsCallbackDone = true;
+    return originalCallback.apply(this, args);
+  };
+};
+
 export class TmsReporter extends Reporter {
   private readonly strategy: IStrategy;
   private readonly additions: IAdditions;
@@ -58,6 +81,7 @@ export class TmsReporter extends Reporter {
 
   constructor(runner: Runner, options: ReporterOptions) {
     super(runner, options);
+    installSuperagentDoubleCallbackGuard();
 
     const config = new ConfigComposer().compose(options?.tmsOptions);
 
@@ -213,6 +237,8 @@ export class TmsReporter extends Reporter {
 
     promise.then((attachments) => {
       target.attachments?.push(...attachments);
+    }).catch((err) => {
+      console.log("Error loading attachment. \n", err?.body ?? err?.error ?? err);
     });
 
     this.attachmentsQueue.push(promise);

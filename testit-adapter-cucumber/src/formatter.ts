@@ -16,6 +16,7 @@ import { Storage } from "./storage";
 import { parseTags } from "./utils";
 
 export default class TestItFormatter extends Formatter implements IFormatter {
+  private static unhandledRejectionHandlerInstalled = false;
   private readonly strategy: IStrategy;
   private readonly additions: Additions;
   private readonly storage: IStorage;
@@ -26,56 +27,80 @@ export default class TestItFormatter extends Formatter implements IFormatter {
 
   constructor(options: IFormatterOptions) {
     super(options);
+    this.installUnhandledRejectionHandler();
     const config = new ConfigComposer().compose(options.parsedArgvOptions as AdapterConfig);
     this.strategy = StrategyFactory.create(config);
     this.additions = new Additions(config);
     this.storage = new Storage();
     this.setupPromise = this.strategy.setup();
 
-    options.eventBroadcaster.on("envelope", async (envelope: Envelope) => {
-      if (envelope.gherkinDocument) {
-        return this.onGherkinDocument(envelope.gherkinDocument);
-      }
-      if (envelope.pickle) {
-        const resolvedAutotests = await this.strategy.testsInRun;
-
-        if (resolvedAutotests !== undefined) {
-          const tags = parseTags(envelope.pickle.tags);
-
-          for (const externalId of resolvedAutotests) {
-            if (externalId === tags.externalId) {
-              return this.onPickle(envelope.pickle);
-            }
-          }
-
-          envelope.pickle = undefined;
-        } else {
-          return this.onPickle(envelope.pickle);
-        }
-      }
-      if (envelope.testCase) {
-        return this.onTestCase(envelope.testCase);
-      }
-      if (envelope.testCaseStarted) {
-        return this.onTestCaseStarted(envelope.testCaseStarted);
-      }
-      if (envelope.testStepStarted) {
-        return this.testStepStarted(envelope.testStepStarted);
-      }
-      if (envelope.testStepFinished) {
-        return this.onTestStepFinished(envelope.testStepFinished);
-      }
-      if (envelope.testCaseFinished) {
-        return this.testCaseFinished(envelope.testCaseFinished);
-      }
-      if (envelope.testRunFinished) {
-        return this.onTestRunFinished(envelope.testRunFinished);
-      }
+    options.eventBroadcaster.on("envelope", (envelope: Envelope) => {
+      void this.handleEnvelope(envelope).catch((err) => {
+        console.error("Unhandled async error in Cucumber formatter envelope handler:", err?.body ?? err?.error ?? err);
+      });
     });
 
     options.supportCodeLibrary.World.prototype.addMessage = this.addMessage.bind(this);
     options.supportCodeLibrary.World.prototype.addLinks = this.addLinks.bind(this);
     options.supportCodeLibrary.World.prototype.addAttachments = this.addAttachments.bind(this);
+  }
+
+  private installUnhandledRejectionHandler() {
+    if (TestItFormatter.unhandledRejectionHandlerInstalled) {
+      return;
+    }
+    TestItFormatter.unhandledRejectionHandlerInstalled = true;
+    process.on("unhandledRejection", (reason: unknown) => {
+      const normalized = (reason as any)?.body ?? (reason as any)?.error ?? reason;
+      console.error("Unhandled promise rejection in Cucumber formatter:", normalized);
+    });
+  }
+
+  private async handleEnvelope(envelope: Envelope): Promise<void> {
+    if (envelope.gherkinDocument) {
+      this.onGherkinDocument(envelope.gherkinDocument);
+      return;
+    }
+    if (envelope.pickle) {
+      const resolvedAutotests = await this.strategy.testsInRun;
+
+      if (resolvedAutotests !== undefined) {
+        const tags = parseTags(envelope.pickle.tags);
+
+        for (const externalId of resolvedAutotests) {
+          if (externalId === tags.externalId) {
+            this.onPickle(envelope.pickle);
+            return;
+          }
+        }
+      } else {
+        this.onPickle(envelope.pickle);
+        return;
+      }
+    }
+    if (envelope.testCase) {
+      this.onTestCase(envelope.testCase);
+      return;
+    }
+    if (envelope.testCaseStarted) {
+      this.onTestCaseStarted(envelope.testCaseStarted);
+      return;
+    }
+    if (envelope.testStepStarted) {
+      this.testStepStarted(envelope.testStepStarted);
+      return;
+    }
+    if (envelope.testStepFinished) {
+      this.onTestStepFinished(envelope.testStepFinished);
+      return;
+    }
+    if (envelope.testCaseFinished) {
+      this.testCaseFinished(envelope.testCaseFinished);
+      return;
+    }
+    if (envelope.testRunFinished) {
+      await this.onTestRunFinished(envelope.testRunFinished);
+    }
   }
 
   onGherkinDocument(document: GherkinDocument): void {

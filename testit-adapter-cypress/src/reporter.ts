@@ -1,4 +1,5 @@
 import type Cypress from "cypress";
+import * as fs from "fs";
 import { ConfigComposer, StrategyFactory, type IStrategy, Additions, type AdapterConfig, type Attachment, Link } from "testit-js-commons";
 import type { TestData, StepData } from "./converter.js";
 import { toAutotestPost, toAutotestResult } from "./converter.js";
@@ -336,7 +337,10 @@ export class TmsCypress {
       return;
     }
     try {
-      const attachments = await this.additions.addAttachments([data.path]);
+      // Snapshot file content immediately to avoid path-based races
+      // when the same file can still be modified/overwritten by Cypress.
+      const content = fs.readFileSync(data.path);
+      const attachments = await this.additions.addAttachments(content, data.name);
       const ids = attachments.map((a: Attachment) => a.id);
       target.attachmentIds.push(...ids);
     } catch {
