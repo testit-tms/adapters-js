@@ -94,10 +94,19 @@ class TmsReporter implements Reporter {
   }
 
   async onEnd(): Promise<void> {
-    await this.setupPromise;
-    await Promise.all(this.loadTestPromises);
-    await this.addSkippedResults();
-    await this.strategy.teardown();
+    try {
+      await this.setupPromise.catch((err: any) => {
+        console.error("TMS Playwright setup failed:", err?.body ?? err?.error ?? err);
+      });
+      await Promise.allSettled(this.loadTestPromises);
+      await this.addSkippedResults();
+    } catch (err: any) {
+      console.error("TMS Playwright onEnd failed:", err?.body ?? err?.error ?? err);
+    } finally {
+      await this.strategy.teardown().catch((err: any) => {
+        console.error("TMS Playwright teardown failed:", err?.body ?? err?.error ?? err);
+      });
+    }
   }
 
   async addSkippedResults(): Promise<void> {
@@ -105,15 +114,23 @@ class TmsReporter implements Reporter {
       .allTests()
       .filter((testCase: any) => !this.testCache.includes(testCase));
 
-    await Promise.all(unprocessedCases.map(async (testCase: any) => {
-      await this.loadTest(testCase, {
-        status: "skipped",
-        attachments: [],
-        duration: 0,
-        errors: [],
-        steps: [],
-      });
-    }));
+    await Promise.all(
+      unprocessedCases.map((testCase: any) =>
+        this.loadTest(testCase, {
+          status: "skipped",
+          attachments: [],
+          duration: 0,
+          errors: [],
+          steps: [],
+        }).catch((err: any) => {
+          console.error(
+            "TMS Playwright loadTest (skipped) failed:",
+            testCase?.title,
+            err?.body ?? err?.error ?? err,
+          );
+        }),
+      ),
+    );
   }
 
   printsToStdio(): boolean {
