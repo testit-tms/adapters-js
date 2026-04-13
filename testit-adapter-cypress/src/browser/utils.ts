@@ -25,16 +25,39 @@ export const resolveSpecRelativePath = (spec: Cypress.Spec) => {
   return IS_WIN ? specPath.replaceAll("\\", "/") : specPath;
 };
 
-export const uint8ArrayToBase64 = (data: unknown) => {
-  // @ts-ignore
-  const u8arrayLike = Array.isArray(data) || data.buffer;
+export const uint8ArrayToBase64 = (data: unknown): string => {
+  if (typeof data === "string") {
+    return data;
+  }
 
-  if (!u8arrayLike) {
+  let u8: Uint8Array | undefined;
+  if (data instanceof Uint8Array) {
+    u8 = data;
+  } else if (Array.isArray(data)) {
+    u8 = new Uint8Array(data as number[]);
+  } else if (data && typeof data === "object" && ArrayBuffer.isView(data as ArrayBufferView)) {
+    const v = data as ArrayBufferView;
+    u8 = new Uint8Array(v.buffer, v.byteOffset, v.byteLength);
+  }
+
+  if (!u8?.length) {
     return data as string;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  return btoa(String.fromCharCode.apply(null, data as number[]));
+  const B = typeof (globalThis as { Buffer?: { from(input: Uint8Array): { toString(enc: string): string } } }).Buffer !== "undefined"
+    ? (globalThis as { Buffer: { from(input: Uint8Array): { toString(enc: string): string } } }).Buffer
+    : undefined;
+  if (B?.from) {
+    return B.from(u8).toString("base64");
+  }
+
+  // Browser: avoid String.fromCharCode.apply on huge arrays (argument limit / silent corruption).
+  const chunk = 0x8000;
+  let binary = "";
+  for (let i = 0; i < u8.length; i += chunk) {
+    binary += String.fromCharCode.apply(null, u8.subarray(i, i + chunk) as unknown as number[]);
+  }
+  return btoa(binary);
 };
 
 export const getTestStartData = (test: CypressTest) => ({

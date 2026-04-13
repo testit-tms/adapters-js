@@ -32,6 +32,7 @@ class TmsReporter implements Reporter {
   private attachmentStepsCache = new Array<TestStep>();
   private attachmentsMap = new Map<Attachment, TestStep>();
   private loadTestPromises = new Array<Promise<void>>();
+  private setupPromise: Promise<void> = Promise.resolve();
 
   constructor(options: ReporterOptions) {
     this.options = { suiteTitle: true, detail: true, ...options };
@@ -43,6 +44,7 @@ class TmsReporter implements Reporter {
   onBegin(config: FullConfig, suite: Suite): void {
     this.config = config;
     this.suite = suite;
+    this.setupPromise = this.strategy.setup();
   }
 
   onTestBegin(test: TestCase): void {
@@ -51,7 +53,7 @@ class TmsReporter implements Reporter {
 
   onTestEnd(test: TestCase, result: TestResult): void {
     this.loadTestPromises.push(
-      this.loadTest(
+      this.setupPromise.then(() => this.loadTest(
         test,
         {
           status: result.status,
@@ -60,6 +62,8 @@ class TmsReporter implements Reporter {
           errors: result.errors,
           error: result.error,
           steps: result.steps,
+        })).catch((err) => {
+          console.log("Error processing test result. \n", err?.body ?? err?.error ?? err);
         })
     );
   }
@@ -90,8 +94,19 @@ class TmsReporter implements Reporter {
   }
 
   async onEnd(): Promise<void> {
-    await Promise.all(this.loadTestPromises);
-    await this.addSkippedResults();
+    try {
+      await this.setupPromise.catch((err: any) => {
+        console.error("TMS Playwright setup failed:", err?.body ?? err?.error ?? err);
+      });
+      await Promise.allSettled(this.loadTestPromises);
+      await this.addSkippedResults();
+    } catch (err: any) {
+      console.error("TMS Playwright onEnd failed:", err?.body ?? err?.error ?? err);
+    } finally {
+      await this.strategy.teardown().catch((err: any) => {
+        console.error("TMS Playwright teardown failed:", err?.body ?? err?.error ?? err);
+      });
+    }
   }
 
   async addSkippedResults(): Promise<void> {
@@ -99,15 +114,23 @@ class TmsReporter implements Reporter {
       .allTests()
       .filter((testCase: any) => !this.testCache.includes(testCase));
 
-    unprocessedCases.forEach(async (testCase: any) => {
-      await this.loadTest(testCase, {
-        status: "skipped",
-        attachments: [],
-        duration: 0,
-        errors: [],
-        steps: [],
-      });
-    });
+    await Promise.all(
+      unprocessedCases.map((testCase: any) =>
+        this.loadTest(testCase, {
+          status: "skipped",
+          attachments: [],
+          duration: 0,
+          errors: [],
+          steps: [],
+        }).catch((err: any) => {
+          console.error(
+            "TMS Playwright loadTest (skipped) failed:",
+            testCase?.title,
+            err?.body ?? err?.error ?? err,
+          );
+        }),
+      ),
+    );
   }
 
   printsToStdio(): boolean {
@@ -139,11 +162,12 @@ class TmsReporter implements Reporter {
       if (!attachment.body) {
         if (attachment.path && attachment.name !== "screenshot") {
           const content = Utils.readBufferSync(attachment.path);
-
-          await this.additions.addAttachments(content, attachment.name)
-            .then((ids: any) => {
-              autotestData.addAttachments?.push(...ids);
-            });
+          try {
+            const ids: any = await this.additions.addAttachments(content, attachment.name);
+            autotestData.addAttachments?.push(...ids);
+          } catch (err: any) {
+            console.log("Error uploading file attachment. \n", err?.body ?? err?.error ?? err);
+          }
         }
         
         continue;
@@ -209,16 +233,19 @@ class TmsReporter implements Reporter {
 
       if (attachment.name.match(stepAttachRegexp)) {
         const step = this.attachmentStepsCache.find((step: TestStep) => step.title === attachment.name);
-
-        await this.additions.addAttachments(attachment.body,
-            attachment.name.replace(stepAttachRegexp, ""))
-            .then((ids: any[]) => {
+        try {
+          const ids: any[] = await this.additions.addAttachments(
+            attachment.body,
+            attachment.name.replace(stepAttachRegexp, "")
+          );
           if (step?.parent) {
             this.attachmentsMap.set(ids[0], step.parent);
-            return;
+            continue;
           }
           autotestData.addAttachments?.push(...ids);
-        });
+        } catch (err: any) {
+          console.log("Error uploading text attachment. \n", err?.body ?? err?.error ?? err);
+        }
       }
     }
 

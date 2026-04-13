@@ -61,31 +61,34 @@ jobs:
       TMS_CONFIGURATION_ID: ${{ secrets[matrix.configuration_id] }}
       TMS_PROJECT_ID: ${{ secrets[matrix.project_id] }}
       TMS_TEST_RUN_NAME: ${{ matrix.project_name }} TestRun
+      TMS_IMPORT_REALTIME: false
+      TMS_ADAPTER_MODE: 1
+      #TMS_DEBUG_LOAD_TEST_RUN: 1
     steps:
       - name: Checkout adapters-js
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Checkout api-validator-dotnet
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: testit-tms/api-validator-dotnet
           token: ${{ env.GITHUB_PAT }}
           path: api-validator-dotnet
       - name: Checkout js-examples
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: testit-tms/js-examples
           ref: examples_for_tests
           path: js-examples
       - name: Setup dotnet
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
       - name: Setup node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Setup python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Setup environment
@@ -128,6 +131,22 @@ jobs:
       - name: Create TestRun
         run: |
           testit testrun create --token ${{ env.TMS_PRIVATE_TOKEN }} --output ${{ env.TEMP_FILE }}
+
+          # mkdir -p "$(dirname "${{ env.TEMP_FILE }}")"
+          # BASE_URL="${{ env.TMS_URL }}"
+          # BASE_URL="${BASE_URL%/}"
+          # BODY=$(jq -nc \
+          #   --arg projectId "${{ env.TMS_PROJECT_ID }}" \
+          #   --arg name "${{ env.TMS_TEST_RUN_NAME }}" \
+          #   '{projectId: $projectId, name: $name}')
+          
+          # curl -sS -f -X POST "${BASE_URL}/api/v2/testRuns" \
+          #   -H "accept: application/json" \
+          #   -H "Content-Type: application/json" \
+          #   -H "Authorization: PrivateToken ${{ env.TMS_PRIVATE_TOKEN }}" \
+          #   -d "$BODY" \
+          #   | jq -er '.id' > "${{ env.TEMP_FILE }}"
+
           echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> $GITHUB_ENV
           echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> .env
           export TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})
@@ -136,22 +155,48 @@ jobs:
           echo "${{ env.TMS_URL }}"
           echo "${{ env.TMS_ADAPTER_MODE }}"
           echo "$GITHUB_ENV"
+
       - name: Test
         run: |
+
+          chmod +x ./scripts/get_sync_storage.sh
+
+          export SYNC_STORAGE_VERSION=$(grep -o 'VERSION = "[^"]*"' testit-js-commons/src/services/syncstorage/syncstorage.runner.ts | cut -d'"' -f2)
+         
+
           cd js-examples/${{ matrix.project_name }}
+          
+          # start sync storage before all other processes
+          ../../scripts/get_sync_storage.sh $SYNC_STORAGE_VERSION
+          nohup .caches/syncstorage-linux-amd64 --testRunId ${{ env.TMS_TEST_RUN_ID }} --port 49152 \
+          --baseURL ${{ env.TMS_URL }} --privateToken ${{ env.TMS_PRIVATE_TOKEN }}  > service.log 2>&1 &  
+          curl -v http://127.0.0.1:49152/health || true
+          
+          
+          npm run test || true 
 
-          # # Search for testit references in package-lock.json
-          # if [ -f "package-lock.json" ]; then
-          #   echo "=== Searching for testit references in package-lock.json ==="
-          #   echo "Found testit packages:"
-          #   grep -i "\"testit" package-lock.json || echo "No testit package references found"
-          #   echo ""
-          # else
-          #   echo "package-lock.json not found"
-          # fi
-
-          npm run test || exit 0
+          # sleep 10
+          curl -v http://127.0.0.1:49152/wait-completion?testRunId=${{ env.TMS_TEST_RUN_ID }} || true
+          cat service.log
 
       - name: Validate
         run: |
+          dotnet test --configuration Debug --no-build --logger:"console;verbosity=detailed" api-validator-dotnet
+
+      - name: Test Adapter Mode 2
+        run: |
+
+          export TMS_ADAPTER_MODE=2
+
+          cd js-examples/${{ matrix.project_name }}
+          
+          npm run test || true 
+
+          # sleep 10
+          curl -v http://127.0.0.1:49152/wait-completion || true
+          # cat service.log
+
+      - name: Validate Again
+        run: |
+          export TMS_TEST_RUN_ID=skip
           dotnet test --configuration Debug --no-build --logger:"console;verbosity=detailed" api-validator-dotnet

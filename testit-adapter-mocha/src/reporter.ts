@@ -20,6 +20,8 @@ import { extractHooks, resolveParallelModeSetupFile } from "./utils";
 
 const Reporter = reporters.Base;
 const Events = Runner.constants;
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const superagent: any = require("superagent");
 
 const emptyTest = (): AutotestResult => ({
   autoTestExternalId: "",
@@ -42,9 +44,31 @@ const StateConstants = {
   STATE_PENDING: 'pending',
 }
 
+let superagentCallbackGuardInstalled = false;
+
+const installSuperagentDoubleCallbackGuard = () => {
+  if (superagentCallbackGuardInstalled) {
+    return;
+  }
+  superagentCallbackGuardInstalled = true;
+  const RequestProto: any = (superagent as any).Request?.prototype;
+  const originalCallback = RequestProto?.callback;
+  if (typeof originalCallback !== "function") {
+    return;
+  }
+  RequestProto.callback = function guardedCallback(this: any, ...args: any[]) {
+    if (this.__tmsCallbackDone) {
+      return;
+    }
+    this.__tmsCallbackDone = true;
+    return originalCallback.apply(this, args);
+  };
+};
+
 export class TmsReporter extends Reporter {
   private readonly strategy: IStrategy;
   private readonly additions: IAdditions;
+  private isRunEnded = false;
 
   private attachmentsQueue: Promise<Attachment[]>[] = [];
   private autotestsQueue: Promise<any>[] = [];
@@ -57,6 +81,7 @@ export class TmsReporter extends Reporter {
 
   constructor(runner: Runner, options: ReporterOptions) {
     super(runner, options);
+    installSuperagentDoubleCallbackGuard();
 
     const config = new ConfigComposer().compose(options?.tmsOptions);
 
@@ -82,25 +107,39 @@ export class TmsReporter extends Reporter {
   };
 
   onStartRun = () => {
-    this.strategy.setup();
+    deasyncPromise(this.strategy.setup().catch((err) => {
+      console.log("Error setup test run. \n", err?.body ?? err);
+    }));
   };
 
   onEndRun = () => {
-    deasyncPromise(this.teardown());
+    if (this.isRunEnded) {
+      return;
+    }
+
+    this.isRunEnded = true;
+
+    deasyncPromise(this.teardown().catch((err) => {
+      console.log("Error during teardown. \n", err?.body ?? err);
+    }));
   };
 
   private async teardown(): Promise<void> {
     await Promise.all(this.attachmentsQueue).catch((err) => {
-      console.log("Error loading attachments. \n", err.body);
+      console.log("Error loading attachments. \n", err?.body ?? err);
     });
 
-    await Promise.all(this.autotestsQueue);
+    await Promise.all(this.autotestsQueue).catch((err) => {
+      console.log("Error load autotests. \n", err?.body ?? err);
+    });
 
     await this.strategy.loadTestRun(this.autotestsForTestRun).catch((err) => {
-      console.log("Error load test run. \n", err.body);
+      console.log("Error load test run. \n", err?.body ?? err);
     });
 
-    await this.strategy.teardown();
+    await this.strategy.teardown().catch((err) => {
+      console.log("Error complete test run. \n", err?.body ?? err);
+    });
   }
 
   clearContext(ctx: Context) {
@@ -198,6 +237,8 @@ export class TmsReporter extends Reporter {
 
     promise.then((attachments) => {
       target.attachments?.push(...attachments);
+    }).catch((err) => {
+      console.log("Error loading attachment. \n", err?.body ?? err?.error ?? err);
     });
 
     this.attachmentsQueue.push(promise);

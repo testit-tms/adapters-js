@@ -1,11 +1,15 @@
 import { Client, IClient } from "../client";
 import { AdapterConfig } from "../common";
+import { logTmsLoadTestRun } from "../common/utils";
 import { AutotestPost, AutotestResult, TestRunId } from "../services";
+import { SyncStorageRunner, toTestResultCutModel } from "../services/syncstorage";
 import { IStrategy } from "./strategy.type";
 
 export class BaseStrategy implements IStrategy {
+  private static readonly INPROGRESS_FIRST_GRACE_MS = 3000;
   client: IClient;
   testRunId: Promise<TestRunId>;
+  private syncStorageRunner?: SyncStorageRunner;
 
   protected constructor(protected config: AdapterConfig) {
     this.client = new Client(config);
@@ -14,12 +18,22 @@ export class BaseStrategy implements IStrategy {
 
   async setup(): Promise<void> {
     const testRunId = await this.testRunId;
+    await this.tryStartSyncStorage(testRunId);
+    await this.syncStorageRunner?.setWorkerStatus("in_progress");
     await this.client.testRuns.startTestRun(testRunId);
   }
 
   async teardown(): Promise<void> {
     const testRunId = await this.testRunId;
-    await this.client.testRuns.completeTestRun(testRunId);
+    await this.syncStorageRunner?.setWorkerStatus("completed");
+    await this.syncStorageRunner?.completeProcessing();
+    // With active sync-storage, run completion is finalized by sync-storage itself.
+    // Calling completeTestRun from adapters can finish the run too early and skip late results.
+    // if (this.syncStorageRunner?.isActive()) {
+    //   logTmsLoadTestRun("skip completeTestRun in adapter teardown: sync-storage is active");
+    //   return;
+    // }
+    //await this.client.testRuns.completeTestRun(testRunId);
   }
 
   async loadAutotest(autotest: AutotestPost, status: string): Promise<void> {
@@ -67,7 +81,81 @@ export class BaseStrategy implements IStrategy {
 
   async loadTestRun(autotests: AutotestResult[]): Promise<void> {
     const testRunId = await this.testRunId;
-    return await this.client.testRuns.loadAutotests(testRunId, autotests);
+    const firstResult = autotests[0];
+    logTmsLoadTestRun("loadTestRun enter", {
+      testRunId,
+      batchSize: autotests.length,
+      firstExternalId: firstResult?.autoTestExternalId,
+      syncRunnerActive: Boolean(this.syncStorageRunner?.isActive?.()),
+      isMaster: Boolean(this.syncStorageRunner?.isMasterWorker?.()),
+    });
+
+    // InProgress is only for the first result (the one used for sync storage cut).
+    // Its final payload is deferred until teardown, so TMS does not immediately flip to final status.
+    if (firstResult) {
+      const isMasterWorker = Boolean(this.syncStorageRunner?.isMasterWorker?.());
+      const published = await this.syncStorageRunner?.sendInProgressTestResult(
+        toTestResultCutModel(firstResult, this.config.projectId),
+      );
+      logTmsLoadTestRun("syncStorage sendInProgressTestResult", {
+        isMasterWorker,
+        published: Boolean(published),
+      });
+      if (!isMasterWorker) {
+        // Global ordering: non-master waits for sync-storage published flag from master.
+        const timeoutMs = this.getInProgressFirstGraceMs();
+        if (timeoutMs > 0 && this.syncStorageRunner) {
+          logTmsLoadTestRun("non-master wait for in-progress published", { timeoutMs });
+          const publishedByMaster = await this.syncStorageRunner.waitForInProgressPublished(timeoutMs);
+          logTmsLoadTestRun("non-master wait result", { publishedByMaster });
+        }
+        logTmsLoadTestRun("skip InProgress stub: current worker is not sync master");
+        await this.client.testRuns.loadAutotests(testRunId, autotests);
+        return;
+      }
+      if (!published) {
+        logTmsLoadTestRun("skip InProgress stub: sync cut was not published");
+        await this.client.testRuns.loadAutotests(testRunId, autotests);
+        return;
+      }
+      logTmsLoadTestRun("InProgress slot acquired", {
+        autoTestExternalId: firstResult.autoTestExternalId,
+        testRunId,
+      });
+      try {
+        await this.client.testRuns.postInProgressAutotestResult(testRunId, firstResult);
+      } catch (err: unknown) {
+        logTmsLoadTestRun("postInProgressAutotestResult FAILED", {
+          autoTestExternalId: firstResult.autoTestExternalId,
+          message: err instanceof Error ? err.message : String(err),
+        });
+        throw err;
+      }
+
+      // For published sync-storage InProgress, finalization of the first result is handled by sync-storage.
+      const rest = autotests.slice(1);
+      if (rest.length > 0) {
+        await this.client.testRuns.loadAutotests(testRunId, rest);
+      }
+      return;
+    }
+
+    // Normal path: no placeholder created here — upload finals as-is.
+    await this.client.testRuns.loadAutotests(testRunId, autotests);
+  }
+
+  private async tryStartSyncStorage(testRunId: string): Promise<void> {
+    if (!this.config.syncStorageEnabled) {
+      return;
+    }
+
+    const runner = new SyncStorageRunner(testRunId, this.config);
+    const started = await runner.start();
+    if (!started) {
+      return;
+    }
+
+    this.syncStorageRunner = runner;
   }
 
   protected async updateTestRun(config: AdapterConfig): Promise<void> {
@@ -86,5 +174,16 @@ export class BaseStrategy implements IStrategy {
     testRun.name = config.testRunName;
 
     this.client.testRuns.updateTestRun(testRun);
+  }
+
+  private getInProgressFirstGraceMs(): number {
+    const raw = process.env.TMS_SYNC_INPROGRESS_FIRST_GRACE_MS;
+    if (!raw) {
+      return BaseStrategy.INPROGRESS_FIRST_GRACE_MS;
+    }
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) && parsed >= 0
+      ? parsed
+      : BaseStrategy.INPROGRESS_FIRST_GRACE_MS;
   }
 }

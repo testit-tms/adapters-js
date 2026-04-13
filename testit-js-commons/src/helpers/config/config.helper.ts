@@ -42,7 +42,9 @@ export class ConfigComposer implements IConfigComposer {
       configurationId: this.resolveAllProperties(file.configurationId, env?.TMS_CONFIGURATION_ID, base?.configurationId),
       automaticCreationTestCases: file.automaticCreationTestCases ?? stringToBoolean(env?.TMS_AUTOMATIC_CREATION_TEST_CASES) ?? base?.automaticCreationTestCases ?? false,
       automaticUpdationLinksToTestCases: file.automaticUpdationLinksToTestCases ?? stringToBoolean(env?.TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES) ?? base?.automaticUpdationLinksToTestCases ?? false,
-      certValidation: file.certValidation ?? stringToBoolean(env?.TMS_CERT_VALIDATION) ?? base?.certValidation ?? true
+      certValidation: file.certValidation ?? stringToBoolean(env?.TMS_CERT_VALIDATION) ?? base?.certValidation ?? true,
+      syncStorageEnabled: file.syncStorageEnabled ?? stringToBoolean(env?.TMS_SYNC_STORAGE_ENABLED) ?? base?.syncStorageEnabled ?? true,
+      syncStoragePort: this.resolveAllProperties(file.syncStoragePort, env?.TMS_SYNC_STORAGE_PORT, base?.syncStoragePort) || "49152",
     };
   }
 
@@ -57,7 +59,9 @@ export class ConfigComposer implements IConfigComposer {
       configurationId: this.resolveProperties(env?.TMS_CONFIGURATION_ID, base?.configurationId),
       automaticCreationTestCases: stringToBoolean(env?.TMS_AUTOMATIC_CREATION_TEST_CASES) ?? base?.automaticCreationTestCases ?? false,
       automaticUpdationLinksToTestCases: stringToBoolean(env?.TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES) ?? base?.automaticUpdationLinksToTestCases ?? false,
-      certValidation: stringToBoolean(env?.TMS_CERT_VALIDATION) ?? base?.certValidation ?? true
+      certValidation: stringToBoolean(env?.TMS_CERT_VALIDATION) ?? base?.certValidation ?? true,
+      syncStorageEnabled: stringToBoolean(env?.TMS_SYNC_STORAGE_ENABLED) ?? base?.syncStorageEnabled ?? true,
+      syncStoragePort: this.resolveProperties(env?.TMS_SYNC_STORAGE_PORT, base?.syncStoragePort) || "49152",
     };
   }
 
@@ -72,7 +76,9 @@ export class ConfigComposer implements IConfigComposer {
       TMS_CONFIGURATION_ID: this.resolveProperties(dotEnv?.TMS_CONFIGURATION_ID, processEnv?.TMS_CONFIGURATION_ID),
       TMS_AUTOMATIC_CREATION_TEST_CASES: dotEnv?.TMS_AUTOMATIC_CREATION_TEST_CASES ?? processEnv?.TMS_AUTOMATIC_CREATION_TEST_CASES,
       TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES: dotEnv?.TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES ?? processEnv?.TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES,
-      TMS_CERT_VALIDATION: dotEnv?.TMS_CERT_VALIDATION ?? processEnv?.TMS_CERT_VALIDATION
+      TMS_CERT_VALIDATION: dotEnv?.TMS_CERT_VALIDATION ?? processEnv?.TMS_CERT_VALIDATION,
+      TMS_SYNC_STORAGE_ENABLED: dotEnv?.TMS_SYNC_STORAGE_ENABLED ?? processEnv?.TMS_SYNC_STORAGE_ENABLED,
+      TMS_SYNC_STORAGE_PORT: this.resolveProperties(dotEnv?.TMS_SYNC_STORAGE_PORT, processEnv?.TMS_SYNC_STORAGE_PORT),
     };
   }
 
@@ -150,6 +156,8 @@ function parseProcessEnvConfig(): Partial<EnvironmentOptions> {
     TMS_AUTOMATIC_CREATION_TEST_CASES: process.env.TMS_AUTOMATIC_CREATION_TEST_CASES,
     TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES: process.env.TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES,
     TMS_CONFIG_FILE: process.env.TMS_PRIVATE_TOKEN,
+    TMS_SYNC_STORAGE_ENABLED: process.env.TMS_SYNC_STORAGE_ENABLED,
+    TMS_SYNC_STORAGE_PORT: process.env.TMS_SYNC_STORAGE_PORT,
   };
 }
 

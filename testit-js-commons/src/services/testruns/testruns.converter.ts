@@ -2,7 +2,6 @@ import {
   AutoTestResultsForTestRunModel,
   TestRunState,
   TestRunV2ApiResult,
-  TestStatusType,
   // @ts-ignore
 } from "testit-api-client";
 import { BaseConverter, AdapterConfig, Outcome } from "../../common";
@@ -14,6 +13,7 @@ export interface ITestRunConverter {
   toLocalState(state: TestRunState): RunState;
   toLocalTestRun(testRun: TestRunV2ApiResult): TestRunGet;
   toOriginAutotestResult(autotest: AutotestResult): AutoTestResultsForTestRunModel;
+  toOriginAutotestResultInProgress(autotest: AutotestResult): AutoTestResultsForTestRunModel;
 }
 
 export class TestRunConverter extends BaseConverter implements ITestRunConverter {
@@ -42,6 +42,13 @@ export class TestRunConverter extends BaseConverter implements ITestRunConverter
       Skipped: "Incomplete"
     };
     return statusMap[status];
+  }
+
+  toOriginAutotestResultInProgress(autotest: AutotestResult): AutoTestResultsForTestRunModel {
+    return {
+      ...this.toOriginAutotestResult(autotest),
+      statusType: "InProgress",
+    };
   }
 
   toOriginAutotestResult(autotest: AutotestResult): AutoTestResultsForTestRunModel {

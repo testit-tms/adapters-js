@@ -66,5 +66,7 @@ export interface ITestRunsService {
   updateTestRun(testRun: TestRunGet): Promise<void>;
   startTestRun(testRunId: TestRunId): Promise<void>;
   completeTestRun(testRunId: TestRunId): Promise<void>;
+  /** First TMS write as InProgress (mirrors Python realtime in-progress before final load). */
+  postInProgressAutotestResult(testRunId: string, result: AutotestResult): Promise<void>;
   loadAutotests(testRunId: string, autotests: Array<AutotestResult>): Promise<void>;
 }

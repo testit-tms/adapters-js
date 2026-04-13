@@ -8,6 +8,7 @@ export default class TmsReporter {
   private readonly additions: Additions;
   private testCache = new Array<object>();
   private loadTestPromises = new Array<Promise<void>>();
+  private readonly setupPromise: Promise<void>;
   private groupMetadata!: Metadata;
   private groupPath!: string;
 
@@ -15,6 +16,7 @@ export default class TmsReporter {
     const config = new ConfigComposer().compose();
     this.strategy = StrategyFactory.create(config);
     this.additions = new Additions(config);
+    this.setupPromise = this.strategy.setup();
   }
 
   onFixtureBegin(name: string, path: string, meta: object): void {
@@ -33,7 +35,9 @@ export default class TmsReporter {
   }
 
   async onEnd(): Promise<void> {
+    await this.setupPromise;
     await Promise.all(this.loadTestPromises);
+    await this.strategy.teardown();
   }
 
   private async loadTest(name: string, testRunInfo: TestRunInfo, meta: object, testData: any): Promise<void> {

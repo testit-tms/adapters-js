@@ -1,13 +1,15 @@
 {
   "name": "testit-js-commons",
-  "version": "3.7.9",
+  "version": "4.0.0",
   "description": "JavaScript commons for Test IT",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "source": "src/index.ts",
   "scripts": {
-    "prebuild": "npm install",
-    "build": "tsc",
+    "prebuild": "npm install && npm --prefix src/sync-storage install && npm --prefix src/sync-storage run build",
+    "build": "tsc && npm run copy:sync-storage",
+    "copy:sync-storage": "node -e \"const fs=require('fs');fs.rmSync('lib/sync-storage',{recursive:true,force:true});fs.mkdirSync('lib/sync-storage',{recursive:true});fs.cpSync('src/sync-storage/dist','lib/sync-storage/dist',{recursive:true});fs.copyFileSync('src/sync-storage/index.d.ts','lib/sync-storage/index.d.ts');\"",
+    "pretest": "npm --prefix src/sync-storage run build",
     "watch": "tsc -w",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -40,6 +42,7 @@
     "testit-api-client": "7.2.6"
   },
   "files": [
-    "lib"
+    "lib",
+    "lib/sync-storage"
   ]
 }

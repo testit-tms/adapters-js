@@ -1,7 +1,7 @@
 import type { EnvironmentContext, JestEnvironmentConfig } from "@jest/environment";
 import { Event } from "jest-circus";
 import NodeEnvironment from "jest-environment-node";
-import { AutotestPost, AutotestResult, Link, Step, Additions, ConfigComposer, Utils, StrategyFactory, IStrategy } from "testit-js-commons";
+import { Attachment, AutotestPost, AutotestResult, Link, Step, Additions, ConfigComposer, Utils, StrategyFactory, IStrategy } from "testit-js-commons";
 import { debug } from "debug";
 import { AutotestData } from "./types";
 import { excludePath, mapParams } from "./utils";
@@ -38,23 +38,65 @@ export default class TestItEnvironment extends NodeEnvironment {
   private autotestResults: AutotestResult[] = [];
   private autotests: AutotestData[] = [];
   private readonly testPath: string;
-  private attachmentsQueue: Promise<void>[] = [];
+  private attachmentsQueue: Promise<Attachment[]>[] = [];
 
   private readonly strategy: IStrategy;
   private readonly additions: Additions;
+  private readonly usesGlobalStrategy: boolean;
+  private readonly unhandledRejectionHandler: (reason: unknown) => void;
+  private finalized = false;
 
   constructor(jestConfig: JestEnvironmentConfig, jestContext: EnvironmentContext) {
     super(jestConfig, jestContext);
     const config = new ConfigComposer().compose(jestConfig.projectConfig.testEnvironmentOptions);
 
     this.additions = new Additions(config);
-    this.strategy = StrategyFactory.create(config);
+    this.usesGlobalStrategy = Boolean(globalThis.strategy);
+    this.strategy = globalThis.strategy ?? StrategyFactory.create(config);
+    this.unhandledRejectionHandler = (reason: unknown) => {
+      console.error("Unhandled promise rejection in Jest environment:", this.formatError(reason));
+    };
 
     this.testPath = excludePath(jestContext.testPath, jestConfig.globalConfig.rootDir);
   }
 
   async setup() {
+    // Register as early as possible for this worker process.
+    process.on("unhandledRejection", this.unhandledRejectionHandler);
     await super.setup();
+    const testRunId = await this.strategy.testRunId;
+    const syncRunner = (this.strategy as any).syncStorageRunner;
+    console.log("[jest-env] setup start", {
+      pid: process.pid,
+      testRunId,
+      usesGlobalStrategy: this.usesGlobalStrategy,
+      syncRunnerActive: Boolean(syncRunner?.isActive?.()),
+      syncRunnerMaster: Boolean(syncRunner?.isMasterWorker?.()),
+    });
+    // Jest workers run in separate processes and do not share globalThis.strategy from globalSetup.
+    // For those workers, run setup locally to register in sync storage (master will publish in-progress).
+    if (!this.usesGlobalStrategy) {
+      try {
+        await this.strategy.setup();
+        const localSyncRunner = (this.strategy as any).syncStorageRunner;
+        console.log("[jest-env] local setup done", {
+          pid: process.pid,
+          testRunId,
+          syncRunnerActive: Boolean(localSyncRunner?.isActive?.()),
+          syncRunnerMaster: Boolean(localSyncRunner?.isMasterWorker?.()),
+        });
+      } catch (err: any) {
+        console.error("Failed local strategy.setup() in Jest environment:", this.formatError(err));
+      }
+    } else {
+      const sharedSyncRunner = (this.strategy as any).syncStorageRunner;
+      console.log("[jest-env] shared strategy mode", {
+        pid: process.pid,
+        testRunId,
+        syncRunnerActive: Boolean(sharedSyncRunner?.isActive?.()),
+        syncRunnerMaster: Boolean(sharedSyncRunner?.isMasterWorker?.()),
+      });
+    }
     this.global.testit = {
       externalId: this.setExternalId.bind(this),
       displayName: this.setDisplayName.bind(this),
@@ -75,6 +117,7 @@ export default class TestItEnvironment extends NodeEnvironment {
   }
 
   async teardown() {
+    process.off("unhandledRejection", this.unhandledRejectionHandler);
     await super.teardown();
   }
 
@@ -87,38 +130,60 @@ export default class TestItEnvironment extends NodeEnvironment {
   }
 
   async handleTestEvent(event: Event) {
-    switch (event.name) {
-      case "hook_start": {
-        this.startHookCapture(event.hook);
-        break;
+    try {
+      switch (event.name) {
+        case "hook_start": {
+          this.startHookCapture(event.hook);
+          break;
+        }
+        case "hook_success":
+        case "hook_failure": {
+          this.finishHookCapture(event.hook);
+          break;
+        }
+        case "test_fn_start": {
+          this.startTestCapture(event.test);
+          break;
+        }
+        case "test_fn_success":
+        case "test_fn_failure": {
+          this.finishTestCapture(event.test);
+          break;
+        }
+        case "test_done": {
+          await this.saveResult(event.test);
+          break;
+        }
+        case "test_skip": {
+          this.resetTest();
+          break;
+        }
+        case "run_finish": {
+          try {
+            await this.loadResults();
+          } catch (err: any) {
+            console.error("Failed to load results in Jest run_finish:", this.formatError(err));
+          } finally {
+            // In worker mode we run local setup, so finalization must happen here even if loadResults fails.
+            if (!this.finalized) {
+              this.finalized = true;
+              try {
+                await this.strategy.teardown();
+              } catch (err: any) {
+                console.error("Failed strategy.teardown() in Jest run_finish:", this.formatError(err));
+              }
+            }
+          }
+          break;
+        }
       }
-      case "hook_success":
-      case "hook_failure": {
-        this.finishHookCapture(event.hook);
-        break;
-      }
-      case "test_fn_start": {
-        this.startTestCapture(event.test);
-        break;
-      }
-      case "test_fn_success":
-      case "test_fn_failure": {
-        this.finishTestCapture(event.test);
-        break;
-      }
-      case "test_done": {
-        await this.saveResult(event.test);
-        break;
-      }
-      case "test_skip": {
-        this.resetTest();
-        break;
-      }
-      case "run_finish": {
-        await this.loadResults();
-        break;
-      }
+    } catch (err: any) {
+      console.error("Unhandled async error in Jest environment event handler:", this.formatError(err));
     }
+  }
+
+  private formatError(err: any): unknown {
+    return err?.body ?? err?.error ?? err;
   }
 
   startHookCapture(hook: Extract<Event, { name: "hook_start" }>["hook"]) {
@@ -177,7 +242,7 @@ export default class TestItEnvironment extends NodeEnvironment {
   async saveResult(test: Extract<Event, { name: "test_done" }>["test"]) {
     log("Saving result for %s", test.name);
 
-    await Promise.all(this.attachmentsQueue);
+    await Promise.allSettled(this.attachmentsQueue);
 
     const errorMessage = test.errors.length > 0 ? test.errors.map((err) => err[0]?.message).join("\n") : undefined;
 
@@ -201,7 +266,7 @@ export default class TestItEnvironment extends NodeEnvironment {
 
   async loadResults() {
     log("Waiting for attachments to be uploaded");
-    await Promise.all(this.attachmentsQueue);
+    await Promise.allSettled(this.attachmentsQueue);
 
     const results: AutotestResult[] = [];
     for (let i = 0; i < this.autotests.length; i++) {
@@ -228,7 +293,11 @@ export default class TestItEnvironment extends NodeEnvironment {
         externalKey: autotest.externalKey,
       };
 
-      await this.strategy.loadAutotest(autotestPost, result.outcome);
+      try {
+        await this.strategy.loadAutotest(autotestPost, result.outcome);
+      } catch (err: any) {
+        console.error("Failed to load autotest in Jest environment:", this.formatError(err));
+      }
 
       results.push({
         autoTestExternalId: autotestPost.externalId,
@@ -247,7 +316,11 @@ export default class TestItEnvironment extends NodeEnvironment {
     }
     log("Loading results");
 
-    await this.strategy.loadTestRun(results);
+    try {
+      await this.strategy.loadTestRun(results);
+    } catch (err: any) {
+      console.error("Failed to load test run in Jest environment:", this.formatError(err));
+    }
   }
 
   resetTest() {
@@ -297,10 +370,16 @@ export default class TestItEnvironment extends NodeEnvironment {
     const step = this.currentStepData;
     const currentType = this.currentType;
 
-    // @ts-ignore
-    const promise = this.additions.addAttachments(attachments, name).then((ids) => {
-      currentType === "test" ? autotest.attachments.push(...ids) : step.attachments?.push(...ids);
-    });
+    // @ts-ignore — overload: paths[] | text content + fileName
+    const promise = this.additions.addAttachments(attachments, name)
+      .then((ids) => {
+        currentType === "test" ? autotest.attachments.push(...ids) : step.attachments?.push(...ids);
+        return ids;
+      })
+      .catch((err: any) => {
+        console.log("Error uploading attachment (Jest). \n", err?.body ?? err?.error ?? err);
+        return [] as Attachment[];
+      });
 
     this.attachmentsQueue.push(promise);
     return promise;
