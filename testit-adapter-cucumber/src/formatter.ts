@@ -134,27 +134,38 @@ export default class TestItFormatter extends Formatter implements IFormatter {
   }
 
   async onTestRunFinished(_testRunFinished: TestRunFinished): Promise<void> {
-    await this.setupPromise;
-    await this.strategy.testRunId;
+    try {
+      await this.setupPromise;
+      await this.strategy.testRunId;
 
-    await Promise.all(this.attachmentsQueue);
+      await Promise.allSettled(this.attachmentsQueue);
 
-    const results = this.storage.getTestRunResults();
-    const autotests = this.storage.getAutotests();
+      const results = this.storage.getTestRunResults();
+      const autotests = this.storage.getAutotests();
 
-    await Promise.all(
-      autotests.map((autotestPost) => {
-        const result = results.find((result) => result.autoTestExternalId === autotestPost.externalId);
+      await Promise.allSettled(
+        autotests.map((autotestPost) => {
+          const result = results.find((r) => r.autoTestExternalId === autotestPost.externalId);
 
-        if (result !== undefined) {
-          return this.strategy.loadAutotest(autotestPost, result.outcome);
-        }
-      })
-    );
+          if (result !== undefined) {
+            return this.strategy.loadAutotest(autotestPost, result.outcome).catch((err) => {
+              console.error("Cucumber loadAutotest failed:", (err as any)?.body ?? (err as any)?.error ?? err);
+            });
+          }
+          return Promise.resolve();
+        }),
+      );
 
-    await this.strategy.loadTestRun(results);
+      await this.strategy.loadTestRun(results).catch((err) => {
+        console.error("Cucumber loadTestRun failed:", (err as any)?.body ?? (err as any)?.error ?? err);
+      });
 
-    await this.strategy.teardown();
+      await this.strategy.teardown().catch((err) => {
+        console.error("Cucumber teardown failed:", (err as any)?.body ?? (err as any)?.error ?? err);
+      });
+    } catch (err) {
+      console.error("Cucumber onTestRunFinished failed:", (err as any)?.body ?? (err as any)?.error ?? err);
+    }
   }
 
   addMessage(message: string): void {
@@ -180,14 +191,25 @@ export default class TestItFormatter extends Formatter implements IFormatter {
 
     const currentTestCaseId = this.currentTestCaseId;
 
-    // @ts-ignore
-    const promise = this.additions.addAttachments(attachments)
-      .then((ids) => {
-        this.storage.addAttachments(currentTestCaseId, ids);
-      })
-      .catch((err) => {
-        console.log("Error load attachments: \n", attachments, "\n", err);
-      });
+    const promise = (async () => {
+      const maxAttempts = 3;
+      let lastErr: unknown;
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+          // @ts-ignore — overload: string[]
+          const ids = await this.additions.addAttachments(attachments);
+          this.storage.addAttachments(currentTestCaseId, ids);
+          return;
+        } catch (err) {
+          lastErr = err;
+          console.log("Error load attachments (attempt): \n", attachments, "\n", attempt, "\n", err);
+          if (attempt < maxAttempts) {
+            await new Promise((r) => setTimeout(r, 400 * attempt));
+          }
+        }
+      }
+      console.error("Error load attachments (gave up): \n", attachments, "\n", lastErr);
+    })();
 
     this.attachmentsQueue.push(promise);
   }

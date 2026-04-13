@@ -1,5 +1,6 @@
 import type Cypress from "cypress";
 import * as fs from "fs";
+import * as path from "path";
 import { ConfigComposer, StrategyFactory, type IStrategy, Additions, type AdapterConfig, type Attachment, Link } from "testit-js-commons";
 import type { TestData, StepData } from "./converter.js";
 import { toAutotestPost, toAutotestResult } from "./converter.js";
@@ -25,6 +26,34 @@ import type {
 import { DEFAULT_RUNTIME_CONFIG, last } from "./utils.js";
 import { getRelativePath, getProjectRoot, parseTestPlan } from "./node-utils.js";
 import { Status } from "./models/status.js";
+
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+/** Wait until file size is stable (Cypress may still be finalizing e.g. MP4). */
+async function readBinaryFileWhenStable(filePath: string, timeoutMs = 15000, stableMs = 300): Promise<Buffer> {
+  const deadline = Date.now() + timeoutMs;
+  let lastSize = -1;
+  let stableSince = 0;
+  while (Date.now() < deadline) {
+    try {
+      const st = fs.statSync(filePath);
+      if (st.size > 0) {
+        if (st.size === lastSize) {
+          if (Date.now() - stableSince >= stableMs) {
+            return fs.readFileSync(filePath);
+          }
+        } else {
+          lastSize = st.size;
+          stableSince = Date.now();
+        }
+      }
+    } catch {
+      // file may not exist yet
+    }
+    await sleep(80);
+  }
+  return fs.readFileSync(filePath);
+}
 
 interface TestItSpecContext {
   specPath: string;
@@ -88,7 +117,9 @@ export class TmsCypress {
     let videoAttachmentIds: string[] = [];
     if ((!this.videoOnFailOnly || context.failed) && cypressVideoPath) {
       try {
-        const attachments = await this.additions.addAttachments([cypressVideoPath]);
+        const videoBuf = await readBinaryFileWhenStable(cypressVideoPath);
+        const videoName = path.basename(cypressVideoPath) || "recording.mp4";
+        const attachments = await this.additions.addAttachments(videoBuf, videoName);
         videoAttachmentIds = attachments.map((a: Attachment) => a.id);
       } catch {
         // ignore
@@ -337,9 +368,10 @@ export class TmsCypress {
       return;
     }
     try {
-      // Snapshot file content immediately to avoid path-based races
-      // when the same file can still be modified/overwritten by Cypress.
-      const content = fs.readFileSync(data.path);
+      const isVideoPath = /\.(mp4|webm|mkv)$/i.test(data.path);
+      const content = isVideoPath
+        ? await readBinaryFileWhenStable(data.path)
+        : fs.readFileSync(data.path);
       const attachments = await this.additions.addAttachments(content, data.name);
       const ids = attachments.map((a: Attachment) => a.id);
       target.attachmentIds.push(...ids);
