@@ -16,7 +16,7 @@ type RegisterResponse = {
 const SyncStorageClient = require("../../sync-storage/dist/index");
 
 export class SyncStorageRunner implements ISyncStorageRunner {
-  private static readonly VERSION = "v0.2.10";
+  private static readonly VERSION = "v0.2.11";
   private static readonly STARTUP_TIMEOUT_MS = 30000;
   private static readonly STARTUP_POLL_MS = 1000;
   private static readonly PROCESS_WARMUP_MS = 2000;
