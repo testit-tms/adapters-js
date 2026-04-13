@@ -331,11 +331,14 @@ export class TmsCypress {
     context: TestItSpecContext,
     data: { name: string; path: string; contentType: string },
   ) => {
+    const target = last(context.stepStack) ?? context.currentTestData;
+    if (!target) {
+      return;
+    }
     try {
       const attachments = await this.additions.addAttachments([data.path]);
       const ids = attachments.map((a: Attachment) => a.id);
-      const target = last(context.stepStack) ?? context.currentTestData;
-      if (target) target.attachmentIds.push(...ids);
+      target.attachmentIds.push(...ids);
     } catch {
       // ignore
     }
@@ -345,12 +348,15 @@ export class TmsCypress {
     context: TestItSpecContext,
     data: { name: string; content: string; encoding: BufferEncoding; contentType: string },
   ) => {
+    const target = last(context.stepStack) ?? context.currentTestData;
+    if (!target) {
+      return;
+    }
     try {
       const buffer = Buffer.from(data.content, data.encoding);
       const attachments = await this.additions.addAttachments(buffer, data.name);
       const ids = attachments.map((a: Attachment) => a.id);
-      const target = last(context.stepStack) ?? context.currentTestData;
-      if (target) target.attachmentIds.push(...ids);
+      target.attachmentIds.push(...ids);
     } catch {
       // ignore
     }
