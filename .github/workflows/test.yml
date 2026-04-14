@@ -25,7 +25,6 @@ env:
   TMS_IS_CI: true
   TMS_PRIVATE_TOKEN: ${{ secrets.TESTIT_PRIVATE_TOKEN }}
   TMS_URL: ${{ secrets.TESTIT_URL }}
-  TMS_SYNC_STORAGE_PORT: 49153
 jobs:
   test:
     name: ${{ matrix.project_name }}
@@ -64,6 +63,7 @@ jobs:
       TMS_TEST_RUN_NAME: ${{ matrix.project_name }} TestRun
       TMS_IMPORT_REALTIME: false
       TMS_ADAPTER_MODE: 1
+      TMS_SYNC_STORAGE_PORT: 49153
       #TMS_DEBUG_LOAD_TEST_RUN: 1
     steps:
       - name: Checkout adapters-js
@@ -169,15 +169,15 @@ jobs:
           
           # start sync storage before all other processes
           ../../scripts/get_sync_storage.sh $SYNC_STORAGE_VERSION
-          nohup .caches/syncstorage-linux-amd64 --testRunId ${{ env.TMS_TEST_RUN_ID }} --port 49152 \
+          nohup .caches/syncstorage-linux-amd64 --testRunId ${{ env.TMS_TEST_RUN_ID }} --port ${{ env.TMS_SYNC_STORAGE_PORT }} \
           --baseURL ${{ env.TMS_URL }} --privateToken ${{ env.TMS_PRIVATE_TOKEN }}  > service.log 2>&1 &  
-          curl -v http://127.0.0.1:49152/health || true
+          curl -v http://127.0.0.1:${{ env.TMS_SYNC_STORAGE_PORT }}/health || true
           
           
           npm run test || true 
 
           # sleep 10
-          curl -v http://127.0.0.1:49152/wait-completion?testRunId=${{ env.TMS_TEST_RUN_ID }} || true
+          curl -v http://127.0.0.1:${{ env.TMS_SYNC_STORAGE_PORT }}/wait-completion?testRunId=${{ env.TMS_TEST_RUN_ID }} || true
           cat service.log
 
       - name: Validate
@@ -194,7 +194,7 @@ jobs:
           npm run test || true 
 
           # sleep 10
-          curl -v http://127.0.0.1:49152/wait-completion || true
+          curl -v http://127.0.0.1:${{ env.TMS_SYNC_STORAGE_PORT }}/wait-completion || true
           # cat service.log
 
       - name: Validate Again
