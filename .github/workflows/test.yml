@@ -25,6 +25,7 @@ env:
   TMS_IS_CI: true
   TMS_PRIVATE_TOKEN: ${{ secrets.TESTIT_PRIVATE_TOKEN }}
   TMS_URL: ${{ secrets.TESTIT_URL }}
+  TMS_SYNC_STORAGE_PORT: 49153
 jobs:
   test:
     name: ${{ matrix.project_name }}
