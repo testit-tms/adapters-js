@@ -28,9 +28,9 @@ export class TestMetadataHelper extends Helper {
       this.metadata.links = [
         {
           title: linksOrName,
+          type: type ?? "Related",
           url,
           description,
-          type,
         },
       ];
     }
