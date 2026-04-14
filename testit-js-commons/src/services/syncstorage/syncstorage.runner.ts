@@ -127,7 +127,7 @@ export class SyncStorageRunner implements ISyncStorageRunner {
 
   public async sendInProgressTestResult(model: TestResultCutModel): Promise<boolean> {
     if (!this.running || !this.isMaster || this.alreadyInProgress || this.inProgressPublishing) {
-      console.log("[syncstorage] skip in-progress cut publish", {
+      console.debug("[syncstorage] skip in-progress cut publish", {
         reason: {
           notRunning: !this.running,
           notMaster: !this.isMaster,
@@ -143,7 +143,7 @@ export class SyncStorageRunner implements ISyncStorageRunner {
       console.warn(
         "Sync storage in-progress payload is incomplete; skipping publish.",
       );
-      console.log("[syncstorage] incomplete in-progress cut payload", {
+      console.debug("[syncstorage] incomplete in-progress cut payload", {
         hasProjectId: Boolean(model.projectId),
         hasAutoTestExternalId: Boolean(model.autoTestExternalId),
         hasStatusCode: Boolean(model.statusCode),
@@ -166,18 +166,18 @@ export class SyncStorageRunner implements ISyncStorageRunner {
         SyncStorageRunner.RETRY_COUNT
       );
       this.alreadyInProgress = true;
-      console.log("[syncstorage] alreadyInProgress set", {
+      console.debug("[syncstorage] alreadyInProgress set", {
         workerPid: this.workerPid,
         autoTestExternalId: model.autoTestExternalId,
       });
-      console.log("[syncstorage] in-progress cut published", {
+      console.debug("[syncstorage] in-progress cut published", {
         workerPid: this.workerPid,
         autoTestExternalId: model.autoTestExternalId,
       });
       return true;
     } catch (error) {
       console.warn(`Sync storage in-progress publish failed: ${error}`);
-      console.log("[syncstorage] in-progress cut publish failed", {
+      console.debug("[syncstorage] in-progress cut publish failed", {
         workerPid: this.workerPid,
         autoTestExternalId: model.autoTestExternalId,
       });

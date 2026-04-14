@@ -51,7 +51,7 @@ export class BaseConverter implements IBaseConverter {
     // @ts-ignore
     return {
       ...link,
-      type: link.type ? this.toOriginLinkType(link.type) : undefined,
+      type: link.type ? this.toOriginLinkType(link.type) : ("Related" as unknown as OriginLinkType),
       hasInfo: true,
     };
   }
@@ -61,7 +61,7 @@ export class BaseConverter implements IBaseConverter {
       url: link.url,
       title: link.title ?? link.url,
       description: link.description ?? undefined,
-      type: link.type ? this.toLocalLinkType(link.type) : undefined,
+      type: link.type ? this.toLocalLinkType(link.type) : ("Related" as LinkType),
     };
   }
 
