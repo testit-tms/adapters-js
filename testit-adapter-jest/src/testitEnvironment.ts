@@ -66,7 +66,7 @@ export default class TestItEnvironment extends NodeEnvironment {
     await super.setup();
     const testRunId = await this.strategy.testRunId;
     const syncRunner = (this.strategy as any).syncStorageRunner;
-    console.log("[jest-env] setup start", {
+    console.debug("[jest-env] setup start", {
       pid: process.pid,
       testRunId,
       usesGlobalStrategy: this.usesGlobalStrategy,
@@ -79,7 +79,7 @@ export default class TestItEnvironment extends NodeEnvironment {
       try {
         await this.strategy.setup();
         const localSyncRunner = (this.strategy as any).syncStorageRunner;
-        console.log("[jest-env] local setup done", {
+        console.debug("[jest-env] local setup done", {
           pid: process.pid,
           testRunId,
           syncRunnerActive: Boolean(localSyncRunner?.isActive?.()),
@@ -90,7 +90,7 @@ export default class TestItEnvironment extends NodeEnvironment {
       }
     } else {
       const sharedSyncRunner = (this.strategy as any).syncStorageRunner;
-      console.log("[jest-env] shared strategy mode", {
+      console.debug("[jest-env] shared strategy mode", {
         pid: process.pid,
         testRunId,
         syncRunnerActive: Boolean(sharedSyncRunner?.isActive?.()),
