@@ -132,7 +132,7 @@ export class TestRunsService extends BaseService implements ITestRunsService {
   }
 
   private async sendAutotestResultWithRetry(testRunId: string, autotestResult: any): Promise<void> {
-    const maxAttempts = 3;
+    const maxAttempts = 5;
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         await this._client.setAutoTestResultsForTestRun(testRunId, { autoTestResultsForTestRunModel: [autotestResult] });
@@ -152,7 +152,7 @@ export class TestRunsService extends BaseService implements ITestRunsService {
         if (!transient || attempt === maxAttempts) {
           throw err;
         }
-        await new Promise((resolve) => setTimeout(resolve, 300 * attempt));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     }
   }
