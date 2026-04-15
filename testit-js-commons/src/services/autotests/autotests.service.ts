@@ -43,6 +43,7 @@ export class AutotestsService extends BaseService implements IAutotestService {
       .catch((err) => handleHttpError(err, `Failed update autotest "${autotestPost.name}"`));
   }
 
+  // sometimes status is lowercase
   public async loadAutotest(autotest: AutotestPost, status: string): Promise<void> {
     const originAutotest = await this.getAutotestByExternalId(autotest.externalId);
 
@@ -57,14 +58,17 @@ export class AutotestsService extends BaseService implements IAutotestService {
       classname: autotest.classname ?? originAutotest.classname,
     };
 
-    switch (status) {
-      case Status.PASSED:
+    // fix the issue with lowercase status
+    const currentStatus = status.toLowerCase();
+    
+    switch (currentStatus) {
+      case "passed":
         await this.updateAutotest(mergedAutotest);
         return;
-      case Status.FAILED:
+      case "failed":
         await this.updateAutotestFromFailed(originAutotest, mergedAutotest);
         return;
-      case Status.SKIPPED:
+      case "skipped":
         if (originAutotest.name != undefined && originAutotest.externalId != undefined) {
           await this.updateAutotestFromFailed(originAutotest, mergedAutotest);
           return;
