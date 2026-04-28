@@ -161,7 +161,15 @@ class TmsReporter implements Reporter {
     for (const attachment of result.attachments) {
       if (!attachment.body) {
         if (attachment.path && attachment.name !== "screenshot") {
-          const content = Utils.readBufferSync(attachment.path);
+          let content: Buffer;
+          try {
+            content = Utils.readBufferSync(attachment.path);
+          } catch (err: any) {
+            if (err?.code === "ENOENT") {
+              continue;
+            }
+            throw err;
+          }
           try {
             const ids: any = await this.additions.addAttachments(content, attachment.name);
             autotestData.addAttachments?.push(...ids);
