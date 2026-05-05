@@ -9,7 +9,7 @@ import {
 import { ConfigComposer, StrategyFactory, IStrategy, Utils, Additions, Attachment, AdapterConfig, BaseStrategy } from "testit-js-commons";
 import { Converter } from "./converter";
 import { MetadataMessage } from "./labels";
-import { isAllStepsWithPassedOutcome, processAttachmentExtensions, stepAttachRegexp } from "./utils";
+import { getTestStatus, processAttachmentExtensions, stepAttachRegexp } from "./utils";
 import { Result, ResultAttachment } from "./models/result";
 import path from "path";
 
@@ -286,9 +286,7 @@ class TmsReporter implements Reporter {
         : [...this.stepsMap.keys()].filter((step: TestStep) => this.stepsMap.get(step) === test);
     const stepResults = Converter.convertTestStepsToSteps(rawSteps, this.attachmentsMap);
 
-    if (!isAllStepsWithPassedOutcome(stepResults)) {
-      result.status = "failed";
-    }
+    result.status = getTestStatus(test);
 
     autotest.steps = Converter.convertTestStepsToShortSteps(rawSteps);
 
