@@ -107,6 +107,7 @@ export class Converter {
       return {
         title: step.title,
         outcome: step.error || !isAllStepsWithPassedOutcome(steps) ? Status.FAILED : Status.PASSED,
+        info: JSON.stringify(step.error),
         steps: steps,
         attachments: [...attachmentsMap.keys()].filter((attachmentId: Attachment) => attachmentsMap.get(attachmentId) === step),
       };
