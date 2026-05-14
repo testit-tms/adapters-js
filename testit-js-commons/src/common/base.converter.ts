@@ -48,10 +48,18 @@ export class BaseConverter implements IBaseConverter {
   }
 
   toOriginLink(link: Link): LinkPostModel {
+    const defaultType = "Related" as unknown as OriginLinkType;
+    let type = defaultType;
+    if (link.type) {
+      const mapped = this.toOriginLinkType(link.type);
+      if (mapped != null) {
+        type = mapped;
+      }
+    }
     // @ts-ignore
     return {
       ...link,
-      type: link.type ? this.toOriginLinkType(link.type) : ("Related" as unknown as OriginLinkType),
+      type,
       hasInfo: true,
     };
   }
