@@ -3,7 +3,7 @@ import * as TestitApiClient from "testit-api-client";
 // @ts-ignore
 import { AutoTestSearchIncludeApiModel, AutoTestSearchApiModel } from "testit-api-client";
 
-import { BaseService, AdapterConfig, escapeHtmlInObject } from "../../common";
+import { BaseService, AdapterConfig, escapeHtmlInObject, withHttpRetry } from "../../common";
 import { AutotestGet, AutotestPost, type IAutotestService, Status } from "./autotests.type";
 import { AutotestConverter, type IAutotestConverter } from "./autotests.converter";
 import { handleHttpError } from "./autotests.handler";
@@ -12,9 +12,6 @@ import logger from "../../logger";
 export class AutotestsService extends BaseService implements IAutotestService {
   protected _client;
   protected _converter: IAutotestConverter;
-  private MAX_TRIES: number = 10;
-  private WAITING_TIME: number = 100;
-
   constructor(protected readonly config: AdapterConfig) {
     super(config);
     this._client = new TestitApiClient.AutoTestsApi();
@@ -26,8 +23,8 @@ export class AutotestsService extends BaseService implements IAutotestService {
     const autotestPost = this._converter.toOriginAutotest(autotest);
     escapeHtmlInObject(autotestPost);
 
-    return await this._client
-      .createAutoTest({ autoTestCreateApiModel: autotestPost })
+    return await withHttpRetry(() => this._client
+      .createAutoTest({ autoTestCreateApiModel: autotestPost }))
       .then(() => logger.log(`Create autotest "${autotest.name}".`))
       // @ts-ignore
       .catch((err) => handleHttpError(err, `Failed create autotest "${autotestPost.name}"`));
@@ -37,8 +34,8 @@ export class AutotestsService extends BaseService implements IAutotestService {
     const autotestPost = this._converter.toOriginAutotest(autotest);
     escapeHtmlInObject(autotestPost);
 
-    await this._client
-      .updateAutoTest({ autoTestUpdateApiModel: autotestPost })
+    await withHttpRetry(() => this._client
+      .updateAutoTest({ autoTestUpdateApiModel: autotestPost }))
       .then(() => logger.log(`Update autotest "${autotest.name}".`))
       // @ts-ignore
       .catch((err) => handleHttpError(err, `Failed update autotest "${autotestPost.name}"`));
@@ -105,37 +102,23 @@ export class AutotestsService extends BaseService implements IAutotestService {
 
   public async linkToWorkItems(internalId: string, workItemIds: Array<string>) {
     const promises = workItemIds.map(async (workItemId) => {
-      for (let attempts = 0; attempts < this.MAX_TRIES; attempts++) {
-        try {
-          await this._client.linkAutoTestToWorkItem(internalId, { workItemIdApiModel: { id: workItemId } });
-          logger.log(`Link autotest ${internalId} to workitem ${workItemId} is successfully`);
-
-          return;
-        // @ts-ignore
-        } catch (e: any) {
-          logger.error(`Cannot link autotest ${internalId} to work item ${workItemId}`);
-          // logger.error(e);
-
-          await new Promise((f) => setTimeout(f, this.WAITING_TIME));
-        }
+      try {
+        await this._client.linkAutoTestToWorkItem(internalId, { workItemIdApiModel: { id: workItemId } });
+        logger.log(`Link autotest ${internalId} to workitem ${workItemId} is successfully`);
+      } catch (e: any) {
+        logger.error(`Cannot link autotest ${internalId} to work item ${workItemId}`, e?.body ?? e?.error ?? e);
       }
     });
 
-    await Promise.all(promises).catch((err) => handleHttpError(err, "Failed link work item"));
+    await Promise.all(promises);
   }
 
   public async unlinkToWorkItem(internalId: string, workItemId: string): Promise<void> {
-    for (let attempts = 0; attempts < this.MAX_TRIES; attempts++) {
-      try {
-        await this._client.deleteAutoTestLinkFromWorkItem(internalId, { workItemId: workItemId });
-        logger.log(`Unlink autotest ${internalId} from workitem ${workItemId} is successfully`);
-
-        return;
-      } catch (e) {
-        logger.log(`Cannot unlink autotest ${internalId} to work item ${workItemId}: ${e}`);
-
-        await new Promise((f) => setTimeout(f, this.WAITING_TIME));
-      }
+    try {
+      await this._client.deleteAutoTestLinkFromWorkItem(internalId, { workItemId: workItemId });
+      logger.log(`Unlink autotest ${internalId} from workitem ${workItemId} is successfully`);
+    } catch (e) {
+      logger.log(`Cannot unlink autotest ${internalId} from work item ${workItemId}: ${e}`);
     }
   }
 

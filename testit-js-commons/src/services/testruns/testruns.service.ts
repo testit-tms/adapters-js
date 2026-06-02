@@ -1,7 +1,7 @@
 // @ts-ignore
 import * as TestitApiClient from "testit-api-client";
 import { AdapterConfig, BaseService } from "../../common";
-import { escapeHtmlInObject, escapeHtmlInObjectArray, logTmsLoadTestRun } from "../../common/utils";
+import { escapeHtmlInObject, escapeHtmlInObjectArray, logTmsLoadTestRun, withHttpRetry } from "../../common/utils";
 import { type ITestRunsService, TestRunId, AutotestResult, TestRunGet } from "./testruns.type";
 import { type ITestRunConverter, TestRunConverter } from "./testruns.converter";
 import { TestRunErrorHandler } from "./testruns.handler";
@@ -10,7 +10,6 @@ import logger from "../../logger";
 export class TestRunsService extends BaseService implements ITestRunsService {
   protected _client;
   protected _converter: ITestRunConverter;
-
   constructor(protected readonly config: AdapterConfig) {
     super(config);
     this._client = new TestitApiClient.TestRunsApi();
@@ -103,7 +102,7 @@ export class TestRunsService extends BaseService implements ITestRunsService {
       statusCode: model.statusCode,
       hasStartedOn: Boolean(model.startedOn),
     });
-    await this._client.setAutoTestResultsForTestRun(testRunId, { autoTestResultsForTestRunModel: [model] });
+    await this.sendAutotestResultWithRetry(testRunId, model);
     logTmsLoadTestRun("POST setAutoTestResults (InProgress stub) done", {
       autoTestExternalId: model.autoTestExternalId,
     });
@@ -133,28 +132,10 @@ export class TestRunsService extends BaseService implements ITestRunsService {
   }
 
   private async sendAutotestResultWithRetry(testRunId: string, autotestResult: any): Promise<void> {
-    const maxAttempts = 5;
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      try {
-        await this._client.setAutoTestResultsForTestRun(testRunId, { autoTestResultsForTestRunModel: [autotestResult] });
-        return;
-      } catch (err: any) {
-        const code = err?.code;
-        const status = err?.status ?? err?.statusCode;
-        const msg = String(err?.message ?? err ?? "");
-        const transient =
-          code === "ECONNRESET" ||
-          code === "ETIMEDOUT" ||
-          code === "EPIPE" ||
-          code === "ECONNABORTED" ||
-          msg.includes("socket hang up") ||
-          msg.includes("read ECONNRESET") ||
-          (typeof status === "number" && status >= 500);
-        if (!transient || attempt === maxAttempts) {
-          throw err;
-        }
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
-    }
+    await withHttpRetry(() =>
+      this._client.setAutoTestResultsForTestRun(testRunId, {
+        autoTestResultsForTestRunModel: [autotestResult],
+      }),
+    );
   }
 }
