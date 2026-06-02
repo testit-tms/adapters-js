@@ -45,6 +45,7 @@ export class ConfigComposer implements IConfigComposer {
       certValidation: file.certValidation ?? stringToBoolean(env?.TMS_CERT_VALIDATION) ?? base?.certValidation ?? true,
       syncStorageEnabled: file.syncStorageEnabled ?? stringToBoolean(env?.TMS_SYNC_STORAGE_ENABLED) ?? base?.syncStorageEnabled ?? true,
       syncStoragePort: this.resolveAllProperties(file.syncStoragePort, env?.TMS_SYNC_STORAGE_PORT, base?.syncStoragePort) || "49152",
+      importRealtime: file.importRealtime ?? stringToBoolean(env?.TMS_IMPORT_REALTIME) ?? base?.importRealtime ?? false,
     };
   }
 
@@ -62,6 +63,7 @@ export class ConfigComposer implements IConfigComposer {
       certValidation: stringToBoolean(env?.TMS_CERT_VALIDATION) ?? base?.certValidation ?? true,
       syncStorageEnabled: stringToBoolean(env?.TMS_SYNC_STORAGE_ENABLED) ?? base?.syncStorageEnabled ?? true,
       syncStoragePort: this.resolveProperties(env?.TMS_SYNC_STORAGE_PORT, base?.syncStoragePort) || "49152",
+      importRealtime: stringToBoolean(env?.TMS_IMPORT_REALTIME) ?? base?.importRealtime ?? false,
     };
   }
 
@@ -79,6 +81,7 @@ export class ConfigComposer implements IConfigComposer {
       TMS_CERT_VALIDATION: dotEnv?.TMS_CERT_VALIDATION ?? processEnv?.TMS_CERT_VALIDATION,
       TMS_SYNC_STORAGE_ENABLED: dotEnv?.TMS_SYNC_STORAGE_ENABLED ?? processEnv?.TMS_SYNC_STORAGE_ENABLED,
       TMS_SYNC_STORAGE_PORT: this.resolveProperties(dotEnv?.TMS_SYNC_STORAGE_PORT, processEnv?.TMS_SYNC_STORAGE_PORT),
+      TMS_IMPORT_REALTIME: dotEnv?.TMS_IMPORT_REALTIME ?? processEnv?.TMS_IMPORT_REALTIME,
     };
   }
 
@@ -158,6 +161,7 @@ function parseProcessEnvConfig(): Partial<EnvironmentOptions> {
     TMS_CONFIG_FILE: process.env.TMS_PRIVATE_TOKEN,
     TMS_SYNC_STORAGE_ENABLED: process.env.TMS_SYNC_STORAGE_ENABLED,
     TMS_SYNC_STORAGE_PORT: process.env.TMS_SYNC_STORAGE_PORT,
+    TMS_IMPORT_REALTIME: process.env.TMS_IMPORT_REALTIME,
   };
 }
 

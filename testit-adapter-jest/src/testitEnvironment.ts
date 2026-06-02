@@ -45,10 +45,13 @@ export default class TestItEnvironment extends NodeEnvironment {
   private readonly usesGlobalStrategy: boolean;
   private readonly unhandledRejectionHandler: (reason: unknown) => void;
   private finalized = false;
+  private readonly importRealtime: boolean;
+  private currentTestAttachmentsQueue: Promise<Attachment[]>[] = [];
 
   constructor(jestConfig: JestEnvironmentConfig, jestContext: EnvironmentContext) {
     super(jestConfig, jestContext);
     const config = new ConfigComposer().compose(jestConfig.projectConfig.testEnvironmentOptions);
+    this.importRealtime = Boolean(config.importRealtime);
 
     this.additions = new Additions(config);
     this.usesGlobalStrategy = Boolean(globalThis.strategy);
@@ -242,7 +245,7 @@ export default class TestItEnvironment extends NodeEnvironment {
   async saveResult(test: Extract<Event, { name: "test_done" }>["test"]) {
     log("Saving result for %s", test.name);
 
-    await Promise.allSettled(this.attachmentsQueue);
+    await Promise.allSettled(this.currentTestAttachmentsQueue);
 
     const errorMessage = test.errors.length > 0 ? test.errors.map((err) => err[0]?.message).join("\n") : undefined;
 
@@ -259,12 +262,55 @@ export default class TestItEnvironment extends NodeEnvironment {
       links: this.additions.links,
     };
 
-    this.autotests.push(this.autotestData);
-    this.autotestResults.push(result);
+    if (this.importRealtime) {
+      const setupSteps = this.beforeAllSteps.concat(this.autotestData.beforeEach);
+      const teardownSteps = this.autotestData.afterEach;
+      const autotestPost: AutotestPost = {
+        externalId: this.autotestData.externalId,
+        title: this.autotestData.title,
+        name: this.autotestData.name,
+        description: this.autotestData.description,
+        links: this.autotestData.links,
+        labels: this.autotestData.labels,
+        tags: this.autotestData.tags,
+        namespace: this.autotestData.namespace ?? Utils.getDir(this.testPath),
+        classname: this.autotestData.classname ?? Utils.getFileName(this.testPath),
+        setup: setupSteps,
+        steps: this.autotestData.testSteps,
+        teardown: teardownSteps,
+        externalKey: this.autotestData.externalKey,
+      };
+      try {
+        await this.strategy.loadAutotest(autotestPost, result.outcome);
+        await this.strategy.loadTestRun([{
+          autoTestExternalId: autotestPost.externalId,
+          outcome: result.outcome,
+          startedOn: result.startedOn,
+          duration: result.duration,
+          attachments: result.attachments,
+          message: result.message,
+          links: result.links,
+          stepResults: this.autotestData.testSteps,
+          traces: result.traces,
+          setupResults: setupSteps,
+          teardownResults: teardownSteps,
+          parameters: this.autotestData.parameters !== undefined ? mapParams(this.autotestData.parameters) : undefined,
+        }]);
+      } catch (err: any) {
+        console.error("Failed realtime send in Jest environment:", this.formatError(err));
+      }
+    } else {
+      this.autotests.push(this.autotestData);
+      this.autotestResults.push(result);
+    }
+    this.currentTestAttachmentsQueue = [];
     this.resetTest();
   }
 
   async loadResults() {
+    if (this.importRealtime) {
+      return;
+    }
     log("Waiting for attachments to be uploaded");
     await Promise.allSettled(this.attachmentsQueue);
 
@@ -382,6 +428,7 @@ export default class TestItEnvironment extends NodeEnvironment {
       });
 
     this.attachmentsQueue.push(promise);
+    this.currentTestAttachmentsQueue.push(promise);
     return promise;
   }
 

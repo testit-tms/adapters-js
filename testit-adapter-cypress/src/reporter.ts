@@ -68,6 +68,7 @@ interface TestItSpecContext {
 export class TmsCypress {
   private strategy: IStrategy;
   private additions: Additions;
+  private readonly importRealtime: boolean;
   specContextByAbsolutePath = new Map<string, TestItSpecContext>();
   videoOnFailOnly = false;
 
@@ -75,7 +76,8 @@ export class TmsCypress {
     const { videoOnFailOnly = false, ...rest } = config;
     this.videoOnFailOnly = videoOnFailOnly;
     const adapterConfig = (rest as { tmsOptions?: AdapterConfig }).tmsOptions ?? rest as AdapterConfig;
-    const composed = new ConfigComposer().compose(adapterConfig);
+    const composed = new ConfigComposer().compose(adapterConfig) as AdapterConfig & { importRealtime?: boolean };
+    this.importRealtime = Boolean(composed.importRealtime);
     this.strategy = StrategyFactory.create(composed);
     this.additions = new Additions(composed);
   }
@@ -113,6 +115,10 @@ export class TmsCypress {
   endSpec = async (specAbsolutePath: string, cypressVideoPath?: string) => {
     const context = this.specContextByAbsolutePath.get(specAbsolutePath);
     if (!context) return;
+    if (this.importRealtime) {
+      this.specContextByAbsolutePath.delete(specAbsolutePath);
+      return;
+    }
 
     let videoAttachmentIds: string[] = [];
     if ((!this.videoOnFailOnly || context.failed) && cypressVideoPath) {
@@ -186,10 +192,10 @@ export class TmsCypress {
           this.#skipTest(context, (message as CypressTestSkipMessage).data);
           break;
         case "cypress_skipped_test":
-          this.#addSkippedTest(context, (message as CypressSkippedTestMessage).data);
+          await this.#addSkippedTest(context, (message as CypressSkippedTestMessage).data);
           break;
         case "cypress_test_end":
-          this.#stopTest(context, (message as CypressTestEndMessage).data);
+          await this.#stopTest(context, (message as CypressTestEndMessage).data);
           break;
         case "cypress_step_start":
           this.#startStep(context, (message as CypressStepStartMessage).data);
@@ -283,7 +289,7 @@ export class TmsCypress {
     }
   };
 
-  #addSkippedTest = (context: TestItSpecContext, data: CypressSkippedTestMessage["data"]) => {
+  #addSkippedTest = async (context: TestItSpecContext, data: CypressSkippedTestMessage["data"]) => {
     const alreadyAdded =
       context.completedTests.some((c) => c.fullNameSuffix === data.fullNameSuffix) ||
       (context.currentTestData?.fullNameSuffix === data.fullNameSuffix);
@@ -303,21 +309,37 @@ export class TmsCypress {
       attachmentIds: [],
       externalKey: data.fullNameSuffix,
     };
+    if (this.importRealtime) {
+      await this.#sendTestResult(context.specPath, t);
+      return;
+    }
     context.completedTests.push(t);
   };
 
-  #stopTest = (context: TestItSpecContext, data: CypressTestEndMessage["data"]) => {
+  #stopTest = async (context: TestItSpecContext, data: CypressTestEndMessage["data"]) => {
     if (context.currentTestData) {
       context.currentTestData.duration = data.duration;
       if (context.currentTestData.start != null) {
         context.currentTestData.stop = context.currentTestData.start + data.duration;
       }
       context.currentTestData.outcome ??= Status.PASSED;
-      context.completedTests.push(context.currentTestData);
+      if (this.importRealtime) {
+        await this.#sendTestResult(context.specPath, context.currentTestData);
+      } else {
+        context.completedTests.push(context.currentTestData);
+      }
       context.currentTestData = null;
     }
     context.stepStack = [];
     context.stepsByFrontEndId.clear();
+  };
+
+  #sendTestResult = async (specPath: string, testData: TestData, extraAttachmentIds: string[] = []) => {
+    const posixSpecPath = specPath.replace(/\\/g, "/");
+    const autotest = toAutotestPost(posixSpecPath, testData);
+    await this.strategy.loadAutotest(autotest, testData.outcome);
+    const result = toAutotestResult(autotest.externalId, testData, testData.outcome, extraAttachmentIds);
+    await this.strategy.loadTestRun([result]);
   };
 
   #startStep = (context: TestItSpecContext, data: CypressStepStartMessage["data"]) => {

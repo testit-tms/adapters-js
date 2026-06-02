@@ -20,6 +20,7 @@ export type ReporterOptions = {
   environmentInfo?: Record<string, string>;
   tmsOptions?: AdapterConfig;
 };
+type ReporterAdapterConfig = AdapterConfig & { importRealtime?: boolean };
 
 class TmsReporter implements Reporter {
   config!: FullConfig;
@@ -33,10 +34,13 @@ class TmsReporter implements Reporter {
   private attachmentsMap = new Map<Attachment, TestStep>();
   private loadTestPromises = new Array<Promise<void>>();
   private setupPromise: Promise<void> = Promise.resolve();
+  private readonly adapterConfig: ReporterAdapterConfig;
+  private bufferedResults: Array<{ test: TestCase; result: Result }> = [];
 
   constructor(options: ReporterOptions) {
     this.options = { suiteTitle: true, detail: true, ...options };
-    const config = new ConfigComposer().compose(options.tmsOptions);
+    const config = new ConfigComposer().compose(options.tmsOptions) as ReporterAdapterConfig;
+    this.adapterConfig = config;
     this.strategy = StrategyFactory.create(config);
     this.additions = new Additions(config);
   }
@@ -52,20 +56,19 @@ class TmsReporter implements Reporter {
   }
 
   onTestEnd(test: TestCase, result: TestResult): void {
-    this.loadTestPromises.push(
-      this.setupPromise.then(() => this.loadTest(
-        test,
-        {
-          status: result.status,
-          attachments: this._processAttachmentsWithExtensions(result),
-          duration: result.duration,
-          errors: result.errors,
-          error: result.error,
-          steps: result.steps,
-        })).catch((err) => {
-          console.log("Error processing test result. \n", err?.body ?? err?.error ?? err);
-        })
-    );
+    const currentResult: Result = {
+      status: result.status,
+      attachments: this._processAttachmentsWithExtensions(result),
+      duration: result.duration,
+      errors: result.errors,
+      error: result.error,
+      steps: result.steps,
+    };
+    if (this.adapterConfig.importRealtime) {
+      this.loadTestPromises.push(this.runLoadTest(test, currentResult));
+      return;
+    }
+    this.bufferedResults.push({ test, result: currentResult });
   }
 
   // fix issues with trace and video files on playwright
@@ -98,6 +101,9 @@ class TmsReporter implements Reporter {
       await this.setupPromise.catch((err: any) => {
         console.error("TMS Playwright setup failed:", err?.body ?? err?.error ?? err);
       });
+      if (!this.adapterConfig.importRealtime) {
+        await Promise.allSettled(this.bufferedResults.map(({ test, result }) => this.runLoadTest(test, result)));
+      }
       await Promise.allSettled(this.loadTestPromises);
       await this.addSkippedResults();
     } catch (err: any) {
@@ -131,6 +137,14 @@ class TmsReporter implements Reporter {
         }),
       ),
     );
+  }
+
+  private runLoadTest(test: TestCase, result: Result): Promise<void> {
+    return this.setupPromise
+      .then(() => this.loadTest(test, result))
+      .catch((err) => {
+        console.log("Error processing test result. \n", err?.body ?? err?.error ?? err);
+      });
   }
 
   printsToStdio(): boolean {

@@ -61,7 +61,7 @@ jobs:
       TMS_CONFIGURATION_ID: ${{ secrets[matrix.configuration_id] }}
       TMS_PROJECT_ID: ${{ secrets[matrix.project_id] }}
       TMS_TEST_RUN_NAME: ${{ matrix.project_name }} TestRun
-      TMS_IMPORT_REALTIME: false
+      TMS_IMPORT_REALTIME: true
       TMS_ADAPTER_MODE: 1
       TMS_SYNC_STORAGE_PORT: 49153
       #TMS_DEBUG_LOAD_TEST_RUN: 1
