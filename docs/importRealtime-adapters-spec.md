@@ -200,6 +200,10 @@ base = @ExternalId из тегов pickle ?? hash(name ?? pickle.name)
 - `listCatchUpRealtimePayloads(sentIds)` — догон в конце прогона.
 - `resolvePickleExternalId(pickle)` — публичный расчёт id (фильтр `testsInRun` в formatter).
 
+**`namespace` / `classname`:**
+
+Совпадают с `mapScenario`: теги pickle → сценарий (по `pickle.astNodeIds`) → feature (документ по `pickle.uri`, не «первый» в storage) → `feature.name` → `scenario.name`.
+
 **Заголовки шагов:**
 
 PickleStep содержит только `text` (`return true`). Keyword (`Then`) восстанавливается из Gherkin:

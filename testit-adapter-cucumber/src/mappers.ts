@@ -3,6 +3,7 @@ import {
   DataTable,
   Examples,
   GherkinDocument,
+  Pickle,
   PickleStep,
   Rule,
   Scenario,
@@ -10,6 +11,10 @@ import {
 } from "@cucumber/messages";
 import { parseTags } from "./utils";
 import { AutotestPost, ShortStep, Utils } from "testit-js-commons";
+
+function normalizeUri(uri: string): string {
+  return uri.replace(/\\/g, "/");
+}
 
 export function mapDate(date: number): Date {
   return new Date(date * 1000);
@@ -156,6 +161,89 @@ export function findGherkinStep(documents: GherkinDocument[], pickleStep: Pickle
     }
   }
   return undefined;
+}
+
+function collectScenarios(document: GherkinDocument): Scenario[] {
+  const scenarios: Scenario[] = [];
+  const feature = document.feature;
+  if (feature === undefined) {
+    return scenarios;
+  }
+
+  for (const child of feature.children) {
+    if (child.scenario !== undefined) {
+      scenarios.push(child.scenario);
+    }
+    if (child.rule !== undefined) {
+      for (const ruleChild of child.rule.children) {
+        if (ruleChild.scenario !== undefined) {
+          scenarios.push(ruleChild.scenario);
+        }
+      }
+    }
+  }
+  return scenarios;
+}
+
+export function findGherkinDocument(documents: GherkinDocument[], pickle: Pickle): GherkinDocument | undefined {
+  const pickleUri = normalizeUri(pickle.uri);
+  return documents.find((document) => document.uri !== undefined && normalizeUri(document.uri) === pickleUri);
+}
+
+export function findScenarioForPickle(document: GherkinDocument, pickle: Pickle): Scenario | undefined {
+  for (const scenario of collectScenarios(document)) {
+    if (pickle.astNodeIds.includes(scenario.id)) {
+      return scenario;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Build autotest metadata for a pickle (same tag/fallback rules as mapScenario).
+ * Resolves document by pickle.uri and scenario by pickle.astNodeIds.
+ */
+export function mapPickleToAutotestPost(
+  documents: GherkinDocument[],
+  pickle: Pickle,
+  externalId: string,
+  stepTitleFn: (step: PickleStep) => string,
+): AutotestPost {
+  const document = findGherkinDocument(documents, pickle);
+  const scenario = document !== undefined ? findScenarioForPickle(document, pickle) : undefined;
+
+  const pickleTags = parseTags(pickle.tags);
+  const scenarioTags = scenario !== undefined ? parseTags(scenario.tags) : parseTags([]);
+  const docTags = document?.feature !== undefined ? parseTags(document.feature.tags) : parseTags([]);
+
+  return {
+    externalId,
+    name: pickleTags.name ?? scenarioTags.name ?? docTags.name ?? scenario?.name ?? pickle.name,
+    title: pickleTags.title ?? scenarioTags.title ?? docTags.title,
+    description:
+      pickleTags.description ?? scenarioTags.description ?? docTags.description ?? scenario?.description,
+    links: pickleTags.links.length > 0 ? pickleTags.links : scenarioTags.links.length > 0 ? scenarioTags.links : docTags.links,
+    labels:
+      (pickleTags.labels.length > 0 ? pickleTags.labels : scenarioTags.labels.length > 0 ? scenarioTags.labels : docTags.labels)?.map(
+        (label) => ({ name: label }),
+      ),
+    tags: pickleTags.tags.length > 0 ? pickleTags.tags : scenarioTags.tags.length > 0 ? scenarioTags.tags : docTags.tags,
+    workItemIds:
+      (pickleTags.workItemIds?.length ?? 0) > 0
+        ? pickleTags.workItemIds
+        : (scenarioTags.workItemIds?.length ?? 0) > 0
+          ? scenarioTags.workItemIds
+          : docTags.workItemIds,
+    namespace: pickleTags.nameSpace ?? scenarioTags.nameSpace ?? docTags.nameSpace,
+    classname:
+      pickleTags.className ??
+      scenarioTags.className ??
+      docTags.className ??
+      document?.feature?.name ??
+      scenario?.name,
+    steps: pickle.steps.map((step) => ({ title: stepTitleFn(step) })),
+    externalKey: scenario?.name ?? pickle.name,
+  };
 }
 
 /** Pickle steps have text only; keyword comes from the linked Gherkin step. */

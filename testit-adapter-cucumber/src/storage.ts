@@ -10,7 +10,7 @@ import {
   TestStepStarted,
 } from "@cucumber/messages";
 import { IStorage } from "./types";
-import { formatPickleStepTitle, mapDate } from "./mappers";
+import { formatPickleStepTitle, mapDate, mapPickleToAutotestPost } from "./mappers";
 import { calculateResultOutcome, parseTags } from "./utils";
 
 type TestCaseId = string;
@@ -54,6 +54,18 @@ export class Storage implements IStorage {
   }
 
   saveGherkinDocument(document: GherkinDocument): void {
+    if (document.uri === undefined) {
+      this.gherkinDocuments.push(document);
+      return;
+    }
+    const uri = document.uri.replace(/\\/g, "/");
+    const idx = this.gherkinDocuments.findIndex(
+      (d) => d.uri !== undefined && d.uri.replace(/\\/g, "/") === uri,
+    );
+    if (idx >= 0) {
+      this.gherkinDocuments[idx] = document;
+      return;
+    }
     this.gherkinDocuments.push(document);
   }
   savePickle(pickle: Pickle): void {
@@ -107,26 +119,14 @@ export class Storage implements IStorage {
   }
 
   getAutotests(): AutotestPost[] {
-    // IMPORTANT: In Scenario Outline mode each example row becomes its own Pickle.
-    // Using scenario-level mapping causes externalId collisions and results overwrite each other.
-    const featureName = this.gherkinDocuments.find((d) => d.feature)?.feature?.name;
-    return this.pickles.map((pickle) => {
-      const tags = parseTags(pickle.tags);
-      return {
-        externalId: this.resolvePickleExternalId(pickle),
-        name: tags.name ?? pickle.name,
-        title: tags.title,
-        description: tags.description,
-        links: tags.links,
-        labels: tags.labels?.map((label) => ({ name: label })),
-        tags: tags.tags,
-        workItemIds: tags.workItemIds,
-        namespace: tags.nameSpace,
-        classname: tags.className ?? featureName,
-        steps: pickle.steps.map((s) => ({ title: this.formatStepTitle(s) })),
-        externalKey: pickle.name,
-      };
-    });
+    return this.pickles.map((pickle) =>
+      mapPickleToAutotestPost(
+        this.gherkinDocuments,
+        pickle,
+        this.resolvePickleExternalId(pickle),
+        (step) => this.formatStepTitle(step),
+      ),
+    );
   }
 
   getTestRunResults(): AutotestResult[] {
@@ -225,20 +225,12 @@ export class Storage implements IStorage {
       attachments: this.attachments[testCase.id],
     };
 
-    const autotest: AutotestPost = {
+    const autotest = mapPickleToAutotestPost(
+      this.gherkinDocuments,
+      pickle,
       externalId,
-      name: tags.name ?? pickle.name,
-      title: tags.title,
-      description: tags.description,
-      links: tags.links,
-      labels: tags.labels?.map((label) => ({ name: label })),
-      tags: tags.tags,
-      workItemIds: tags.workItemIds,
-      namespace: tags.nameSpace,
-      classname: tags.className ?? this.gherkinDocuments.find((d) => d.feature)?.feature?.name,
-      steps: pickle.steps.map((s) => ({ title: this.formatStepTitle(s) })),
-      externalKey: pickle.name,
-    };
+      (step) => this.formatStepTitle(step),
+    );
 
     return { autotest, result };
   }

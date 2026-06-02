@@ -34,10 +34,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # - adapter_name: testit-adapter-codecept
-          #   configuration_id: CODECEPT_CONFIGURATION_ID
-          #   project_id: CODECEPT_PROJECT_ID
-          #   project_name: codecept
+          - adapter_name: testit-adapter-codecept
+            configuration_id: CODECEPT_CONFIGURATION_ID
+            project_id: CODECEPT_PROJECT_ID
+            project_name: codecept
           - adapter_name: testit-adapter-cucumber
             configuration_id: CUCUMBER_CONFIGURATION_ID
             project_id: CUCUMBER_PROJECT_ID
@@ -58,6 +58,10 @@ jobs:
             configuration_id: CYPRESS_CONFIGURATION_ID
             project_id: CYPRESS_PROJECT_ID
             project_name: cypress
+          - adapter_name: testcafe-reporter-testit
+            configuration_id: TESTCAFE_CONFIGURATION_ID
+            project_id: TESTCAFE_PROJECT_ID
+            project_name: testcafe
     env:
       TMS_CONFIGURATION_ID: ${{ secrets[matrix.configuration_id] }}
       TMS_PROJECT_ID: ${{ secrets[matrix.project_id] }}
@@ -81,6 +85,8 @@ jobs:
           repository: testit-tms/js-examples
           ref: examples_for_tests
           path: js-examples
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
       - name: Setup dotnet
         uses: actions/setup-dotnet@v5
         with:
@@ -121,8 +127,13 @@ jobs:
           fi
 
           # Install Playwright browsers for codecept project
-          if [ "${{ matrix.project_name }}" = "codecept" ]; then
-            npx playwright install
+          # linking is not working for codecept adapter
+          if [ "${{ matrix.adapter_name }}" != "testit-adapter-codecept" ]; then
+            echo "Adapter is not codecept, proceeding..."
+            cd ${{ matrix.adapter_name }}
+            npm run build && npm link
+            cd ../js-examples/${{ matrix.project_name }}
+            npm link ${{ matrix.adapter_name }} && npm install
           fi
 
           cd ../..
@@ -174,7 +185,7 @@ jobs:
           --baseURL ${{ env.TMS_URL }} --privateToken ${{ env.TMS_PRIVATE_TOKEN }}  > service.log 2>&1 &  
           curl -v http://127.0.0.1:${{ env.TMS_SYNC_STORAGE_PORT }}/health || true
           
-          
+          export HEADLESS=true
           npm run test || true 
 
           # sleep 10
