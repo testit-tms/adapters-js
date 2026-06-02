@@ -1,6 +1,7 @@
 import * as dotenv from "dotenv";
 import { Utils, AdapterConfig, EnvironmentOptions, AdapterMode } from "../../common";
 import { IConfigComposer } from "./config.type";
+import logger from "../../logger";
 
 export const DEFAULT_CONFIG_FILE = "tms.config.json";
 
@@ -16,7 +17,7 @@ export class ConfigComposer implements IConfigComposer {
       const fileConfig: AdapterConfig = JSON.parse(content);
 
       if (fileConfig.privateToken) {
-        console.warn(`
+        logger.warn(`
         The configuration file specifies a private token. It is not safe. 
         Use TMS_PRIVATE_TOKEN environment variable`);
       }
@@ -111,32 +112,32 @@ export class ConfigComposer implements IConfigComposer {
     try {
       new URL(config.url);
     } catch (err) {
-      console.error(`Url is invalid`);
+      logger.error(`Url is invalid`);
     }
 
     if (!config.privateToken) {
-      console.error(`Private Token is invalid`);
+      logger.error(`Private Token is invalid`);
     }
 
     if (config.projectId.match('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$') === null) {
-      console.error(`Project ID is invalid`);
+      logger.error(`Project ID is invalid`);
     }
 
     if (config.configurationId.match('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$') === null) {
-      console.error(`Configuration ID is invalid`);
+      logger.error(`Configuration ID is invalid`);
     }
 
     if (config.adapterMode == 2) {
       if (config.testRunId.match('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$') !== null) {
-        console.error(`Adapter works in mode 2. Config should not contains test run id.`);
+        logger.error(`Adapter works in mode 2. Config should not contains test run id.`);
       }
     } else if (config.adapterMode == 1) {
       if (config.testRunId.match('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$') === null) {
-        console.error(`Adapter works in mode 1. Config should contains valid test run id.`);
+        logger.error(`Adapter works in mode 1. Config should contains valid test run id.`);
       }
     } else {
       if (config.testRunId.match('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$') === null) {
-        console.error(`Adapter works in mode 0. Config should contains valid test run id.`);
+        logger.error(`Adapter works in mode 0. Config should contains valid test run id.`);
       }
     }
   }

@@ -18,6 +18,8 @@ import {
   getMessageAndTraceFromError,
 } from "./utils.js";
 import { Status } from "../models/status.js";
+import { logger } from "testit-js-commons";
+
 
 export const reportRunStart = () => {
   enqueueRuntimeMessage({
@@ -246,8 +248,8 @@ const logTmsRootAfterError = (context: Mocha.Context, err: unknown) => {
   // We play safe and swallow errors here to keep the original 'after all' error.
   try {
     // eslint-disable-next-line no-console
-    console.error(`Unexpected error when reporting the failure of ${context.test?.title ?? "'after all'"}`);
+    logger.error(`Unexpected error when reporting the failure of ${context.test?.title ?? "'after all'"}`);
     // eslint-disable-next-line no-console
-    console.error(err);
+    logger.error(err as any);
   } catch {}
 };

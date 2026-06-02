@@ -7,6 +7,7 @@ import { BaseService, AdapterConfig, escapeHtmlInObject } from "../../common";
 import { AutotestGet, AutotestPost, type IAutotestService, Status } from "./autotests.type";
 import { AutotestConverter, type IAutotestConverter } from "./autotests.converter";
 import { handleHttpError } from "./autotests.handler";
+import logger from "../../logger";
 
 export class AutotestsService extends BaseService implements IAutotestService {
   protected _client;
@@ -27,7 +28,7 @@ export class AutotestsService extends BaseService implements IAutotestService {
 
     return await this._client
       .createAutoTest({ autoTestCreateApiModel: autotestPost })
-      .then(() => console.log(`Create autotest "${autotest.name}".`))
+      .then(() => logger.log(`Create autotest "${autotest.name}".`))
       // @ts-ignore
       .catch((err) => handleHttpError(err, `Failed create autotest "${autotestPost.name}"`));
   }
@@ -38,7 +39,7 @@ export class AutotestsService extends BaseService implements IAutotestService {
 
     await this._client
       .updateAutoTest({ autoTestUpdateApiModel: autotestPost })
-      .then(() => console.log(`Update autotest "${autotest.name}".`))
+      .then(() => logger.log(`Update autotest "${autotest.name}".`))
       // @ts-ignore
       .catch((err) => handleHttpError(err, `Failed update autotest "${autotestPost.name}"`));
   }
@@ -73,10 +74,10 @@ export class AutotestsService extends BaseService implements IAutotestService {
           await this.updateAutotestFromFailed(originAutotest, mergedAutotest);
           return;
         }
-        console.log(`Cannot update skipped autotest ${autotest.name} without name or externalId`);
+        logger.log(`Cannot update skipped autotest ${autotest.name} without name or externalId`);
         return;
       default:
-        console.log(`Cannot update autotest ${autotest.name} with unknown status ${status}`);
+        logger.log(`Cannot update autotest ${autotest.name} with unknown status ${status}`);
     }
   }
 
@@ -107,13 +108,13 @@ export class AutotestsService extends BaseService implements IAutotestService {
       for (let attempts = 0; attempts < this.MAX_TRIES; attempts++) {
         try {
           await this._client.linkAutoTestToWorkItem(internalId, { workItemIdApiModel: { id: workItemId } });
-          console.log(`Link autotest ${internalId} to workitem ${workItemId} is successfully`);
+          logger.log(`Link autotest ${internalId} to workitem ${workItemId} is successfully`);
 
           return;
         // @ts-ignore
         } catch (e: any) {
-          console.error(`Cannot link autotest ${internalId} to work item ${workItemId}`);
-          // console.error(e);
+          logger.error(`Cannot link autotest ${internalId} to work item ${workItemId}`);
+          // logger.error(e);
 
           await new Promise((f) => setTimeout(f, this.WAITING_TIME));
         }
@@ -127,11 +128,11 @@ export class AutotestsService extends BaseService implements IAutotestService {
     for (let attempts = 0; attempts < this.MAX_TRIES; attempts++) {
       try {
         await this._client.deleteAutoTestLinkFromWorkItem(internalId, { workItemId: workItemId });
-        console.log(`Unlink autotest ${internalId} from workitem ${workItemId} is successfully`);
+        logger.log(`Unlink autotest ${internalId} from workitem ${workItemId} is successfully`);
 
         return;
       } catch (e) {
-        console.log(`Cannot unlink autotest ${internalId} to work item ${workItemId}: ${e}`);
+        logger.log(`Cannot unlink autotest ${internalId} to work item ${workItemId}: ${e}`);
 
         await new Promise((f) => setTimeout(f, this.WAITING_TIME));
       }
@@ -145,7 +146,7 @@ export class AutotestsService extends BaseService implements IAutotestService {
       .then((res) => res.body)
       // @ts-ignore
       .catch((e) => {
-        console.log(`Cannot get linked workitems to autotest ${internalId}: ${e}`);
+        logger.log(`Cannot get linked workitems to autotest ${internalId}: ${e}`);
 
         return [];
       });
@@ -178,7 +179,7 @@ export class AutotestsService extends BaseService implements IAutotestService {
         return autotest ? this._converter.toLocalAutotest(autotest) : null;
       })
       .catch((reason: any) => {
-        console.error(reason);
+        logger.error(reason);
         return null;
       });
   }

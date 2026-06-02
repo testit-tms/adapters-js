@@ -4,6 +4,7 @@ import { BaseService, Utils, AdapterConfig, Attachment } from "../../common";
 import { IAttachmentsService } from "./attachments.type";
 import { Buffer } from "buffer";
 import * as fs from "fs";
+import logger from "../../logger";
 
 const UPLOAD_MAX_ATTEMPTS = 5;
 const UPLOAD_RETRY_BASE_MS = 500;
@@ -106,13 +107,13 @@ export class AttachmentsService extends BaseService implements IAttachmentsServi
             fs.rmdirSync(tempDir);
           }
         } catch (cleanupError) {
-          console.warn("Failed to cleanup temporary files:", cleanupError);
+          logger.warn("Failed to cleanup temporary files:", cleanupError);
         }
       }
     } catch (error: any) {
-      console.error("Error uploading text attachment:", error);
+      logger.error("Error uploading text attachment:", error);
       if (error.response) {
-        console.error("Response details:", {
+        logger.error("Response details:", {
           status: error.response.status,
           text: error.response.text,
         });
@@ -143,9 +144,9 @@ export class AttachmentsService extends BaseService implements IAttachmentsServi
 
         attachmentIds.push(id);
       } catch (error: any) {
-        console.error(`Error uploading attachment ${path}:`, error);
+        logger.error(`Error uploading attachment ${path}:`, error);
         if (error.response) {
-          console.error("Response details:", {
+          logger.error("Response details:", {
             status: error.response.status,
             text: error.response.text,
           });

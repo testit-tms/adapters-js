@@ -1,4 +1,5 @@
+import logger from "../../logger";
 
 export function handleHttpError(err: any, message = "") {
-  console.error(`HttpError ${err.statusCode}: ${message}. Error body: \n`, err.body);
+  logger.error(`HttpError ${err.statusCode}: ${message}. Error body: \n`, err.body);
 }

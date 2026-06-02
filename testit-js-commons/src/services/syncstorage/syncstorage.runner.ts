@@ -7,6 +7,7 @@ import { spawn, ChildProcess } from "child_process";
 import { AdapterConfig } from "../../common";
 import { isTmsLoadTestRunDebug } from "../../common/utils";
 import { ISyncStorageRunner, TestResultCutModel, WorkerStatus } from "./syncstorage.type";
+import logger from "../../logger";
 
 type RegisterResponse = {
   is_master?: boolean;
@@ -86,7 +87,7 @@ export class SyncStorageRunner implements ISyncStorageRunner {
       this.running = true;
       return true;
     } catch (error) {
-      console.warn(`Sync storage start failed: ${error}`);
+      logger.warn(`Sync storage start failed: ${error}`);
       return false;
     }
   }
@@ -129,7 +130,7 @@ export class SyncStorageRunner implements ISyncStorageRunner {
   public async sendInProgressTestResult(model: TestResultCutModel): Promise<boolean> {
     if (!this.running || !this.isMaster || this.alreadyInProgress || this.inProgressPublishing) {
       if (isTmsLoadTestRunDebug()) {
-        console.debug("[syncstorage] skip in-progress cut publish", {
+        logger.debug("[syncstorage] skip in-progress cut publish", {
           reason: {
             notRunning: !this.running,
             notMaster: !this.isMaster,
@@ -143,11 +144,11 @@ export class SyncStorageRunner implements ISyncStorageRunner {
     }
 
     if (!model.projectId || !model.autoTestExternalId || !model.statusCode || !model.statusType) {
-      console.warn(
+      logger.warn(
         "Sync storage in-progress payload is incomplete; skipping publish.",
       );
       if (isTmsLoadTestRunDebug()) {
-        console.debug("[syncstorage] incomplete in-progress cut payload", {
+        logger.debug("[syncstorage] incomplete in-progress cut payload", {
           hasProjectId: Boolean(model.projectId),
           hasAutoTestExternalId: Boolean(model.autoTestExternalId),
           hasStatusCode: Boolean(model.statusCode),
@@ -172,20 +173,20 @@ export class SyncStorageRunner implements ISyncStorageRunner {
       );
       this.alreadyInProgress = true;
       if (isTmsLoadTestRunDebug()) {
-        console.debug("[syncstorage] alreadyInProgress set", {
+        logger.debug("[syncstorage] alreadyInProgress set", {
           workerPid: this.workerPid,
           autoTestExternalId: model.autoTestExternalId,
         });
-        console.debug("[syncstorage] in-progress cut published", {
+        logger.debug("[syncstorage] in-progress cut published", {
           workerPid: this.workerPid,
           autoTestExternalId: model.autoTestExternalId,
         });
       }
       return true;
     } catch (error) {
-      console.warn(`Sync storage in-progress publish failed: ${error}`);
+      logger.warn(`Sync storage in-progress publish failed: ${error}`);
       if (isTmsLoadTestRunDebug()) {
-        console.debug("[syncstorage] in-progress cut publish failed", {
+        logger.debug("[syncstorage] in-progress cut publish failed", {
           workerPid: this.workerPid,
           autoTestExternalId: model.autoTestExternalId,
         });
@@ -212,7 +213,7 @@ export class SyncStorageRunner implements ISyncStorageRunner {
         SyncStorageRunner.RETRY_COUNT
       );
     } catch (error) {
-      console.warn(`Sync storage set worker status failed: ${error}`);
+      logger.warn(`Sync storage set worker status failed: ${error}`);
     }
   }
 
@@ -237,7 +238,7 @@ export class SyncStorageRunner implements ISyncStorageRunner {
         SyncStorageRunner.RETRY_COUNT
       );
     } catch (error) {
-      console.warn(`Sync storage completion failed: ${error}`);
+      logger.warn(`Sync storage completion failed: ${error}`);
     }
   }
 
@@ -275,7 +276,7 @@ export class SyncStorageRunner implements ISyncStorageRunner {
       }
       return started;
     } catch (error) {
-      console.warn(`Sync storage local process start failed: ${error}`);
+      logger.warn(`Sync storage local process start failed: ${error}`);
       return false;
     }
   }

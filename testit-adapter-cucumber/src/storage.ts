@@ -73,20 +73,26 @@ export class Storage implements IStorage {
       const testCase = this.testCases.find((testCase) => testCase.pickleId === pickle.id);
 
       if (testCase !== undefined) {
-        const testCaseStarted = this.testCasesStarted.find((testCase) => testCase.id === testCase.id);
+        const testCaseStarted = this.testCasesStarted.find((started) => started.testCaseId === testCase.id);
         if (testCaseStarted === undefined) {
-          throw new Error("TestCaseStarted not found");
+          continue;
         }
 
         const testCaseFinished = this.testCasesFinished.find(
-          (testCase) => testCase.testCaseStartedId === testCaseStarted.id
+          (finished) => finished.testCaseStartedId === testCaseStarted.id
         );
         if (testCaseFinished === undefined) {
-          throw new Error("TestCaseFinished not found");
+          continue;
         }
 
-        const steps = pickle.steps
+        const stepResults = pickle.steps
           .map((step) => this.getStepResult(step, testCase))
+          .filter((step): step is Step => step !== undefined);
+        if (stepResults.length !== pickle.steps.length) {
+          // In realtime mode envelopes can arrive out of order; wait for next pass.
+          continue;
+        }
+        const steps = stepResults
           .filter((item, i, arr) => {
             const prevOutcome = arr[i - 1]?.outcome;
 
@@ -129,20 +135,20 @@ export class Storage implements IStorage {
     return results;
   }
 
-  getStepResult(pickleStep: PickleStep, testCase: TestCase): Step {
+  getStepResult(pickleStep: PickleStep, testCase: TestCase): Step | undefined {
     const testStep = testCase.testSteps.find((step) => step.pickleStepId === pickleStep.id);
     if (testStep === undefined) {
-      throw new Error("TestCase step not found");
+      return undefined;
     }
 
     const testStepStarted = this.testStepsStarted.find((step) => step.testStepId === testStep.id);
     if (testStepStarted === undefined) {
-      throw new Error("TestStepStarted not found");
+      return undefined;
     }
 
     const testStepFinished = this.testStepsFinished.find((step) => step.testStepId === testStepStarted.testStepId);
     if (testStepFinished === undefined) {
-      throw new Error("TestStepFinished not found");
+      return undefined;
     }
 
     return {
@@ -157,15 +163,15 @@ export class Storage implements IStorage {
   getStepMessage(pickleStep: PickleStep, testCase: TestCase): string | undefined {
     const testStep = testCase.testSteps.find((step) => step.pickleStepId === pickleStep.id);
     if (testStep === undefined) {
-      throw new Error("TestCase step not found");
+      return undefined;
     }
     const testStepStarted = this.testStepsStarted.find((step) => step.testStepId === testStep.id);
     if (testStepStarted === undefined) {
-      throw new Error("TestStepStarted not found");
+      return undefined;
     }
     const testStepFinished = this.testStepsFinished.find((step) => step.testStepId === testStepStarted.testStepId);
     if (testStepFinished === undefined) {
-      throw new Error("TestStepFinished not found");
+      return undefined;
     }
     return testStepFinished.testStepResult.message;
   }

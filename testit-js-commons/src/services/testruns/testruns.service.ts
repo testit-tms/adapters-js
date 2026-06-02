@@ -5,6 +5,7 @@ import { escapeHtmlInObject, escapeHtmlInObjectArray, logTmsLoadTestRun } from "
 import { type ITestRunsService, TestRunId, AutotestResult, TestRunGet } from "./testruns.type";
 import { type ITestRunConverter, TestRunConverter } from "./testruns.converter";
 import { TestRunErrorHandler } from "./testruns.handler";
+import logger from "../../logger";
 
 export class TestRunsService extends BaseService implements ITestRunsService {
   protected _client;
@@ -26,7 +27,7 @@ export class TestRunsService extends BaseService implements ITestRunsService {
       .createEmpty({ createEmptyTestRunApiModel: escapeHtmlInObject(createRequest) })
       // @ts-ignore
       .then((response) => {
-        //console.debug("Full response from createEmpty:", response);
+        //logger.debug("Full response from createEmpty:", response);
         const data = response.body || response;
         if (!data) {
           throw new Error("API returned undefined response");
@@ -37,7 +38,7 @@ export class TestRunsService extends BaseService implements ITestRunsService {
         return data.id;
       })
       .catch((err: any) => {
-        console.error("Error in createTestRun:", err);
+        logger.error("Error in createTestRun:", err);
         throw err;
       });
   }
@@ -59,7 +60,7 @@ export class TestRunsService extends BaseService implements ITestRunsService {
       .updateEmpty({ updateEmptyTestRunApiModel: testRun })
       // @ts-ignore
       .then((response) => {
-        console.log("Full response from updateEmpty:", response);
+        logger.log("Full response from updateEmpty:", response);
         const data = response.body || response;
         if (!data) {
           throw new Error("API returned undefined response");
@@ -122,7 +123,7 @@ export class TestRunsService extends BaseService implements ITestRunsService {
       });
       await this.sendAutotestResultWithRetry(testRunId, autotestResult).catch((err: any) => {
         const normalized = err?.body ?? err?.error ?? err;
-        console.error("[testit-js-commons:loadTestRun] FAILED to post final result", {
+        logger.error("[testit-js-commons:loadTestRun] FAILED to post final result", {
           testRunId,
           autoTestExternalId: autotestResult.autoTestExternalId,
           error: normalized,

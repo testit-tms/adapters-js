@@ -1,4 +1,6 @@
 import { Config } from '@jest/reporters';
+import { logger } from "testit-js-commons";
+
 
 export default async (
   globalConfig: Config.GlobalConfig,
@@ -9,6 +11,6 @@ export default async (
       await globalThis.strategy.teardown();
     }
   } catch (err) {
-    console.error('Failed to complete test run');
+    logger.error('Failed to complete test run');
   }
 };

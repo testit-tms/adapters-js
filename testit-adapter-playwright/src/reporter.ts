@@ -12,6 +12,7 @@ import { MetadataMessage } from "./labels";
 import { getTestStatus, processAttachmentExtensions, stepAttachRegexp } from "./utils";
 import { Result, ResultAttachment } from "./models/result";
 import path from "path";
+import { logger } from "testit-js-commons";
 
 export type ReporterOptions = {
   detail?: boolean;
@@ -99,7 +100,7 @@ class TmsReporter implements Reporter {
   async onEnd(): Promise<void> {
     try {
       await this.setupPromise.catch((err: any) => {
-        console.error("TMS Playwright setup failed:", err?.body ?? err?.error ?? err);
+        logger.error("TMS Playwright setup failed:", err?.body ?? err?.error ?? err);
       });
       if (!this.adapterConfig.importRealtime) {
         await Promise.allSettled(this.bufferedResults.map(({ test, result }) => this.runLoadTest(test, result)));
@@ -107,10 +108,10 @@ class TmsReporter implements Reporter {
       await Promise.allSettled(this.loadTestPromises);
       await this.addSkippedResults();
     } catch (err: any) {
-      console.error("TMS Playwright onEnd failed:", err?.body ?? err?.error ?? err);
+      logger.error("TMS Playwright onEnd failed:", err?.body ?? err?.error ?? err);
     } finally {
       await this.strategy.teardown().catch((err: any) => {
-        console.error("TMS Playwright teardown failed:", err?.body ?? err?.error ?? err);
+        logger.error("TMS Playwright teardown failed:", err?.body ?? err?.error ?? err);
       });
     }
   }
@@ -129,7 +130,7 @@ class TmsReporter implements Reporter {
           errors: [],
           steps: [],
         }).catch((err: any) => {
-          console.error(
+          logger.error(
             "TMS Playwright loadTest (skipped) failed:",
             testCase?.title,
             err?.body ?? err?.error ?? err,
@@ -143,7 +144,7 @@ class TmsReporter implements Reporter {
     return this.setupPromise
       .then(() => this.loadTest(test, result))
       .catch((err) => {
-        console.log("Error processing test result. \n", err?.body ?? err?.error ?? err);
+        logger.log("Error processing test result. \n", err?.body ?? err?.error ?? err);
       });
   }
 
@@ -188,7 +189,7 @@ class TmsReporter implements Reporter {
             const ids: any = await this.additions.addAttachments(content, attachment.name);
             autotestData.addAttachments?.push(...ids);
           } catch (err: any) {
-            console.log("Error uploading file attachment. \n", err?.body ?? err?.error ?? err);
+            logger.log("Error uploading file attachment. \n", err?.body ?? err?.error ?? err);
           }
         }
         
@@ -266,7 +267,7 @@ class TmsReporter implements Reporter {
           }
           autotestData.addAttachments?.push(...ids);
         } catch (err: any) {
-          console.log("Error uploading text attachment. \n", err?.body ?? err?.error ?? err);
+          logger.log("Error uploading text attachment. \n", err?.body ?? err?.error ?? err);
         }
       }
     }

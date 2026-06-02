@@ -14,6 +14,8 @@ import {
 import { IStorage, IFormatter } from "./types";
 import { Storage } from "./storage";
 import { parseTags } from "./utils";
+import { logger } from "testit-js-commons";
+
 
 export default class TestItFormatter extends Formatter implements IFormatter {
   private static unhandledRejectionHandlerInstalled = false;
@@ -39,7 +41,7 @@ export default class TestItFormatter extends Formatter implements IFormatter {
 
     options.eventBroadcaster.on("envelope", (envelope: Envelope) => {
       void this.handleEnvelope(envelope).catch((err) => {
-        console.error("Unhandled async error in Cucumber formatter envelope handler:", err?.body ?? err?.error ?? err);
+        logger.error("Unhandled async error in Cucumber formatter envelope handler:", err?.body ?? err?.error ?? err);
       });
     });
 
@@ -55,7 +57,7 @@ export default class TestItFormatter extends Formatter implements IFormatter {
     TestItFormatter.unhandledRejectionHandlerInstalled = true;
     process.on("unhandledRejection", (reason: unknown) => {
       const normalized = (reason as any)?.body ?? (reason as any)?.error ?? reason;
-      console.error("Unhandled promise rejection in Cucumber formatter:", normalized);
+      logger.error("Unhandled promise rejection in Cucumber formatter:", normalized);
     });
   }
 
@@ -158,7 +160,7 @@ export default class TestItFormatter extends Formatter implements IFormatter {
 
             if (result !== undefined) {
               return this.strategy.loadAutotest(autotestPost, result.outcome).catch((err) => {
-                console.error("Cucumber loadAutotest failed:", (err as any)?.body ?? (err as any)?.error ?? err);
+                logger.error("Cucumber loadAutotest failed:", (err as any)?.body ?? (err as any)?.error ?? err);
               });
             }
             return Promise.resolve();
@@ -166,15 +168,15 @@ export default class TestItFormatter extends Formatter implements IFormatter {
         );
 
         await this.strategy.loadTestRun(results).catch((err) => {
-          console.error("Cucumber loadTestRun failed:", (err as any)?.body ?? (err as any)?.error ?? err);
+          logger.error("Cucumber loadTestRun failed:", (err as any)?.body ?? (err as any)?.error ?? err);
         });
       }
 
       await this.strategy.teardown().catch((err) => {
-        console.error("Cucumber teardown failed:", (err as any)?.body ?? (err as any)?.error ?? err);
+        logger.error("Cucumber teardown failed:", (err as any)?.body ?? (err as any)?.error ?? err);
       });
     } catch (err) {
-      console.error("Cucumber onTestRunFinished failed:", (err as any)?.body ?? (err as any)?.error ?? err);
+      logger.error("Cucumber onTestRunFinished failed:", (err as any)?.body ?? (err as any)?.error ?? err);
     }
   }
 
@@ -212,13 +214,13 @@ export default class TestItFormatter extends Formatter implements IFormatter {
           return;
         } catch (err) {
           lastErr = err;
-          console.log("Error load attachments (attempt): \n", attachments, "\n", attempt, "\n", err);
+          logger.log("Error load attachments (attempt): \n", attachments, "\n", attempt, "\n", err);
           if (attempt < maxAttempts) {
             await new Promise((r) => setTimeout(r, 400 * attempt));
           }
         }
       }
-      console.error("Error load attachments (gave up): \n", attachments, "\n", lastErr);
+      logger.error("Error load attachments (gave up): \n", attachments, "\n", lastErr);
     })();
 
     this.attachmentsQueue.push(promise);
@@ -237,10 +239,10 @@ export default class TestItFormatter extends Formatter implements IFormatter {
         continue;
       }
       await this.strategy.loadAutotest(autotest, result.outcome).catch((err) => {
-        console.error("Cucumber realtime loadAutotest failed:", (err as any)?.body ?? (err as any)?.error ?? err);
+        logger.error("Cucumber realtime loadAutotest failed:", (err as any)?.body ?? (err as any)?.error ?? err);
       });
       await this.strategy.loadTestRun([result]).catch((err) => {
-        console.error("Cucumber realtime loadTestRun failed:", (err as any)?.body ?? (err as any)?.error ?? err);
+        logger.error("Cucumber realtime loadTestRun failed:", (err as any)?.body ?? (err as any)?.error ?? err);
       });
       this.sentExternalIds.add(result.autoTestExternalId);
     }

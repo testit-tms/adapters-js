@@ -17,6 +17,8 @@ import {
 import { ReporterOptions, Context, Test, Hook } from "./types";
 import { ITestStep, TestStep } from "./step";
 import { extractHooks, resolveParallelModeSetupFile } from "./utils";
+import { logger } from "testit-js-commons";
+
 
 const Reporter = reporters.Base;
 const Events = Runner.constants;
@@ -111,7 +113,7 @@ export class TmsReporter extends Reporter {
 
   onStartRun = () => {
     deasyncPromise(this.strategy.setup().catch((err) => {
-      console.log("Error setup test run. \n", err?.body ?? err);
+      logger.log("Error setup test run. \n", err?.body ?? err);
     }));
   };
 
@@ -123,27 +125,27 @@ export class TmsReporter extends Reporter {
     this.isRunEnded = true;
 
     deasyncPromise(this.teardown().catch((err) => {
-      console.log("Error during teardown. \n", err?.body ?? err);
+      logger.log("Error during teardown. \n", err?.body ?? err);
     }));
   };
 
   private async teardown(): Promise<void> {
     await Promise.all(this.attachmentsQueue).catch((err) => {
-      console.log("Error loading attachments. \n", err?.body ?? err);
+      logger.log("Error loading attachments. \n", err?.body ?? err);
     });
 
     await Promise.all(this.autotestsQueue).catch((err) => {
-      console.log("Error load autotests. \n", err?.body ?? err);
+      logger.log("Error load autotests. \n", err?.body ?? err);
     });
 
     if (!this.importRealtime) {
       await this.strategy.loadTestRun(this.autotestsForTestRun).catch((err) => {
-        console.log("Error load test run. \n", err?.body ?? err);
+        logger.log("Error load test run. \n", err?.body ?? err);
       });
     }
 
     await this.strategy.teardown().catch((err) => {
-      console.log("Error complete test run. \n", err?.body ?? err);
+      logger.log("Error complete test run. \n", err?.body ?? err);
     });
   }
 
@@ -253,7 +255,7 @@ export class TmsReporter extends Reporter {
     promise.then((attachments) => {
       target.attachments?.push(...attachments);
     }).catch((err) => {
-      console.log("Error loading attachment. \n", err?.body ?? err?.error ?? err);
+      logger.log("Error loading attachment. \n", err?.body ?? err?.error ?? err);
     });
 
     this.attachmentsQueue.push(promise);
@@ -284,7 +286,7 @@ export class TmsReporter extends Reporter {
     } catch (err) {
       this.currentStep.outcome = "Failed";
       this.currentTest.outcome = "Failed";
-      console.log("Step failed. \n", err);
+      logger.log("Step failed. \n", err);
     }
 
     this.currentStep.title = step.title;

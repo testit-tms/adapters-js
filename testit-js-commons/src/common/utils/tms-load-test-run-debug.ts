@@ -1,4 +1,5 @@
 /** Set `TMS_DEBUG_LOAD_TEST_RUN=1` (or `true`) for loadTestRun / TMS result POST tracing. */
+import logger from "../../logger";
 
 export function isTmsLoadTestRunDebug(): boolean {
   const v = process.env.TMS_DEBUG_LOAD_TEST_RUN;
@@ -10,8 +11,8 @@ export function logTmsLoadTestRun(message: string, data?: Record<string, unknown
     return;
   }
   if (data && Object.keys(data).length > 0) {
-    console.log(`[testit-js-commons:loadTestRun] ${message}`, data);
+    logger.log(`[testit-js-commons:loadTestRun] ${message}`, data);
   } else {
-    console.log(`[testit-js-commons:loadTestRun] ${message}`);
+    logger.log(`[testit-js-commons:loadTestRun] ${message}`);
   }
 }
