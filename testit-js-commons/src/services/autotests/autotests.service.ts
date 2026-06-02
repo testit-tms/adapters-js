@@ -23,8 +23,9 @@ export class AutotestsService extends BaseService implements IAutotestService {
     const autotestPost = this._converter.toOriginAutotest(autotest);
     escapeHtmlInObject(autotestPost);
 
+    logger.debug("[autotests] createAutoTest", { externalId: autotest.externalId, name: autotest.name });
     return await withHttpRetry(() => this._client
-      .createAutoTest({ autoTestCreateApiModel: autotestPost }))
+      .createAutoTest({ autoTestCreateApiModel: autotestPost }), { label: "createAutoTest" })
       .then(() => logger.log(`Create autotest "${autotest.name}".`))
       // @ts-ignore
       .catch((err) => handleHttpError(err, `Failed create autotest "${autotestPost.name}"`));
@@ -34,8 +35,9 @@ export class AutotestsService extends BaseService implements IAutotestService {
     const autotestPost = this._converter.toOriginAutotest(autotest);
     escapeHtmlInObject(autotestPost);
 
+    logger.debug("[autotests] updateAutoTest", { externalId: autotest.externalId, name: autotest.name });
     await withHttpRetry(() => this._client
-      .updateAutoTest({ autoTestUpdateApiModel: autotestPost }))
+      .updateAutoTest({ autoTestUpdateApiModel: autotestPost }), { label: "updateAutoTest" })
       .then(() => logger.log(`Update autotest "${autotest.name}".`))
       // @ts-ignore
       .catch((err) => handleHttpError(err, `Failed update autotest "${autotestPost.name}"`));
@@ -46,9 +48,12 @@ export class AutotestsService extends BaseService implements IAutotestService {
     const originAutotest = await this.getAutotestByExternalId(autotest.externalId);
 
     if (!originAutotest) {
+      logger.debug("[autotests] loadAutotest → create", { externalId: autotest.externalId, status });
       await this.createAutotest(autotest);
       return;
     }
+
+    logger.debug("[autotests] loadAutotest → update path", { externalId: autotest.externalId, status });
 
     const mergedAutotest: AutotestPost = {
       ...autotest,

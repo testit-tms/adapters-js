@@ -1,6 +1,7 @@
+import logger from "../../logger";
+
 /** Node/network error codes that are safe to retry. */
-const TRANSIENT_NETWORK_CODES = new Set([
-  "ECONNRESET",
+const TRANSIENT_NETWORK_CODES = new Set([  "ECONNRESET",
   "ETIMEDOUT",
   "EPIPE",
   "ECONNABORTED",
@@ -28,8 +29,9 @@ export type HttpRetryOptions = {
   delayMs?: number;
   /** When true, delay is `delayMs * attempt` (1-based). */
   backoff?: boolean;
+  /** Shown in debug logs when a retry happens. */
+  label?: string;
 };
-
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -98,17 +100,32 @@ export async function withHttpRetry<T>(fn: () => Promise<T>, options: HttpRetryO
   const maxAttempts = options.maxAttempts ?? 3;
   const delayMs = options.delayMs ?? 1000;
   const backoff = options.backoff ?? false;
+  const label = options.label ?? "http";
 
   let last: unknown;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      return await fn();
+      const value = await fn();
+      if (attempt > 1) {
+        logger.debug(`[http-retry] ${label} succeeded on attempt ${attempt}/${maxAttempts}`);
+      }
+      return value;
     } catch (e) {
       last = e;
       if (!isRetryableHttpError(e) || attempt === maxAttempts) {
+        if (attempt > 1) {
+          logger.debug(`[http-retry] ${label} failed after ${attempt} attempt(s)`, {
+            retryable: isRetryableHttpError(e),
+          });
+        }
         throw e;
       }
-      await sleep(backoff ? delayMs * attempt : delayMs);
+      const waitMs = backoff ? delayMs * attempt : delayMs;
+      logger.debug(`[http-retry] ${label} attempt ${attempt}/${maxAttempts} failed, retry in ${waitMs}ms`, {
+        status: getHttpStatus(unwrapHttpError(e) ?? {}),
+        code: getNetworkErrorCode(unwrapHttpError(e) ?? {}),
+      });
+      await sleep(waitMs);
     }
   }
   throw last;

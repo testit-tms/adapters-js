@@ -34,6 +34,7 @@ export default class TestItFormatter extends Formatter implements IFormatter {
     this.installUnhandledRejectionHandler();
     const config = new ConfigComposer().compose(options.parsedArgvOptions as AdapterConfig);
     this.importRealtime = Boolean(config.importRealtime);
+    logger.debug("[cucumber] formatter init", { importRealtime: this.importRealtime });
     this.strategy = StrategyFactory.create(config);
     this.additions = new Additions(config);
     this.storage = new Storage();
@@ -137,6 +138,7 @@ export default class TestItFormatter extends Formatter implements IFormatter {
     this.currentTestCaseId = undefined;
     this.storage.saveTestCaseFinished(testCaseFinished);
     if (this.importRealtime) {
+      logger.debug("[cucumber] testCaseFinished → realtime");
       await this.sendResolvedResultsRealtime();
     }
   }
@@ -149,8 +151,12 @@ export default class TestItFormatter extends Formatter implements IFormatter {
       await Promise.allSettled(this.attachmentsQueue);
 
       if (this.importRealtime) {
+        logger.debug("[cucumber] onTestRunFinished catch-up realtime", {
+          sent: this.sentExternalIds.size,
+        });
         await this.sendResolvedResultsRealtime();
       } else {
+        logger.debug("[cucumber] onTestRunFinished batch");
         const results = this.storage.getTestRunResults();
         const autotests = this.storage.getAutotests();
 
@@ -214,6 +220,7 @@ export default class TestItFormatter extends Formatter implements IFormatter {
           return;
         } catch (err) {
           lastErr = err;
+          logger.debug("[cucumber] attachment upload retry", { attempt, attachments });
           logger.log("Error load attachments (attempt): \n", attachments, "\n", attempt, "\n", err);
           if (attempt < maxAttempts) {
             await new Promise((r) => setTimeout(r, 400 * attempt));
@@ -230,14 +237,25 @@ export default class TestItFormatter extends Formatter implements IFormatter {
     const results = this.storage.getTestRunResults();
     const autotests = this.storage.getAutotests();
     const autotestsByExternalId = new Map(autotests.map((autotest) => [autotest.externalId, autotest]));
+    logger.debug("[cucumber] sendResolvedResultsRealtime", {
+      results: results.length,
+      alreadySent: this.sentExternalIds.size,
+    });
     for (const result of results) {
       if (this.sentExternalIds.has(result.autoTestExternalId)) {
         continue;
       }
       const autotest = autotestsByExternalId.get(result.autoTestExternalId);
       if (!autotest) {
+        logger.debug("[cucumber] realtime skip: autotest not ready", {
+          externalId: result.autoTestExternalId,
+        });
         continue;
       }
+      logger.debug("[cucumber] realtime send", {
+        externalId: result.autoTestExternalId,
+        outcome: result.outcome,
+      });
       await this.strategy.loadAutotest(autotest, result.outcome).catch((err) => {
         logger.error("Cucumber realtime loadAutotest failed:", (err as any)?.body ?? (err as any)?.error ?? err);
       });

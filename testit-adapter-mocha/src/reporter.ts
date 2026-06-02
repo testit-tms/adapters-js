@@ -89,6 +89,7 @@ export class TmsReporter extends Reporter {
 
     const config = new ConfigComposer().compose(options?.tmsOptions);
     this.importRealtime = Boolean(config.importRealtime);
+    logger.debug("[mocha] reporter init", { importRealtime: this.importRealtime });
 
     this.strategy = StrategyFactory.create(config);
     this.additions = new Additions(config);
@@ -139,9 +140,12 @@ export class TmsReporter extends Reporter {
     });
 
     if (!this.importRealtime) {
+      logger.debug("[mocha] onEndRun batch loadTestRun", { count: this.autotestsForTestRun.length });
       await this.strategy.loadTestRun(this.autotestsForTestRun).catch((err) => {
         logger.log("Error load test run. \n", err?.body ?? err);
       });
+    } else {
+      logger.debug("[mocha] onEndRun skip batch (importRealtime)");
     }
 
     await this.strategy.teardown().catch((err) => {
@@ -227,6 +231,11 @@ export class TmsReporter extends Reporter {
     const promise = Promise.allSettled(this.currentTestAttachmentsQueue).then(async () => {
       await this.strategy.loadAutotest(autotestPost, outcome);
       if (this.importRealtime) {
+        logger.debug("[mocha] onEndTest realtime", {
+          externalId: autotestPost.externalId,
+          outcome,
+          teardownSteps: teardown.length,
+        });
         await this.strategy.loadTestRun([testRunResult]);
         return;
       }

@@ -29,6 +29,14 @@ export class ConfigComposer implements IConfigComposer {
 
     this.validateConfig(config);
 
+    logger.debug("[config] composed", {
+      adapterMode: config.adapterMode,
+      importRealtime: config.importRealtime,
+      syncStorageEnabled: config.syncStorageEnabled,
+      hasTestRunId: Boolean(config.testRunId),
+      projectId: config.projectId,
+    });
+
     return config;
   }
 

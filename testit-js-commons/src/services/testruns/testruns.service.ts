@@ -132,10 +132,20 @@ export class TestRunsService extends BaseService implements ITestRunsService {
   }
 
   private async sendAutotestResultWithRetry(testRunId: string, autotestResult: any): Promise<void> {
-    await withHttpRetry(() =>
-      this._client.setAutoTestResultsForTestRun(testRunId, {
-        autoTestResultsForTestRunModel: [autotestResult],
-      }),
+    await withHttpRetry(
+      () =>
+        this._client.setAutoTestResultsForTestRun(testRunId, {
+          autoTestResultsForTestRunModel: [autotestResult],
+        }),
+      {
+        label: `setAutoTestResults:${autotestResult.autoTestExternalId}:${autotestResult.statusCode ?? autotestResult.statusType}`,
+      },
     );
+    logger.debug("[testruns] setAutoTestResults ok", {
+      testRunId,
+      autoTestExternalId: autotestResult.autoTestExternalId,
+      statusCode: autotestResult.statusCode,
+      statusType: autotestResult.statusType,
+    });
   }
 }

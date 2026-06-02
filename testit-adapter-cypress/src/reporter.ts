@@ -1,7 +1,7 @@
 import type Cypress from "cypress";
 import * as fs from "fs";
 import * as path from "path";
-import { ConfigComposer, StrategyFactory, type IStrategy, Additions, type AdapterConfig, type Attachment, Link } from "testit-js-commons";
+import { ConfigComposer, StrategyFactory, type IStrategy, Additions, type AdapterConfig, type Attachment, Link, logger } from "testit-js-commons";
 import type { TestData, StepData } from "./converter.js";
 import { toAutotestPost, toAutotestResult } from "./converter.js";
 import type {
@@ -80,6 +80,7 @@ export class TmsCypress {
     this.importRealtime = Boolean(composed.importRealtime);
     this.strategy = StrategyFactory.create(composed);
     this.additions = new Additions(composed);
+    logger.debug("[cypress] reporter init", { importRealtime: this.importRealtime });
   }
 
   attachToCypress = (on: Cypress.PluginEvents) => {
@@ -337,6 +338,11 @@ export class TmsCypress {
   #sendTestResult = async (specPath: string, testData: TestData, extraAttachmentIds: string[] = []) => {
     const posixSpecPath = specPath.replace(/\\/g, "/");
     const autotest = toAutotestPost(posixSpecPath, testData);
+    logger.debug("[cypress] sendTestResult", {
+      externalId: autotest.externalId,
+      outcome: testData.outcome,
+      steps: testData.steps?.length ?? 0,
+    });
     await this.strategy.loadAutotest(autotest, testData.outcome);
     const result = toAutotestResult(autotest.externalId, testData, testData.outcome, extraAttachmentIds);
     await this.strategy.loadTestRun([result]);

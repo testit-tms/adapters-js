@@ -34,6 +34,7 @@ export class AttachmentsService extends BaseService implements IAttachmentsServi
       try {
         fs.writeFileSync(tempFilePath, bufferContent);
 
+        logger.debug("[attachments] upload text", { fileName, bytes: bufferContent.length });
         const id = await withHttpRetry(
           async () => {
             const fileStream = fs.createReadStream(tempFilePath);
@@ -46,8 +47,9 @@ export class AttachmentsService extends BaseService implements IAttachmentsServi
               fileStream.destroy();
             }
           },
-          UPLOAD_RETRY_OPTIONS,
+          { ...UPLOAD_RETRY_OPTIONS, label: `uploadText:${fileName}` },
         );
+        logger.debug("[attachments] upload text ok", { fileName, id });
 
         return [{ id }];
       } finally {
@@ -82,6 +84,7 @@ export class AttachmentsService extends BaseService implements IAttachmentsServi
           throw new Error(`File not found: ${path}`);
         }
 
+        logger.debug("[attachments] upload file", { path });
         const id = await withHttpRetry(
           async () => {
             const fileStream = Utils.readStream(path);
@@ -94,8 +97,9 @@ export class AttachmentsService extends BaseService implements IAttachmentsServi
               fileStream.destroy();
             }
           },
-          UPLOAD_RETRY_OPTIONS,
+          { ...UPLOAD_RETRY_OPTIONS, label: `uploadFile:${path}` },
         );
+        logger.debug("[attachments] upload file ok", { path, id });
 
         attachmentIds.push(id);
       } catch (error: any) {

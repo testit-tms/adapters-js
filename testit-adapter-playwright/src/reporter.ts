@@ -44,6 +44,7 @@ class TmsReporter implements Reporter {
     this.adapterConfig = config;
     this.strategy = StrategyFactory.create(config);
     this.additions = new Additions(config);
+    logger.debug("[playwright] reporter init", { importRealtime: Boolean(config.importRealtime) });
   }
 
   onBegin(config: FullConfig, suite: Suite): void {
@@ -66,6 +67,7 @@ class TmsReporter implements Reporter {
       steps: result.steps,
     };
     if (this.adapterConfig.importRealtime) {
+      logger.debug("[playwright] onTestEnd realtime", { title: test.title, status: result.status });
       this.loadTestPromises.push(this.runLoadTest(test, currentResult));
       return;
     }
@@ -103,7 +105,10 @@ class TmsReporter implements Reporter {
         logger.error("TMS Playwright setup failed:", err?.body ?? err?.error ?? err);
       });
       if (!this.adapterConfig.importRealtime) {
+        logger.debug("[playwright] onEnd batch flush", { count: this.bufferedResults.length });
         await Promise.allSettled(this.bufferedResults.map(({ test, result }) => this.runLoadTest(test, result)));
+      } else {
+        logger.debug("[playwright] onEnd await realtime", { pending: this.loadTestPromises.length });
       }
       await Promise.allSettled(this.loadTestPromises);
       await this.addSkippedResults();
@@ -276,6 +281,7 @@ class TmsReporter implements Reporter {
   }
 
   private async loadTest(test: TestCase, result: Result): Promise<void> {
+    logger.debug("[playwright] loadTest", { title: test.title, status: result.status });
     const autotestData = await this.getAutotestData(test, result);
 
     const origin = await (this.strategy as BaseStrategy).client.autoTests.getAutotestByExternalId(

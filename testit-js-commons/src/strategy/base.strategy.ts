@@ -38,6 +38,13 @@ export class BaseStrategy implements IStrategy {
   }
 
   async loadAutotest(autotest: AutotestPost, status: string): Promise<void> {
+    logger.debug("[strategy] loadAutotest", {
+      externalId: autotest.externalId,
+      status,
+      setupSteps: autotest.setup?.length ?? 0,
+      testSteps: autotest.steps?.length ?? 0,
+      teardownSteps: autotest.teardown?.length ?? 0,
+    });
     await this.client.autoTests.loadAutotest(autotest, status);
 
     if (Array.isArray(autotest.workItemIds)) {
