@@ -256,6 +256,19 @@ PickleStep содержит только `text` (`return true`). Keyword (`Then`
 
 ---
 
+## Unit-тесты (testit-adapter-cucumber)
+
+Запуск: `npm test` в `testit-adapter-cucumber/`.
+
+| Файл | Что фиксирует |
+|------|----------------|
+| `src/mappers.test.ts` | `classname` по `pickle.uri`, `@ClassName`, keyword в title шага |
+| `src/storage.test.ts` | несколько feature в одном run, outline `externalId`, `getRealtimePayload`, catch-up |
+
+Фикстуры: `src/test-fixtures.ts` (не входят в `dist`).
+
+---
+
 ## Чеклист проверки
 
 1. `importRealtime=false` — поведение как до фичи (batch).

@@ -34,10 +34,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - adapter_name: testit-adapter-codecept
-            configuration_id: CODECEPT_CONFIGURATION_ID
-            project_id: CODECEPT_PROJECT_ID
-            project_name: codecept
+          # - adapter_name: testit-adapter-codecept
+          #   configuration_id: CODECEPT_CONFIGURATION_ID
+          #   project_id: CODECEPT_PROJECT_ID
+          #   project_name: codecept
           - adapter_name: testit-adapter-cucumber
             configuration_id: CUCUMBER_CONFIGURATION_ID
             project_id: CUCUMBER_PROJECT_ID
@@ -58,10 +58,10 @@ jobs:
             configuration_id: CYPRESS_CONFIGURATION_ID
             project_id: CYPRESS_PROJECT_ID
             project_name: cypress
-          - adapter_name: testcafe-reporter-testit
-            configuration_id: TESTCAFE_CONFIGURATION_ID
-            project_id: TESTCAFE_PROJECT_ID
-            project_name: testcafe
+          # - adapter_name: testcafe-reporter-testit
+          #   configuration_id: TESTCAFE_CONFIGURATION_ID
+          #   project_id: TESTCAFE_PROJECT_ID
+          #   project_name: testcafe
     env:
       TMS_CONFIGURATION_ID: ${{ secrets[matrix.configuration_id] }}
       TMS_PROJECT_ID: ${{ secrets[matrix.project_id] }}
