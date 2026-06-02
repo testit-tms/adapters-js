@@ -210,7 +210,8 @@ PickleStep содержит только `text` (`return true`). Keyword (`Then`
 
 - `pickleStep.astNodeIds` → `Step.id` в сохранённых `gherkinDocument`;
 - формат как в `mapStep`: `` `${keyword} ${text}` `` (`Then  return true`);
-- функции: `findGherkinStep`, `formatPickleStepTitle` в `mappers.ts`;
+- функции: `findGherkinStep`, `formatPickleStepTitle`, `buildSetupForScenario` в `mappers.ts`;
+- **`setup`**: Examples + Background (как `mapScenario`), не теряется для Scenario Outline;
 - используется в `autotest.steps` и `stepResults`.
 
 **Исправления побочных багов:**

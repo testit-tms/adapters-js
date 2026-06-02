@@ -3,7 +3,7 @@ import {
   formatPickleStepTitle,
   mapPickleToAutotestPost,
 } from "./mappers";
-import { gherkinFeature, pickleForScenario } from "./test-fixtures";
+import { gherkinFeature, gherkinOutlineFeature, pickleForScenario } from "./test-fixtures";
 
 describe("cucumber mappers", () => {
   const annotationDoc = gherkinFeature({
@@ -84,5 +84,30 @@ describe("cucumber mappers", () => {
     });
 
     expect(formatPickleStepTitle(documents, pickle.steps[0])).toBe("Then  return true");
+  });
+
+  it("mapPickleToAutotestPost includes Examples table in setup for Scenario Outline", () => {
+    const outlineDoc = gherkinOutlineFeature({
+      uri: "features/outline.feature",
+      featureName: "OutlineFeature",
+      scenarioId: "sc-outline",
+      scenarioName: "Parametrized test success",
+      stepId: "step-outline",
+      stepKeyword: "Then ",
+      stepText: "return true",
+    });
+    const pickle = pickleForScenario({
+      id: "p-outline-1",
+      uri: "features/outline.feature",
+      name: "Parametrized test success -- #1",
+      scenarioId: "sc-outline",
+      stepId: "step-outline",
+      stepText: "return true",
+    });
+
+    const autotest = mapPickleToAutotestPost([outlineDoc], pickle, "ext-outline", (s) => s.text);
+
+    expect(autotest.setup).toHaveLength(1);
+    expect(autotest.setup?.[0]?.title).toBe("Parameters");
   });
 });

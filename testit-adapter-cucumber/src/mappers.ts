@@ -199,6 +199,48 @@ export function findScenarioForPickle(document: GherkinDocument, pickle: Pickle)
   return undefined;
 }
 
+function collectFeatureBackgrounds(document: GherkinDocument): ShortStep[] {
+  if (document.feature === undefined) {
+    return [];
+  }
+  return document.feature.children
+    .map((child) => child.background)
+    .filter((background): background is Background => background !== undefined)
+    .map((background) => mapBackground(background));
+}
+
+function findRuleForScenario(document: GherkinDocument, scenario: Scenario): Rule | undefined {
+  if (document.feature === undefined) {
+    return undefined;
+  }
+  for (const child of document.feature.children) {
+    if (child.rule === undefined) {
+      continue;
+    }
+    for (const ruleChild of child.rule.children) {
+      if (ruleChild.scenario?.id === scenario.id) {
+        return child.rule;
+      }
+    }
+  }
+  return undefined;
+}
+
+/** Same setup chain as mapScenario: Examples + feature/rule backgrounds. */
+export function buildSetupForScenario(document: GherkinDocument, scenario: Scenario): ShortStep[] {
+  let setup = collectFeatureBackgrounds(document);
+  const rule = findRuleForScenario(document, scenario);
+  if (rule !== undefined) {
+    setup = setup.concat(
+      rule.children
+        .map((child) => child.background)
+        .filter((background): background is Background => background !== undefined)
+        .map((background) => mapBackground(background)),
+    );
+  }
+  return scenario.examples.map(mapExamples).concat(setup);
+}
+
 /**
  * Build autotest metadata for a pickle (same tag/fallback rules as mapScenario).
  * Resolves document by pickle.uri and scenario by pickle.astNodeIds.
@@ -241,6 +283,10 @@ export function mapPickleToAutotestPost(
       docTags.className ??
       document?.feature?.name ??
       scenario?.name,
+    setup:
+      document !== undefined && scenario !== undefined
+        ? buildSetupForScenario(document, scenario)
+        : [],
     steps: pickle.steps.map((step) => ({ title: stepTitleFn(step) })),
     externalKey: scenario?.name ?? pickle.name,
   };

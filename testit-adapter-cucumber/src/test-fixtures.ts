@@ -66,6 +66,73 @@ export function gherkinFeature(params: {
   } as unknown as GherkinDocument;
 }
 
+export function gherkinOutlineFeature(params: {
+  uri: string;
+  featureName: string;
+  scenarioId: string;
+  scenarioName: string;
+  stepId: string;
+  stepKeyword: string;
+  stepText: string;
+}): GherkinDocument {
+  return {
+    uri: params.uri,
+    feature: {
+      name: params.featureName,
+      description: "",
+      keyword: "Feature",
+      language: "en",
+      location: loc,
+      tags: [],
+      children: [
+        {
+          scenario: {
+            id: params.scenarioId,
+            name: params.scenarioName,
+            description: "",
+            keyword: "Scenario Outline",
+            tags: [],
+            location: loc,
+            steps: [
+              {
+                id: params.stepId,
+                keyword: params.stepKeyword,
+                text: params.stepText,
+                location: loc,
+              },
+            ],
+            examples: [
+              {
+                id: "examples-1",
+                tags: [],
+                location: loc,
+                name: "",
+                description: "",
+                tableHeader: {
+                  cells: [
+                    { value: "number", location: loc },
+                    { value: "value", location: loc },
+                  ],
+                },
+                tableBody: [
+                  {
+                    id: "row-1",
+                    location: loc,
+                    cells: [
+                      { value: "1", location: loc },
+                      { value: "string01", location: loc },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      ],
+    },
+  } as unknown as GherkinDocument;
+}
+
 export function pickleForScenario(params: {
   id: string;
   uri: string;

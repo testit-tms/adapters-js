@@ -118,7 +118,7 @@ jobs:
 
           # Copy the specific adapter
           # Handle different output directories for different adapters
-          if [ "${{ matrix.adapter_name }}" = "testit-adapter-mocha" ]; then
+          if [ "${{ matrix.adapter_name }}" = "testit-adapter-mocha" ] || [ "${{ matrix.adapter_name }}" = "testcafe-reporter-testit" ]; then
             cp -r ../../${{ matrix.adapter_name }}/lib node_modules/${{ matrix.adapter_name }}
           elif [ "${{ matrix.adapter_name }}" = "testit-adapter-codecept" ]; then
             cp -r ../../${{ matrix.adapter_name }}/build node_modules/${{ matrix.adapter_name }}
