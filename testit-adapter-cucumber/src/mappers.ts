@@ -3,6 +3,7 @@ import {
   DataTable,
   Examples,
   GherkinDocument,
+  PickleStep,
   Rule,
   Scenario,
   Step as CucumberStep,
@@ -116,6 +117,54 @@ export function mapStep(step: CucumberStep): ShortStep {
     title: `${step.keyword} ${step.text}`,
     description: step.docString?.content ?? mapDataTable(step.dataTable),
   };
+}
+
+function collectGherkinSteps(document: GherkinDocument): CucumberStep[] {
+  const steps: CucumberStep[] = [];
+  const feature = document.feature;
+  if (feature === undefined) {
+    return steps;
+  }
+
+  for (const child of feature.children) {
+    if (child.background !== undefined) {
+      steps.push(...child.background.steps);
+    }
+    if (child.scenario !== undefined) {
+      steps.push(...child.scenario.steps);
+    }
+    if (child.rule !== undefined) {
+      for (const ruleChild of child.rule.children) {
+        if (ruleChild.background !== undefined) {
+          steps.push(...ruleChild.background.steps);
+        }
+        if (ruleChild.scenario !== undefined) {
+          steps.push(...ruleChild.scenario.steps);
+        }
+      }
+    }
+  }
+  return steps;
+}
+
+export function findGherkinStep(documents: GherkinDocument[], pickleStep: PickleStep): CucumberStep | undefined {
+  for (const document of documents) {
+    for (const step of collectGherkinSteps(document)) {
+      if (pickleStep.astNodeIds.includes(step.id)) {
+        return step;
+      }
+    }
+  }
+  return undefined;
+}
+
+/** Pickle steps have text only; keyword comes from the linked Gherkin step. */
+export function formatPickleStepTitle(documents: GherkinDocument[], pickleStep: PickleStep): string {
+  const gherkinStep = findGherkinStep(documents, pickleStep);
+  if (gherkinStep !== undefined) {
+    return mapStep(gherkinStep).title;
+  }
+  return pickleStep.text;
 }
 
 export function mapDataTable(dataTable: DataTable | undefined): string | undefined {

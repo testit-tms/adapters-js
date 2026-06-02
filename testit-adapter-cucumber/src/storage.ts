@@ -10,7 +10,7 @@ import {
   TestStepStarted,
 } from "@cucumber/messages";
 import { IStorage } from "./types";
-import { mapDate } from "./mappers";
+import { formatPickleStepTitle, mapDate } from "./mappers";
 import { calculateResultOutcome, parseTags } from "./utils";
 
 type TestCaseId = string;
@@ -123,8 +123,7 @@ export class Storage implements IStorage {
         workItemIds: tags.workItemIds,
         namespace: tags.nameSpace,
         classname: tags.className ?? featureName,
-        // Pickle steps do not include keywords; keep text only.
-        steps: pickle.steps.map((s) => ({ title: s.text })),
+        steps: pickle.steps.map((s) => ({ title: this.formatStepTitle(s) })),
         externalKey: pickle.name,
       };
     });
@@ -237,11 +236,15 @@ export class Storage implements IStorage {
       workItemIds: tags.workItemIds,
       namespace: tags.nameSpace,
       classname: tags.className ?? this.gherkinDocuments.find((d) => d.feature)?.feature?.name,
-      steps: pickle.steps.map((s) => ({ title: s.text })),
+      steps: pickle.steps.map((s) => ({ title: this.formatStepTitle(s) })),
       externalKey: pickle.name,
     };
 
     return { autotest, result };
+  }
+
+  private formatStepTitle(pickleStep: PickleStep): string {
+    return formatPickleStepTitle(this.gherkinDocuments, pickleStep);
   }
 
   getStepResult(pickleStep: PickleStep, testCase: TestCase): Step | undefined {
@@ -261,7 +264,7 @@ export class Storage implements IStorage {
     }
 
     return {
-      title: pickleStep.text,
+      title: this.formatStepTitle(pickleStep),
       startedOn: mapDate(testStepStarted.timestamp.seconds),
       duration: testStepFinished.testStepResult.duration.seconds,
       completedOn: mapDate(testStepFinished.timestamp.seconds),
