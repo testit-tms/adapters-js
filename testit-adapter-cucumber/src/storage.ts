@@ -10,7 +10,7 @@ import {
   TestStepStarted,
 } from "@cucumber/messages";
 import { IStorage } from "./types";
-import { mapDate, mapDocument } from "./mappers";
+import { mapDate } from "./mappers";
 import { calculateResultOutcome, parseTags } from "./utils";
 
 type TestCaseId = string;
@@ -28,9 +28,19 @@ export class Storage implements IStorage {
   private links: Record<TestCaseId, Link[]> = {};
   private attachments: Record<TestCaseId, Attachment[]> = {};
 
-  private getPickleExternalId(pickle: Pickle): string {
+  private getPickleExternalIdBase(pickle: Pickle): string {
     const tags = parseTags(pickle.tags);
     return tags.externalId ?? Utils.getHash(tags.name ?? pickle.name);
+  }
+
+  /** Disambiguate Scenario Outline rows that share the same @ExternalId tag. */
+  resolvePickleExternalId(pickle: Pickle): string {
+    const base = this.getPickleExternalIdBase(pickle);
+    const duplicates = this.pickles.filter((p) => this.getPickleExternalIdBase(p) === base).length;
+    if (duplicates > 1) {
+      return `${base}__${Utils.getHash(pickle.name)}`;
+    }
+    return base;
   }
 
   isResolvedTestCase(testCase: TestCase): boolean {
@@ -103,7 +113,7 @@ export class Storage implements IStorage {
     return this.pickles.map((pickle) => {
       const tags = parseTags(pickle.tags);
       return {
-        externalId: this.getPickleExternalId(pickle),
+        externalId: this.resolvePickleExternalId(pickle),
         name: tags.name ?? pickle.name,
         title: tags.title,
         description: tags.description,
@@ -121,74 +131,117 @@ export class Storage implements IStorage {
   }
 
   getTestRunResults(): AutotestResult[] {
-    const results: AutotestResult[] = [];
+    return this.testCasesFinished
+      .map((finished) => this.buildRealtimePayload(finished.testCaseStartedId)?.result)
+      .filter((result): result is AutotestResult => result !== undefined);
+  }
 
-    for (const pickle of this.pickles) {
-      const tags = parseTags(pickle.tags);
+  getRealtimePayload(
+    testCaseStartedId: string,
+  ): { autotest: AutotestPost; result: AutotestResult } | undefined {
+    return this.buildRealtimePayload(testCaseStartedId);
+  }
 
-      const testCase = this.testCases.find((testCase) => testCase.pickleId === pickle.id);
-
-      if (testCase !== undefined) {
-        const testCaseStarted = this.testCasesStarted.find((started) => started.testCaseId === testCase.id);
-        if (testCaseStarted === undefined) {
-          continue;
-        }
-
-        const testCaseFinished = this.testCasesFinished.find(
-          (finished) => finished.testCaseStartedId === testCaseStarted.id
-        );
-        if (testCaseFinished === undefined) {
-          continue;
-        }
-
-        const stepResults = pickle.steps
-          .map((step) => this.getStepResult(step, testCase))
-          .filter((step): step is Step => step !== undefined);
-        if (stepResults.length !== pickle.steps.length) {
-          // In realtime mode envelopes can arrive out of order; wait for next pass.
-          continue;
-        }
-        const steps = stepResults
-          .filter((item, i, arr) => {
-            const prevOutcome = arr[i - 1]?.outcome;
-
-            return !(
-              item.outcome === "Skipped" &&
-              prevOutcome !== undefined &&
-              ["Failed", "Skipped"].includes(prevOutcome)
-            );
-          });
-
-        const messages: string[] = [];
-
-        for (const step of pickle.steps) {
-          const message = this.getStepMessage(step, testCase);
-          if (message !== undefined) {
-            messages.push(message);
-          }
-        }
-
-        const links = this.links[testCase.id] ?? [];
-        links.push(...tags.links);
-
-        const result: AutotestResult = {
-          autoTestExternalId: this.getPickleExternalId(pickle),
-          links,
-          stepResults: steps,
-          outcome: calculateResultOutcome(
-            steps.map((step) => step.outcome).filter((outcome): outcome is Outcome => outcome !== undefined)
-          ),
-          startedOn: mapDate(testCaseStarted.timestamp.seconds),
-          completedOn: mapDate(testCaseFinished.timestamp.seconds),
-          duration: testCaseFinished.timestamp.seconds - testCaseStarted.timestamp.seconds,
-          message: this.messages[testCase.id]?.join("\n"),
-          traces: messages.join("\n"),
-          attachments: this.attachments[testCase.id],
-        };
-        results.push(result);
+  listCatchUpRealtimePayloads(
+    sentTestCaseStartedIds: ReadonlySet<string>,
+  ): Array<{ testCaseStartedId: string; autotest: AutotestPost; result: AutotestResult }> {
+    const payloads: Array<{ testCaseStartedId: string; autotest: AutotestPost; result: AutotestResult }> = [];
+    for (const finished of this.testCasesFinished) {
+      if (sentTestCaseStartedIds.has(finished.testCaseStartedId)) {
+        continue;
+      }
+      const payload = this.buildRealtimePayload(finished.testCaseStartedId);
+      if (payload !== undefined) {
+        payloads.push({ testCaseStartedId: finished.testCaseStartedId, ...payload });
       }
     }
-    return results;
+    return payloads;
+  }
+
+  private buildRealtimePayload(
+    testCaseStartedId: string,
+  ): { autotest: AutotestPost; result: AutotestResult } | undefined {
+    const testCaseStarted = this.testCasesStarted.find((started) => started.id === testCaseStartedId);
+    if (testCaseStarted === undefined) {
+      return undefined;
+    }
+
+    const testCaseFinished = this.testCasesFinished.find(
+      (finished) => finished.testCaseStartedId === testCaseStartedId,
+    );
+    if (testCaseFinished === undefined) {
+      return undefined;
+    }
+
+    const testCase = this.testCases.find((tc) => tc.id === testCaseStarted.testCaseId);
+    if (testCase === undefined) {
+      return undefined;
+    }
+
+    const pickle = this.pickles.find((p) => p.id === testCase.pickleId);
+    if (pickle === undefined) {
+      return undefined;
+    }
+
+    const tags = parseTags(pickle.tags);
+    const stepResults = pickle.steps
+      .map((step) => this.getStepResult(step, testCase))
+      .filter((step): step is Step => step !== undefined);
+    if (stepResults.length !== pickle.steps.length) {
+      return undefined;
+    }
+
+    const steps = stepResults.filter((item, i, arr) => {
+      const prevOutcome = arr[i - 1]?.outcome;
+      return !(
+        item.outcome === "Skipped" &&
+        prevOutcome !== undefined &&
+        ["Failed", "Skipped"].includes(prevOutcome)
+      );
+    });
+
+    const messages: string[] = [];
+    for (const step of pickle.steps) {
+      const message = this.getStepMessage(step, testCase);
+      if (message !== undefined) {
+        messages.push(message);
+      }
+    }
+
+    const externalId = this.resolvePickleExternalId(pickle);
+    const links = [...(this.links[testCase.id] ?? []), ...(tags.links ?? [])];
+
+    const result: AutotestResult = {
+      autoTestExternalId: externalId,
+      links,
+      stepResults: steps,
+      outcome: calculateResultOutcome(
+        steps.map((step) => step.outcome).filter((outcome): outcome is Outcome => outcome !== undefined),
+      ),
+      startedOn: mapDate(testCaseStarted.timestamp.seconds),
+      completedOn: mapDate(testCaseFinished.timestamp.seconds),
+      duration: testCaseFinished.timestamp.seconds - testCaseStarted.timestamp.seconds,
+      message: this.messages[testCase.id]?.join("\n"),
+      traces: messages.join("\n"),
+      attachments: this.attachments[testCase.id],
+    };
+
+    const autotest: AutotestPost = {
+      externalId,
+      name: tags.name ?? pickle.name,
+      title: tags.title,
+      description: tags.description,
+      links: tags.links,
+      labels: tags.labels?.map((label) => ({ name: label })),
+      tags: tags.tags,
+      workItemIds: tags.workItemIds,
+      namespace: tags.nameSpace,
+      classname: tags.className ?? this.gherkinDocuments.find((d) => d.feature)?.feature?.name,
+      steps: pickle.steps.map((s) => ({ title: s.text })),
+      externalKey: pickle.name,
+    };
+
+    return { autotest, result };
   }
 
   getStepResult(pickleStep: PickleStep, testCase: TestCase): Step | undefined {

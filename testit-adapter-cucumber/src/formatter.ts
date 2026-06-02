@@ -24,7 +24,9 @@ export default class TestItFormatter extends Formatter implements IFormatter {
   private readonly storage: IStorage;
   private readonly setupPromise: Promise<void>;
   private readonly importRealtime: boolean;
-  private readonly sentExternalIds = new Set<string>();
+  /** One TMS publish per Cucumber test execution (testCaseStarted.id). */
+  private readonly sentTestCaseStartedIds = new Set<string>();
+  private realtimeSendChain: Promise<void> = Promise.resolve();
 
   private currentTestCaseId: string | undefined;
   private attachmentsQueue: Promise<void>[] = [];
@@ -71,15 +73,17 @@ export default class TestItFormatter extends Formatter implements IFormatter {
       const resolvedAutotests = await this.strategy.testsInRun;
 
       if (resolvedAutotests !== undefined) {
+        this.onPickle(envelope.pickle);
+        const pickleExternalId = this.storage.resolvePickleExternalId(envelope.pickle);
         const tags = parseTags(envelope.pickle.tags);
-        const pickleExternalId = tags.externalId ?? Utils.getHash(tags.name ?? envelope.pickle.name);
+        const baseExternalId = tags.externalId ?? Utils.getHash(tags.name ?? envelope.pickle.name);
 
         for (const resolvedExternalId of resolvedAutotests) {
-          if (resolvedExternalId === pickleExternalId) {
-            this.onPickle(envelope.pickle);
+          if (resolvedExternalId === pickleExternalId || resolvedExternalId === baseExternalId) {
             return;
           }
         }
+        return;
       } else {
         this.onPickle(envelope.pickle);
         return;
@@ -139,8 +143,7 @@ export default class TestItFormatter extends Formatter implements IFormatter {
     this.currentTestCaseId = undefined;
     this.storage.saveTestCaseFinished(testCaseFinished);
     if (this.importRealtime) {
-      logger.debug("[cucumber] testCaseFinished → realtime");
-      await this.sendResolvedResultsRealtime();
+      await this.enqueueRealtimeSend(testCaseFinished.testCaseStartedId);
     }
   }
 
@@ -152,10 +155,8 @@ export default class TestItFormatter extends Formatter implements IFormatter {
       await Promise.allSettled(this.attachmentsQueue);
 
       if (this.importRealtime) {
-        logger.debug("[cucumber] onTestRunFinished catch-up realtime", {
-          sent: this.sentExternalIds.size,
-        });
-        await this.sendResolvedResultsRealtime();
+        await this.realtimeSendChain;
+        await this.catchUpRealtimeResults();
       } else {
         logger.debug("[cucumber] onTestRunFinished batch");
         const results = this.storage.getTestRunResults();
@@ -234,36 +235,49 @@ export default class TestItFormatter extends Formatter implements IFormatter {
     this.attachmentsQueue.push(promise);
   }
 
-  private async sendResolvedResultsRealtime(): Promise<void> {
-    const results = this.storage.getTestRunResults();
-    const autotests = this.storage.getAutotests();
-    const autotestsByExternalId = new Map(autotests.map((autotest) => [autotest.externalId, autotest]));
-    logger.debug("[cucumber] sendResolvedResultsRealtime", {
-      results: results.length,
-      alreadySent: this.sentExternalIds.size,
+  private enqueueRealtimeSend(testCaseStartedId: string): Promise<void> {
+    const task = this.realtimeSendChain.then(() => this.publishRealtimeResult(testCaseStartedId));
+    this.realtimeSendChain = task.catch(() => undefined);
+    return task;
+  }
+
+  private async publishRealtimeResult(testCaseStartedId: string): Promise<void> {
+    if (this.sentTestCaseStartedIds.has(testCaseStartedId)) {
+      logger.debug("[cucumber] realtime skip: already sent", { testCaseStartedId });
+      return;
+    }
+
+    await Promise.allSettled(this.attachmentsQueue);
+
+    const payload = this.storage.getRealtimePayload(testCaseStartedId);
+    if (payload === undefined) {
+      logger.debug("[cucumber] realtime skip: not ready", { testCaseStartedId });
+      return;
+    }
+
+    this.sentTestCaseStartedIds.add(testCaseStartedId);
+    const { autotest, result } = payload;
+    logger.debug("[cucumber] realtime send", {
+      testCaseStartedId,
+      externalId: autotest.externalId,
+      outcome: result.outcome,
     });
-    for (const result of results) {
-      if (this.sentExternalIds.has(result.autoTestExternalId)) {
-        continue;
-      }
-      const autotest = autotestsByExternalId.get(result.autoTestExternalId);
-      if (!autotest) {
-        logger.debug("[cucumber] realtime skip: autotest not ready", {
-          externalId: result.autoTestExternalId,
-        });
-        continue;
-      }
-      logger.debug("[cucumber] realtime send", {
-        externalId: result.autoTestExternalId,
-        outcome: result.outcome,
-      });
-      await this.strategy.loadAutotest(autotest, result.outcome).catch((err) => {
-        logger.error("Cucumber realtime loadAutotest failed:", (err as any)?.body ?? (err as any)?.error ?? err);
-      });
-      await this.strategy.loadTestRun([result]).catch((err) => {
-        logger.error("Cucumber realtime loadTestRun failed:", (err as any)?.body ?? (err as any)?.error ?? err);
-      });
-      this.sentExternalIds.add(result.autoTestExternalId);
+
+    try {
+      await this.strategy.loadAutotest(autotest, result.outcome);
+      await this.strategy.loadTestRun([result]);
+    } catch (err) {
+      this.sentTestCaseStartedIds.delete(testCaseStartedId);
+      logger.error("Cucumber realtime publish failed:", (err as any)?.body ?? (err as any)?.error ?? err);
+      throw err;
+    }
+  }
+
+  private async catchUpRealtimeResults(): Promise<void> {
+    const pending = this.storage.listCatchUpRealtimePayloads(this.sentTestCaseStartedIds);
+    logger.debug("[cucumber] catch-up realtime", { pending: pending.length, sent: this.sentTestCaseStartedIds.size });
+    for (const { testCaseStartedId } of pending) {
+      await this.publishRealtimeResult(testCaseStartedId);
     }
   }
 }
