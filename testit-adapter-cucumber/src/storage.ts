@@ -28,6 +28,11 @@ export class Storage implements IStorage {
   private links: Record<TestCaseId, Link[]> = {};
   private attachments: Record<TestCaseId, Attachment[]> = {};
 
+  private getPickleExternalId(pickle: Pickle): string {
+    const tags = parseTags(pickle.tags);
+    return tags.externalId ?? Utils.getHash(tags.name ?? pickle.name);
+  }
+
   isResolvedTestCase(testCase: TestCase): boolean {
     for (const pickle of this.pickles) {
       const tags = parseTags(pickle.tags);
@@ -42,26 +47,77 @@ export class Storage implements IStorage {
     this.gherkinDocuments.push(document);
   }
   savePickle(pickle: Pickle): void {
+    // Envelopes can be replayed/out-of-order; keep pickles unique by id.
+    const idx = this.pickles.findIndex((p) => p.id === pickle.id);
+    if (idx >= 0) {
+      this.pickles[idx] = pickle;
+      return;
+    }
     this.pickles.push(pickle);
   }
   saveTestCase(testCase: TestCase): void {
+    const idx = this.testCases.findIndex((t) => t.id === testCase.id);
+    if (idx >= 0) {
+      this.testCases[idx] = testCase;
+      return;
+    }
     this.testCases.push(testCase);
   }
   saveTestCaseStarted(testCaseStarted: TestCaseStarted): void {
+    const idx = this.testCasesStarted.findIndex((t) => t.id === testCaseStarted.id);
+    if (idx >= 0) {
+      this.testCasesStarted[idx] = testCaseStarted;
+      return;
+    }
     this.testCasesStarted.push(testCaseStarted);
   }
   saveTestCaseFinished(testCaseFinished: TestCaseFinished): void {
+    const idx = this.testCasesFinished.findIndex((t) => t.testCaseStartedId === testCaseFinished.testCaseStartedId);
+    if (idx >= 0) {
+      this.testCasesFinished[idx] = testCaseFinished;
+      return;
+    }
     this.testCasesFinished.push(testCaseFinished);
   }
   saveTestStepStarted(testStepStarted: TestStepStarted): void {
+    const idx = this.testStepsStarted.findIndex((t) => t.testStepId === testStepStarted.testStepId);
+    if (idx >= 0) {
+      this.testStepsStarted[idx] = testStepStarted;
+      return;
+    }
     this.testStepsStarted.push(testStepStarted);
   }
   saveTestStepFinished(testStepFinished: TestStepFinished): void {
+    const idx = this.testStepsFinished.findIndex((t) => t.testStepId === testStepFinished.testStepId);
+    if (idx >= 0) {
+      this.testStepsFinished[idx] = testStepFinished;
+      return;
+    }
     this.testStepsFinished.push(testStepFinished);
   }
 
   getAutotests(): AutotestPost[] {
-    return this.gherkinDocuments.flatMap((document) => mapDocument(document));
+    // IMPORTANT: In Scenario Outline mode each example row becomes its own Pickle.
+    // Using scenario-level mapping causes externalId collisions and results overwrite each other.
+    const featureName = this.gherkinDocuments.find((d) => d.feature)?.feature?.name;
+    return this.pickles.map((pickle) => {
+      const tags = parseTags(pickle.tags);
+      return {
+        externalId: this.getPickleExternalId(pickle),
+        name: tags.name ?? pickle.name,
+        title: tags.title,
+        description: tags.description,
+        links: tags.links,
+        labels: tags.labels?.map((label) => ({ name: label })),
+        tags: tags.tags,
+        workItemIds: tags.workItemIds,
+        namespace: tags.nameSpace,
+        classname: tags.className ?? featureName,
+        // Pickle steps do not include keywords; keep text only.
+        steps: pickle.steps.map((s) => ({ title: s.text })),
+        externalKey: pickle.name,
+      };
+    });
   }
 
   getTestRunResults(): AutotestResult[] {
@@ -116,7 +172,7 @@ export class Storage implements IStorage {
         links.push(...tags.links);
 
         const result: AutotestResult = {
-          autoTestExternalId: tags.externalId ?? Utils.getHash(tags.name ?? pickle.name),
+          autoTestExternalId: this.getPickleExternalId(pickle),
           links,
           stepResults: steps,
           outcome: calculateResultOutcome(
@@ -188,7 +244,7 @@ export class Storage implements IStorage {
     if (this.links[testCaseId] === undefined) {
       this.links[testCaseId] = links;
     } else {
-      this.links[testCaseId].concat(links);
+      this.links[testCaseId].push(...links);
     }
   }
 
@@ -196,7 +252,7 @@ export class Storage implements IStorage {
     if (this.attachments[testCaseId] === undefined) {
       this.attachments[testCaseId] = attachments;
     } else {
-      this.attachments[testCaseId].concat(attachments);
+      this.attachments[testCaseId].push(...attachments);
     }
   }
 }

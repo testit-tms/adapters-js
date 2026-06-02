@@ -12,6 +12,12 @@ npm install testit-adapter-playwright
 
 ### Configuration
 
+
+#### Log level
+
+The adapter includes a custom logger; the default level is `warn`. Set another level at runtime with the `LOG_LEVEL` environment variable: `error`, `warn`, `info`, or `debug`.
+
+
 | Description                                                                                                                                                                                                                                                                                                                                                                            | File property                     | Environment variable                       |
 |----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------|--------------------------------------------|
 | Location of the TMS instance                                                                                                                                                                                                                                                                                                                                                           | url                               | TMS_URL                                    |
@@ -24,6 +30,7 @@ npm install testit-adapter-playwright
 | It enables/disables certificate validation (**It's optional**). Default value - true                                                                                                                                                                                                                                                                                                   | certValidation                    | TMS_CERT_VALIDATION                        |
 | Mode of automatic creation test cases (**It's optional**). Default value - false. The adapter supports following modes:<br/>true - in this mode, the adapter will create a test case linked to the created autotest (not to the updated autotest)<br/>false - in this mode, the adapter will not create a test case                                                                    | automaticCreationTestCases        | TMS_AUTOMATIC_CREATION_TEST_CASES          |
 | Mode of automatic updation links to test cases (**It's optional**). Default value - false. The adapter supports following modes:<br/>true - in this mode, the adapter will update links to test cases<br/>false - in this mode, the adapter will not update link to test cases                                                                                                         | automaticUpdationLinksToTestCases | TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES |
+| Logger level, default value is `warn`, available values: [`error`, `warn`, `info`, `debug`] | | LOG_LEVEL |
 
 Add Adapter to Playwright file configuration:
 
