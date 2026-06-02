@@ -186,11 +186,10 @@ Jest выполняет `afterAll` **после всех тестов**, до `r
 **`externalId`:**
 
 ```text
-base = @ExternalId из тегов pickle ?? hash(name ?? pickle.name)
-если несколько pickles с одним base → base + "__" + hash(pickle.name)
+@ExternalId из тегов pickle ?? hash(name ?? pickle.name)
 ```
 
-Нужно для Scenario Outline с общим `@ExternalId` на все строки Examples (иначе коллизии и «наложение» результатов).
+**Важно:** суффиксы к `externalId` **не добавляются** (в т.ч. для Scenario Outline). Иначе ломается совместимость с уже заведёнными автотестами в TMS (`parametrized test_success`, а не `parametrized test_success__hash…`). Несколько строк Examples с одним `@ExternalId` — один и тот же autotest, отдельные **результаты** в прогоне; дубли POST устраняются дедупом по `testCaseStarted.id`, а не изменением externalId.
 
 **Дедуп envelope в storage:** `savePickle`, `saveTestCase`, `saveTestCaseStarted`, `saveTestCaseFinished`, `saveTestStep*` — обновление по id, без дублей в массивах.
 
@@ -222,7 +221,7 @@ PickleStep содержит только `text` (`return true`). Keyword (`Then`
 
 #### Фильтр `testsInRun` (formatter)
 
-При заданном списке автотестов прогона pickle сохраняется, если `resolvedExternalId` совпадает с `resolvePickleExternalId(pickle)` **или** с базовым id (без суффикса outline).
+При заданном списке автотестов прогона pickle сохраняется, если `resolvedExternalId` совпадает с `resolvePickleExternalId(pickle)`.
 
 ### Debug
 
@@ -235,8 +234,8 @@ PickleStep содержит только `text` (`return true`). Keyword (`Then`
 | Симптом | Причина | Решение |
 |---------|---------|---------|
 | Один тест в прогоне 4–14 раз | Rescan + гонка `sentExternalIds` | Отправка по `testCaseStartedId` + очередь |
-| Outline «схлопывается» | Один `externalId` на все Examples | Суффикс `__hash(pickle.name)` |
 | Diff шагов: `return true` vs `Then return true` | Pickle без keyword | `formatPickleStepTitle` через astNodeIds |
+| externalId с суффиксом `__hash` | Суффикс outline (запрещён) | Только значение `@ExternalId`, без модификаций |
 
 ---
 
@@ -264,7 +263,7 @@ PickleStep содержит только `text` (`return true`). Keyword (`Then`
 | Файл | Что фиксирует |
 |------|----------------|
 | `src/mappers.test.ts` | `classname` по `pickle.uri`, `@ClassName`, keyword в title шага |
-| `src/storage.test.ts` | несколько feature в одном run, outline `externalId`, `getRealtimePayload`, catch-up |
+| `src/storage.test.ts` | несколько feature в одном run, один `externalId` для outline rows, `getRealtimePayload`, catch-up |
 
 Фикстуры: `src/test-fixtures.ts` (не входят в `dist`).
 

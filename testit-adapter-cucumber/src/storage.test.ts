@@ -61,9 +61,9 @@ describe("cucumber Storage", () => {
     expect(byExternal.get(storage.resolvePickleExternalId(pickleB))?.classname).toBe("MethodsTests");
   });
 
-  it("resolvePickleExternalId disambiguates Scenario Outline rows with same @ExternalId", () => {
+  it("resolvePickleExternalId is identical for Scenario Outline rows with same @ExternalId", () => {
     const storage = new Storage();
-    const sharedTag = ["@ExternalId=parametrized_test"];
+    const sharedTag = ["@ExternalId=parametrized_test_success"];
 
     const row1 = pickleForScenario({
       id: "p-row-1",
@@ -90,11 +90,9 @@ describe("cucumber Storage", () => {
     const id1 = storage.resolvePickleExternalId(row1);
     const id2 = storage.resolvePickleExternalId(row2);
 
-    expect(id1).toContain("parametrized");
-    expect(id2).toContain("parametrized");
-    expect(id1).toContain("__");
-    expect(id2).toContain("__");
-    expect(id1).not.toBe(id2);
+    expect(id1).toBe(id2);
+    expect(id1).toBe("parametrized test_success");
+    expect(id1).not.toContain("__");
   });
 
   it("getRealtimePayload returns one result per testCaseStarted with keyword in step title", () => {

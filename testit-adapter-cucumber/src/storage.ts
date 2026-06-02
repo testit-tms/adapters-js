@@ -28,19 +28,10 @@ export class Storage implements IStorage {
   private links: Record<TestCaseId, Link[]> = {};
   private attachments: Record<TestCaseId, Attachment[]> = {};
 
-  private getPickleExternalIdBase(pickle: Pickle): string {
+  /** @ExternalId from tags or hash(name); no suffixes — must match TMS autotest externalId. */
+  resolvePickleExternalId(pickle: Pickle): string {
     const tags = parseTags(pickle.tags);
     return tags.externalId ?? Utils.getHash(tags.name ?? pickle.name);
-  }
-
-  /** Disambiguate Scenario Outline rows that share the same @ExternalId tag. */
-  resolvePickleExternalId(pickle: Pickle): string {
-    const base = this.getPickleExternalIdBase(pickle);
-    const duplicates = this.pickles.filter((p) => this.getPickleExternalIdBase(p) === base).length;
-    if (duplicates > 1) {
-      return `${base}__${Utils.getHash(pickle.name)}`;
-    }
-    return base;
   }
 
   isResolvedTestCase(testCase: TestCase): boolean {

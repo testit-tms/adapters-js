@@ -1,4 +1,4 @@
-import { AdapterConfig, Additions, ConfigComposer, IStrategy, Link, StrategyFactory, Utils } from "testit-js-commons";
+import { AdapterConfig, Additions, ConfigComposer, IStrategy, Link, StrategyFactory } from "testit-js-commons";
 import { Formatter, IFormatterOptions } from "@cucumber/cucumber";
 import {
   Envelope,
@@ -75,11 +75,9 @@ export default class TestItFormatter extends Formatter implements IFormatter {
       if (resolvedAutotests !== undefined) {
         this.onPickle(envelope.pickle);
         const pickleExternalId = this.storage.resolvePickleExternalId(envelope.pickle);
-        const tags = parseTags(envelope.pickle.tags);
-        const baseExternalId = tags.externalId ?? Utils.getHash(tags.name ?? envelope.pickle.name);
 
         for (const resolvedExternalId of resolvedAutotests) {
-          if (resolvedExternalId === pickleExternalId || resolvedExternalId === baseExternalId) {
+          if (resolvedExternalId === pickleExternalId) {
             return;
           }
         }
