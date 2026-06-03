@@ -2,6 +2,7 @@ import {
   findGherkinDocument,
   formatPickleStepTitle,
   mapPickleToAutotestPost,
+  resolvePickleExternalId,
 } from "./mappers";
 import { gherkinFeature, gherkinOutlineFeature, pickleForScenario } from "./test-fixtures";
 
@@ -51,7 +52,7 @@ describe("cucumber mappers", () => {
       stepText: "call method",
     });
 
-    const autotest = mapPickleToAutotestPost(documents, pickle, "ext-methods", (s) => s.text);
+    const autotest = mapPickleToAutotestPost(documents, pickle, (s) => s.text);
 
     expect(autotest.classname).toBe("MethodsTests");
     expect(autotest.classname).not.toBe("AnnotationTests");
@@ -68,7 +69,7 @@ describe("cucumber mappers", () => {
       tagNames: ["@ClassName=CustomClass"],
     });
 
-    const autotest = mapPickleToAutotestPost(documents, pickle, "ext-tagged", (s) => s.text);
+    const autotest = mapPickleToAutotestPost(documents, pickle, (s) => s.text);
 
     expect(autotest.classname).toBe("CustomClass");
   });
@@ -95,6 +96,7 @@ describe("cucumber mappers", () => {
       stepId: "step-outline",
       stepKeyword: "Then ",
       stepText: "return true",
+      scenarioTags: ["@ExternalId=parametrized_test_success"],
     });
     const pickle = pickleForScenario({
       id: "p-outline-1",
@@ -105,9 +107,34 @@ describe("cucumber mappers", () => {
       stepText: "return true",
     });
 
-    const autotest = mapPickleToAutotestPost([outlineDoc], pickle, "ext-outline", (s) => s.text);
+    const autotest = mapPickleToAutotestPost([outlineDoc], pickle, (s) => s.text);
 
     expect(autotest.setup).toHaveLength(1);
     expect(autotest.setup?.[0]?.title).toBe("Parameters");
+    expect(autotest.externalId).toBe("parametrized test_success");
+    expect(autotest.externalId).not.toContain("__");
+  });
+
+  it("resolvePickleExternalId reads @ExternalId from scenario tags for outline rows", () => {
+    const outlineDoc = gherkinOutlineFeature({
+      uri: "features/outline.feature",
+      featureName: "OutlineFeature",
+      scenarioId: "sc-outline",
+      scenarioName: "Parametrized test success",
+      stepId: "step-outline",
+      stepKeyword: "Then ",
+      stepText: "return true",
+      scenarioTags: ["@ExternalId=parametrized_test_success"],
+    });
+    const pickle = pickleForScenario({
+      id: "p-outline-1",
+      uri: "features/outline.feature",
+      name: "Parametrized test success -- #1",
+      scenarioId: "sc-outline",
+      stepId: "step-outline",
+      stepText: "return true",
+    });
+
+    expect(resolvePickleExternalId([outlineDoc], pickle)).toBe("parametrized test_success");
   });
 });

@@ -241,6 +241,17 @@ export function buildSetupForScenario(document: GherkinDocument, scenario: Scena
   return scenario.examples.map(mapExamples).concat(setup);
 }
 
+/** @ExternalId from tags (pickle → scenario → feature) or hash(name). Never append suffixes. */
+export function resolvePickleExternalId(documents: GherkinDocument[], pickle: Pickle): string {
+  const document = findGherkinDocument(documents, pickle);
+  const scenario = document !== undefined ? findScenarioForPickle(document, pickle) : undefined;
+  const pickleTags = parseTags(pickle.tags);
+  const scenarioTags = scenario !== undefined ? parseTags(scenario.tags) : parseTags([]);
+  const docTags = document?.feature !== undefined ? parseTags(document.feature.tags) : parseTags([]);
+  const name = pickleTags.name ?? scenarioTags.name ?? docTags.name ?? scenario?.name ?? pickle.name;
+  return pickleTags.externalId ?? scenarioTags.externalId ?? docTags.externalId ?? Utils.getHash(name);
+}
+
 /**
  * Build autotest metadata for a pickle (same tag/fallback rules as mapScenario).
  * Resolves document by pickle.uri and scenario by pickle.astNodeIds.
@@ -248,11 +259,11 @@ export function buildSetupForScenario(document: GherkinDocument, scenario: Scena
 export function mapPickleToAutotestPost(
   documents: GherkinDocument[],
   pickle: Pickle,
-  externalId: string,
   stepTitleFn: (step: PickleStep) => string,
 ): AutotestPost {
   const document = findGherkinDocument(documents, pickle);
   const scenario = document !== undefined ? findScenarioForPickle(document, pickle) : undefined;
+  const externalId = resolvePickleExternalId(documents, pickle);
 
   const pickleTags = parseTags(pickle.tags);
   const scenarioTags = scenario !== undefined ? parseTags(scenario.tags) : parseTags([]);

@@ -186,10 +186,10 @@ Jest выполняет `afterAll` **после всех тестов**, до `r
 **`externalId`:**
 
 ```text
-@ExternalId из тегов pickle ?? hash(name ?? pickle.name)
+pickle @ExternalId ?? scenario @ExternalId ?? feature @ExternalId ?? hash(name)
 ```
 
-**Важно:** суффиксы к `externalId` **не добавляются** (в т.ч. для Scenario Outline). Иначе ломается совместимость с уже заведёнными автотестами в TMS (`parametrized test_success`, а не `parametrized test_success__hash…`). Несколько строк Examples с одним `@ExternalId` — один и тот же autotest, отдельные **результаты** в прогоне; дубли POST устраняются дедупом по `testCaseStarted.id`, а не изменением externalId.
+Единая функция `resolvePickleExternalId` в `mappers.ts` — используется и для autotest, и для result. **Суффиксы `__hash` не добавляются.**
 
 **Дедуп envelope в storage:** `savePickle`, `saveTestCase`, `saveTestCaseStarted`, `saveTestCaseFinished`, `saveTestStep*` — обновление по id, без дублей в массивах.
 

@@ -1,4 +1,4 @@
-import { Attachment, AutotestPost, AutotestResult, Link, Outcome, Step, Utils } from "testit-js-commons";
+import { Attachment, AutotestPost, AutotestResult, Link, Outcome, Step } from "testit-js-commons";
 import {
   GherkinDocument,
   Pickle,
@@ -10,7 +10,7 @@ import {
   TestStepStarted,
 } from "@cucumber/messages";
 import { IStorage } from "./types";
-import { formatPickleStepTitle, mapDate, mapPickleToAutotestPost } from "./mappers";
+import { formatPickleStepTitle, mapDate, mapPickleToAutotestPost, resolvePickleExternalId } from "./mappers";
 import { calculateResultOutcome, parseTags } from "./utils";
 
 type TestCaseId = string;
@@ -28,10 +28,8 @@ export class Storage implements IStorage {
   private links: Record<TestCaseId, Link[]> = {};
   private attachments: Record<TestCaseId, Attachment[]> = {};
 
-  /** @ExternalId from tags or hash(name); no suffixes — must match TMS autotest externalId. */
   resolvePickleExternalId(pickle: Pickle): string {
-    const tags = parseTags(pickle.tags);
-    return tags.externalId ?? Utils.getHash(tags.name ?? pickle.name);
+    return resolvePickleExternalId(this.gherkinDocuments, pickle);
   }
 
   isResolvedTestCase(testCase: TestCase): boolean {
@@ -111,12 +109,7 @@ export class Storage implements IStorage {
 
   getAutotests(): AutotestPost[] {
     return this.pickles.map((pickle) =>
-      mapPickleToAutotestPost(
-        this.gherkinDocuments,
-        pickle,
-        this.resolvePickleExternalId(pickle),
-        (step) => this.formatStepTitle(step),
-      ),
+      mapPickleToAutotestPost(this.gherkinDocuments, pickle, (step) => this.formatStepTitle(step)),
     );
   }
 
@@ -198,11 +191,10 @@ export class Storage implements IStorage {
       }
     }
 
-    const externalId = this.resolvePickleExternalId(pickle);
     const links = [...(this.links[testCase.id] ?? []), ...(tags.links ?? [])];
 
     const result: AutotestResult = {
-      autoTestExternalId: externalId,
+      autoTestExternalId: resolvePickleExternalId(this.gherkinDocuments, pickle),
       links,
       stepResults: steps,
       outcome: calculateResultOutcome(
@@ -216,12 +208,7 @@ export class Storage implements IStorage {
       attachments: this.attachments[testCase.id],
     };
 
-    const autotest = mapPickleToAutotestPost(
-      this.gherkinDocuments,
-      pickle,
-      externalId,
-      (step) => this.formatStepTitle(step),
-    );
+    const autotest = mapPickleToAutotestPost(this.gherkinDocuments, pickle, (step) => this.formatStepTitle(step));
 
     return { autotest, result };
   }

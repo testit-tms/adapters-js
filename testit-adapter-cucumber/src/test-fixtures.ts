@@ -74,6 +74,7 @@ export function gherkinOutlineFeature(params: {
   stepId: string;
   stepKeyword: string;
   stepText: string;
+  scenarioTags?: string[];
 }): GherkinDocument {
   return {
     uri: params.uri,
@@ -91,7 +92,7 @@ export function gherkinOutlineFeature(params: {
             name: params.scenarioName,
             description: "",
             keyword: "Scenario Outline",
-            tags: [],
+            tags: (params.scenarioTags ?? []).map(tag),
             location: loc,
             steps: [
               {

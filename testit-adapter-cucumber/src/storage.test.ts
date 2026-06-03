@@ -135,7 +135,8 @@ describe("cucumber Storage", () => {
     expect(payload).toBeDefined();
     expect(payload?.autotest.classname).toBe("AnnotationTests");
     expect(payload?.result.stepResults?.[0]?.title).toBe("Then  return true");
-    expect(payload?.result.autoTestExternalId).toBe(payload?.autotest.externalId);
+    expect(payload?.result.autoTestExternalId).not.toContain("__");
+    expect(payload?.autotest.externalId).toBe(payload?.result.autoTestExternalId);
   });
 
   it("listCatchUpRealtimePayloads skips already sent testCaseStarted ids", () => {
