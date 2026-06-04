@@ -110,6 +110,10 @@ API `testit.*` из `labels.ts` пишет поля в attachment `tms-metadata.
 
 Пример: тест «Тест поломки дерева» — `await testit.namespace('Отладка автотестов')` и `await testit.classname('Баг поломки дерева')` должны уходить в TMS оба поля.
 
+**Фикстура `prepare` с падением до `await use()`:** тело теста не выполняется → `testit.namespace` в теле не вызывается → в TMS остаётся fallback `tests` / `steps.test.ts`. Metadata нужно вызывать **до** падающего шага в фикстуре или после `await use()`.
+
+**Ключ store:** `testId`, `file + titlePath` (не только `title` — иначе ключи в labels и reporter не совпадают).
+
 ---
 
 ## 2) testit-adapter-cypress

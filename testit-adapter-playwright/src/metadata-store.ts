@@ -1,4 +1,5 @@
 import path from "path";
+import { Utils } from "testit-js-commons";
 import type { MetadataMessage } from "./labels";
 
 const STORE_KEY = Symbol.for("testit.playwright.metadata");
@@ -11,24 +12,69 @@ function metadataMap(): Map<string, MetadataMessage> {
   return g[STORE_KEY];
 }
 
-export function metadataKey(file: string, title: string): string {
-  return `${path.resolve(file)}\0${title}`;
+export function metadataKey(file: string, titlePath: string[]): string {
+  return `${path.resolve(file)}\0${titlePath.join("\0")}`;
+}
+
+export type MetadataRunContext = {
+  testId: string;
+  file: string;
+  titlePath: string[];
+  title: string;
+};
+
+export function metadataKeys(ctx: MetadataRunContext): string[] {
+  const fullTitle = ctx.titlePath.join(" › ");
+  return [
+    ctx.testId,
+    metadataKey(ctx.file, ctx.titlePath),
+    metadataKey(ctx.file, [ctx.title]),
+    `hash:${Utils.getHash(ctx.title)}`,
+    `hash:${Utils.getHash(fullTitle)}`,
+  ];
 }
 
 /** In-process metadata from testit.*(); attachments alone are unreliable in the reporter. */
-export function patchTestMetadata(key: string, patch: MetadataMessage): void {
-  const map = metadataMap();
-  map.set(key, { ...(map.get(key) ?? {}), ...patch });
+export function patchTestMetadataForRun(ctx: MetadataRunContext, patch: MetadataMessage): void {
+  for (const key of metadataKeys(ctx)) {
+    const map = metadataMap();
+    map.set(key, { ...(map.get(key) ?? {}), ...patch });
+  }
 }
 
-export function consumeTestMetadata(key: string): MetadataMessage | undefined {
-  const map = metadataMap();
-  const data = map.get(key);
-  if (!data) {
-    return undefined;
+function peekTestMetadata(key: string): MetadataMessage | undefined {
+  return metadataMap().get(key);
+}
+
+export function resolveTestMetadata(ctx: {
+  testId: string;
+  file: string;
+  titlePath: string[];
+  title: string;
+}): MetadataMessage | undefined {
+  let merged: MetadataMessage = {};
+  let found = false;
+  for (const key of metadataKeys(ctx)) {
+    const chunk = peekTestMetadata(key);
+    if (!chunk) {
+      continue;
+    }
+    merged = { ...merged, ...chunk };
+    found = true;
   }
-  map.delete(key);
-  return data;
+  return found ? merged : undefined;
+}
+
+export function releaseTestMetadata(ctx: {
+  testId: string;
+  file: string;
+  titlePath: string[];
+  title: string;
+}): void {
+  const map = metadataMap();
+  for (const key of metadataKeys(ctx)) {
+    map.delete(key);
+  }
 }
 
 export function applyMetadataTo(target: MetadataMessage, source: MetadataMessage): void {
