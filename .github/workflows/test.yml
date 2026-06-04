@@ -85,8 +85,6 @@ jobs:
           repository: testit-tms/js-examples
           ref: examples_for_tests
           path: js-examples
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps chromium
       - name: Setup dotnet
         uses: actions/setup-dotnet@v5
         with:
@@ -126,9 +124,9 @@ jobs:
             cp -r ../../${{ matrix.adapter_name }}/dist node_modules/${{ matrix.adapter_name }}
           fi
 
-          # Install Playwright browsers for codecept project
-          if [ "${{ matrix.project_name }}" = "codecept" ]; then
-            npx playwright install
+          # Playwright browsers only for codecept / testcafe examples
+          if [ "${{ matrix.project_name }}" = "codecept" ] || [ "${{ matrix.project_name }}" = "testcafe" ]; then
+            npx playwright install --with-deps chromium
           fi
           cd ../..
 

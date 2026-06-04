@@ -86,7 +86,7 @@ API `testit.*` из `labels.ts` пишет поля в attachment `tms-metadata.
 **Решение (два уровня):**
 
 1. **`labels.ts`** — перед `test.info().attach` читаются уже добавленные metadata-вложения из `test.info().attachments`, поля мержатся, в attachment уходит полный JSON.
-2. **`reporter.ts`** — `applyMetadataAttachments()` после обхода вложений мержит **все** `application/vnd.tms.metadata+json` из `result.attachments` в один `MetadataMessage`.
+2. **`reporter.ts`** — `applyMetadataAttachments()` после обхода вложений мержит **все** metadata-вложения (`contentType` или имя `tms-metadata.json`) в один `MetadataMessage`. Тело читается из `attachment.body` **или** `attachment.path` (Playwright в reporter чаще отдаёт только path после копирования attach на диск).
 
 **Приоритет `namespace` / `classname`:**
 
@@ -105,6 +105,7 @@ API `testit.*` из `labels.ts` пишет поля в attachment `tms-metadata.
 |---------|---------|---------|
 | Validator: `AutoTest.Namespace` = имя папки (`tests`), ожидался `testit.namespace()` | Несколько `tms-metadata.json`, в отчёте остался последний без `namespace` | Merge в `labels.ts` + `applyMetadataAttachments` в `reporter.ts` |
 | `classname` верный, `namespace` из пути | То же: последний metadata-attachment без `namespace` | То же |
+| Metadata в тесте есть, reporter не видит `namespace` | `applyMetadataAttachments` читал только `body`, в `onTestEnd` у attach только `path` | `readAttachmentBuffer()` + не грузить metadata как файл в TMS |
 
 Пример: тест «Тест поломки дерева» — `await testit.namespace('Отладка автотестов')` и `await testit.classname('Баг поломки дерева')` должны уходить в TMS оба поля.
 

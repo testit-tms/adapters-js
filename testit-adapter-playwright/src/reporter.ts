@@ -179,6 +179,10 @@ class TmsReporter implements Reporter {
     };
 
     for (const attachment of result.attachments) {
+      if (this.isMetadataAttachment(attachment)) {
+        continue;
+      }
+
       if (!attachment.body) {
         if (attachment.path && attachment.name !== "screenshot") {
           let content: Buffer;
@@ -201,10 +205,6 @@ class TmsReporter implements Reporter {
         continue;
       }
   
-      if (attachment.contentType === "application/vnd.tms.metadata+json") {
-        continue;
-      }
-
       if (attachment.name.match(stepAttachRegexp)) {
         const step = this.attachmentStepsCache.find((step: TestStep) => step.title === attachment.name);
         try {
@@ -228,14 +228,43 @@ class TmsReporter implements Reporter {
     return autotestData;
   }
 
+  private isMetadataAttachment(attachment: ResultAttachment): boolean {
+    return (
+      attachment.contentType === "application/vnd.tms.metadata+json" ||
+      attachment.name === "tms-metadata.json"
+    );
+  }
+
+  /** Playwright copies inline attach to disk — reporter often gets path only, not body. */
+  private readAttachmentBuffer(attachment: ResultAttachment): Buffer | undefined {
+    if (attachment.body) {
+      return attachment.body;
+    }
+    if (!attachment.path) {
+      return undefined;
+    }
+    try {
+      return Utils.readBufferSync(attachment.path);
+    } catch (err: any) {
+      if (err?.code === "ENOENT") {
+        return undefined;
+      }
+      throw err;
+    }
+  }
+
   /** Each testit.*() call may add a separate tms-metadata.json; merge all of them. */
   private applyMetadataAttachments(autotestData: MetadataMessage, attachments: Result["attachments"]): void {
     let merged: MetadataMessage = {};
     for (const attachment of attachments) {
-      if (attachment.contentType !== "application/vnd.tms.metadata+json" || !attachment.body) {
+      if (!this.isMetadataAttachment(attachment)) {
         continue;
       }
-      merged = { ...merged, ...JSON.parse(attachment.body.toString()) };
+      const body = this.readAttachmentBuffer(attachment);
+      if (!body) {
+        continue;
+      }
+      merged = { ...merged, ...JSON.parse(body.toString()) };
     }
 
     if (merged.externalId) {
