@@ -1,15 +1,15 @@
 // @ts-ignore
 import * as TestitApiClient from "testit-api-client";
 import { AdapterConfig, BaseService } from "../../common";
-import { escapeHtmlInObject, escapeHtmlInObjectArray, logTmsLoadTestRun } from "../../common/utils";
+import { escapeHtmlInObject, escapeHtmlInObjectArray, logTmsLoadTestRun, withHttpRetry } from "../../common/utils";
 import { type ITestRunsService, TestRunId, AutotestResult, TestRunGet } from "./testruns.type";
 import { type ITestRunConverter, TestRunConverter } from "./testruns.converter";
 import { TestRunErrorHandler } from "./testruns.handler";
+import logger from "../../logger";
 
 export class TestRunsService extends BaseService implements ITestRunsService {
   protected _client;
   protected _converter: ITestRunConverter;
-
   constructor(protected readonly config: AdapterConfig) {
     super(config);
     this._client = new TestitApiClient.TestRunsApi();
@@ -26,7 +26,7 @@ export class TestRunsService extends BaseService implements ITestRunsService {
       .createEmpty({ createEmptyTestRunApiModel: escapeHtmlInObject(createRequest) })
       // @ts-ignore
       .then((response) => {
-        //console.debug("Full response from createEmpty:", response);
+        //logger.debug("Full response from createEmpty:", response);
         const data = response.body || response;
         if (!data) {
           throw new Error("API returned undefined response");
@@ -37,7 +37,7 @@ export class TestRunsService extends BaseService implements ITestRunsService {
         return data.id;
       })
       .catch((err: any) => {
-        console.error("Error in createTestRun:", err);
+        logger.error("Error in createTestRun:", err);
         throw err;
       });
   }
@@ -59,7 +59,7 @@ export class TestRunsService extends BaseService implements ITestRunsService {
       .updateEmpty({ updateEmptyTestRunApiModel: testRun })
       // @ts-ignore
       .then((response) => {
-        console.log("Full response from updateEmpty:", response);
+        logger.log("Full response from updateEmpty:", response);
         const data = response.body || response;
         if (!data) {
           throw new Error("API returned undefined response");
@@ -102,7 +102,7 @@ export class TestRunsService extends BaseService implements ITestRunsService {
       statusCode: model.statusCode,
       hasStartedOn: Boolean(model.startedOn),
     });
-    await this._client.setAutoTestResultsForTestRun(testRunId, { autoTestResultsForTestRunModel: [model] });
+    await this.sendAutotestResultWithRetry(testRunId, model);
     logTmsLoadTestRun("POST setAutoTestResults (InProgress stub) done", {
       autoTestExternalId: model.autoTestExternalId,
     });
@@ -122,7 +122,7 @@ export class TestRunsService extends BaseService implements ITestRunsService {
       });
       await this.sendAutotestResultWithRetry(testRunId, autotestResult).catch((err: any) => {
         const normalized = err?.body ?? err?.error ?? err;
-        console.error("[testit-js-commons:loadTestRun] FAILED to post final result", {
+        logger.error("[testit-js-commons:loadTestRun] FAILED to post final result", {
           testRunId,
           autoTestExternalId: autotestResult.autoTestExternalId,
           error: normalized,
@@ -132,28 +132,20 @@ export class TestRunsService extends BaseService implements ITestRunsService {
   }
 
   private async sendAutotestResultWithRetry(testRunId: string, autotestResult: any): Promise<void> {
-    const maxAttempts = 5;
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      try {
-        await this._client.setAutoTestResultsForTestRun(testRunId, { autoTestResultsForTestRunModel: [autotestResult] });
-        return;
-      } catch (err: any) {
-        const code = err?.code;
-        const status = err?.status ?? err?.statusCode;
-        const msg = String(err?.message ?? err ?? "");
-        const transient =
-          code === "ECONNRESET" ||
-          code === "ETIMEDOUT" ||
-          code === "EPIPE" ||
-          code === "ECONNABORTED" ||
-          msg.includes("socket hang up") ||
-          msg.includes("read ECONNRESET") ||
-          (typeof status === "number" && status >= 500);
-        if (!transient || attempt === maxAttempts) {
-          throw err;
-        }
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
-    }
+    await withHttpRetry(
+      () =>
+        this._client.setAutoTestResultsForTestRun(testRunId, {
+          autoTestResultsForTestRunModel: [autotestResult],
+        }),
+      {
+        label: `setAutoTestResults:${autotestResult.autoTestExternalId}:${autotestResult.statusCode ?? autotestResult.statusType}`,
+      },
+    );
+    logger.debug("[testruns] setAutoTestResults ok", {
+      testRunId,
+      autoTestExternalId: autotestResult.autoTestExternalId,
+      statusCode: autotestResult.statusCode,
+      statusType: autotestResult.statusType,
+    });
   }
 }

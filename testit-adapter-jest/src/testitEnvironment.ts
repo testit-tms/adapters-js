@@ -5,6 +5,8 @@ import { Attachment, AutotestPost, AutotestResult, Link, Step, Additions, Config
 import { debug } from "debug";
 import { AutotestData } from "./types";
 import { excludePath, mapParams } from "./utils";
+import { logger } from "testit-js-commons";
+
 
 const log = debug("tms").extend("environment");
 
@@ -26,6 +28,11 @@ const emptyStepData = (): Step => ({
   attachments: [],
 });
 
+type RealtimeSentSnapshot = {
+  autotest: AutotestData;
+  result: AutotestResult;
+};
+
 export default class TestItEnvironment extends NodeEnvironment {
   private autotestData: AutotestData = emptyAutotestData();
   private currentStepData: Step = emptyStepData();
@@ -45,16 +52,21 @@ export default class TestItEnvironment extends NodeEnvironment {
   private readonly usesGlobalStrategy: boolean;
   private readonly unhandledRejectionHandler: (reason: unknown) => void;
   private finalized = false;
+  private readonly importRealtime: boolean;
+  private currentTestAttachmentsQueue: Promise<Attachment[]>[] = [];
+  /** Sent in realtime on test_done; finalized with afterAll on run_finish. */
+  private realtimeSent: RealtimeSentSnapshot[] = [];
 
   constructor(jestConfig: JestEnvironmentConfig, jestContext: EnvironmentContext) {
     super(jestConfig, jestContext);
     const config = new ConfigComposer().compose(jestConfig.projectConfig.testEnvironmentOptions);
+    this.importRealtime = Boolean(config.importRealtime);
 
     this.additions = new Additions(config);
     this.usesGlobalStrategy = Boolean(globalThis.strategy);
     this.strategy = globalThis.strategy ?? StrategyFactory.create(config);
     this.unhandledRejectionHandler = (reason: unknown) => {
-      console.error("Unhandled promise rejection in Jest environment:", this.formatError(reason));
+      logger.error("Unhandled promise rejection in Jest environment:", this.formatError(reason));
     };
 
     this.testPath = excludePath(jestContext.testPath, jestConfig.globalConfig.rootDir);
@@ -66,9 +78,10 @@ export default class TestItEnvironment extends NodeEnvironment {
     await super.setup();
     const testRunId = await this.strategy.testRunId;
     const syncRunner = (this.strategy as any).syncStorageRunner;
-    console.debug("[jest-env] setup start", {
+    logger.debug("[jest-env] setup start", {
       pid: process.pid,
       testRunId,
+      importRealtime: this.importRealtime,
       usesGlobalStrategy: this.usesGlobalStrategy,
       syncRunnerActive: Boolean(syncRunner?.isActive?.()),
       syncRunnerMaster: Boolean(syncRunner?.isMasterWorker?.()),
@@ -79,18 +92,18 @@ export default class TestItEnvironment extends NodeEnvironment {
       try {
         await this.strategy.setup();
         const localSyncRunner = (this.strategy as any).syncStorageRunner;
-        console.debug("[jest-env] local setup done", {
+        logger.debug("[jest-env] local setup done", {
           pid: process.pid,
           testRunId,
           syncRunnerActive: Boolean(localSyncRunner?.isActive?.()),
           syncRunnerMaster: Boolean(localSyncRunner?.isMasterWorker?.()),
         });
       } catch (err: any) {
-        console.error("Failed local strategy.setup() in Jest environment:", this.formatError(err));
+        logger.error("Failed local strategy.setup() in Jest environment:", this.formatError(err));
       }
     } else {
       const sharedSyncRunner = (this.strategy as any).syncStorageRunner;
-      console.debug("[jest-env] shared strategy mode", {
+      logger.debug("[jest-env] shared strategy mode", {
         pid: process.pid,
         testRunId,
         syncRunnerActive: Boolean(sharedSyncRunner?.isActive?.()),
@@ -159,10 +172,16 @@ export default class TestItEnvironment extends NodeEnvironment {
           break;
         }
         case "run_finish": {
+          logger.debug("[jest-env] run_finish", {
+            importRealtime: this.importRealtime,
+            realtimeSent: this.realtimeSent.length,
+            afterAllSteps: this.afterAllSteps.length,
+          });
           try {
+            await this.flushRealtimeTeardown();
             await this.loadResults();
           } catch (err: any) {
-            console.error("Failed to load results in Jest run_finish:", this.formatError(err));
+            logger.error("Failed to load results in Jest run_finish:", this.formatError(err));
           } finally {
             // In worker mode we run local setup, so finalization must happen here even if loadResults fails.
             if (!this.finalized) {
@@ -170,7 +189,7 @@ export default class TestItEnvironment extends NodeEnvironment {
               try {
                 await this.strategy.teardown();
               } catch (err: any) {
-                console.error("Failed strategy.teardown() in Jest run_finish:", this.formatError(err));
+                logger.error("Failed strategy.teardown() in Jest run_finish:", this.formatError(err));
               }
             }
           }
@@ -178,7 +197,7 @@ export default class TestItEnvironment extends NodeEnvironment {
         }
       }
     } catch (err: any) {
-      console.error("Unhandled async error in Jest environment event handler:", this.formatError(err));
+      logger.error("Unhandled async error in Jest environment event handler:", this.formatError(err));
     }
   }
 
@@ -242,14 +261,14 @@ export default class TestItEnvironment extends NodeEnvironment {
   async saveResult(test: Extract<Event, { name: "test_done" }>["test"]) {
     log("Saving result for %s", test.name);
 
-    await Promise.allSettled(this.attachmentsQueue);
+    await Promise.allSettled(this.currentTestAttachmentsQueue);
 
+    const autotestSnapshot = this.snapshotAutotestData();
     const errorMessage = test.errors.length > 0 ? test.errors.map((err) => err[0]?.message).join("\n") : undefined;
-
     const errorTraces = test.errors.length > 0 ? test.errors.map((err) => err[0]?.stack).join("\n") : undefined;
 
     const result: AutotestResult = {
-      autoTestExternalId: this.autotestData.externalId,
+      autoTestExternalId: autotestSnapshot.externalId,
       outcome: test.errors.length > 0 ? "Failed" : "Passed",
       startedOn: test.startedAt ? new Date(test.startedAt) : undefined,
       duration: test.duration ?? undefined,
@@ -259,12 +278,128 @@ export default class TestItEnvironment extends NodeEnvironment {
       links: this.additions.links,
     };
 
-    this.autotests.push(this.autotestData);
-    this.autotestResults.push(result);
+    if (this.importRealtime) {
+      this.realtimeSent.push({ autotest: autotestSnapshot, result });
+      logger.debug("[jest-env] realtime test_done", {
+        externalId: autotestSnapshot.externalId,
+        outcome: result.outcome,
+        afterEachSteps: autotestSnapshot.afterEach.length,
+        afterAllStepsKnown: this.afterAllSteps.length,
+      });
+      try {
+        await this.sendRealtimePayload(autotestSnapshot, result, false);
+      } catch (err: any) {
+        logger.error("Failed realtime send in Jest environment:", this.formatError(err));
+      }
+    } else {
+      this.autotests.push(autotestSnapshot);
+      this.autotestResults.push(result);
+    }
+    this.currentTestAttachmentsQueue = [];
     this.resetTest();
   }
 
+  private snapshotAutotestData(): AutotestData {
+    return {
+      ...this.autotestData,
+      beforeEach: [...this.autotestData.beforeEach],
+      afterEach: [...this.autotestData.afterEach],
+      testSteps: [...this.autotestData.testSteps],
+      attachments: [...this.autotestData.attachments],
+      links: this.autotestData.links ? [...this.autotestData.links] : [],
+      labels: this.autotestData.labels ? [...this.autotestData.labels] : [],
+      tags: this.autotestData.tags ? [...this.autotestData.tags] : [],
+    };
+  }
+
+  private buildSetupSteps(autotest: AutotestData): Step[] {
+    return this.beforeAllSteps.concat(autotest.beforeEach);
+  }
+
+  private buildTeardownSteps(autotest: AutotestData, includeAfterAll: boolean): Step[] {
+    const afterEach = autotest.afterEach;
+    return includeAfterAll ? afterEach.concat(this.afterAllSteps) : afterEach;
+  }
+
+  private async sendRealtimePayload(
+    autotest: AutotestData,
+    result: AutotestResult,
+    includeAfterAll: boolean,
+  ): Promise<void> {
+    const setupSteps = this.buildSetupSteps(autotest);
+    const teardownSteps = this.buildTeardownSteps(autotest, includeAfterAll);
+    logger.debug("[jest-env] sendRealtimePayload", {
+      externalId: autotest.externalId,
+      outcome: result.outcome,
+      includeAfterAll,
+      setupSteps: setupSteps.length,
+      teardownSteps: teardownSteps.length,
+      testSteps: autotest.testSteps.length,
+    });
+    const autotestPost: AutotestPost = {
+      externalId: autotest.externalId,
+      title: autotest.title,
+      name: autotest.name,
+      description: autotest.description,
+      links: autotest.links,
+      labels: autotest.labels,
+      tags: autotest.tags,
+      namespace: autotest.namespace ?? Utils.getDir(this.testPath),
+      classname: autotest.classname ?? Utils.getFileName(this.testPath),
+      setup: setupSteps,
+      steps: autotest.testSteps,
+      teardown: teardownSteps,
+      externalKey: autotest.externalKey,
+    };
+
+    await this.strategy.loadAutotest(autotestPost, result.outcome);
+    await this.strategy.loadTestRun([
+      {
+        autoTestExternalId: autotestPost.externalId,
+        outcome: result.outcome,
+        startedOn: result.startedOn,
+        duration: result.duration,
+        attachments: result.attachments,
+        message: result.message,
+        links: result.links,
+        stepResults: autotest.testSteps,
+        traces: result.traces,
+        setupResults: setupSteps,
+        teardownResults: teardownSteps,
+        parameters: autotest.parameters !== undefined ? mapParams(autotest.parameters) : undefined,
+      },
+    ]);
+  }
+
+  /** afterAll hooks run after all tests; patch teardown when importRealtime is enabled. */
+  private async flushRealtimeTeardown(): Promise<void> {
+    if (!this.importRealtime || this.realtimeSent.length === 0 || this.afterAllSteps.length === 0) {
+      logger.debug("[jest-env] flushRealtimeTeardown skip", {
+        importRealtime: this.importRealtime,
+        realtimeSent: this.realtimeSent.length,
+        afterAllSteps: this.afterAllSteps.length,
+      });
+      return;
+    }
+    logger.debug("[jest-env] flushRealtimeTeardown", {
+      tests: this.realtimeSent.length,
+      afterAllSteps: this.afterAllSteps.length,
+    });
+    for (const { autotest, result } of this.realtimeSent) {
+      try {
+        await this.sendRealtimePayload(autotest, result, true);
+      } catch (err: any) {
+        logger.error("Failed realtime teardown flush in Jest environment:", this.formatError(err));
+      }
+    }
+  }
+
   async loadResults() {
+    if (this.importRealtime) {
+      logger.debug("[jest-env] loadResults skip (importRealtime)");
+      return;
+    }
+    logger.debug("[jest-env] loadResults batch", { tests: this.autotests.length });
     log("Waiting for attachments to be uploaded");
     await Promise.allSettled(this.attachmentsQueue);
 
@@ -296,7 +431,7 @@ export default class TestItEnvironment extends NodeEnvironment {
       try {
         await this.strategy.loadAutotest(autotestPost, result.outcome);
       } catch (err: any) {
-        console.error("Failed to load autotest in Jest environment:", this.formatError(err));
+        logger.error("Failed to load autotest in Jest environment:", this.formatError(err));
       }
 
       results.push({
@@ -319,7 +454,7 @@ export default class TestItEnvironment extends NodeEnvironment {
     try {
       await this.strategy.loadTestRun(results);
     } catch (err: any) {
-      console.error("Failed to load test run in Jest environment:", this.formatError(err));
+      logger.error("Failed to load test run in Jest environment:", this.formatError(err));
     }
   }
 
@@ -377,11 +512,12 @@ export default class TestItEnvironment extends NodeEnvironment {
         return ids;
       })
       .catch((err: any) => {
-        console.log("Error uploading attachment (Jest). \n", err?.body ?? err?.error ?? err);
+        logger.log("Error uploading attachment (Jest). \n", err?.body ?? err?.error ?? err);
         return [] as Attachment[];
       });
 
     this.attachmentsQueue.push(promise);
+    this.currentTestAttachmentsQueue.push(promise);
     return promise;
   }
 

@@ -4,6 +4,7 @@ import { logTmsLoadTestRun } from "../common/utils";
 import { AutotestPost, AutotestResult, TestRunId } from "../services";
 import { SyncStorageRunner, toTestResultCutModel } from "../services/syncstorage";
 import { IStrategy } from "./strategy.type";
+import logger from "../logger";
 
 export class BaseStrategy implements IStrategy {
   private static readonly INPROGRESS_FIRST_GRACE_MS = 3000;
@@ -37,6 +38,13 @@ export class BaseStrategy implements IStrategy {
   }
 
   async loadAutotest(autotest: AutotestPost, status: string): Promise<void> {
+    logger.debug("[strategy] loadAutotest", {
+      externalId: autotest.externalId,
+      status,
+      setupSteps: autotest.setup?.length ?? 0,
+      testSteps: autotest.steps?.length ?? 0,
+      teardownSteps: autotest.teardown?.length ?? 0,
+    });
     await this.client.autoTests.loadAutotest(autotest, status);
 
     if (Array.isArray(autotest.workItemIds)) {
@@ -75,7 +83,7 @@ export class BaseStrategy implements IStrategy {
     }
 
     await this.client.autoTests.linkToWorkItems(existingAutotest, workItemIds).catch((err) => {
-      console.log("Failed link work items. \n", err);
+      logger.log("Failed link work items. \n", err);
     });
   }
 

@@ -21,6 +21,10 @@ module.exports = {
 
 ## Configuration
 
+#### Log level
+
+The adapter includes a custom logger; the default level is `warn`. Set another level at runtime with the `LOG_LEVEL` environment variable: `error`, `warn`, `info`, or `debug`.
+
 | Description                                                                                                                                                                                                                                                                                                                                                                            | File property                     | Environment variable                       |
 |----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------|--------------------------------------------|
 | Location of the TMS instance                                                                                                                                                                                                                                                                                                                                                           | url                               | TMS_URL                                    |
@@ -32,6 +36,7 @@ module.exports = {
 | Adapter mode. Default value - 1. The adapter supports following modes:<br>1 - in this mode, the adapter sends all results to the test run without filtering or [with filtering CLI](#run-with-filter)<br/>2 - in this mode, the adapter creates a new test run and sends results to the new test run | adapterMode                       | TMS_ADAPTER_MODE                           |
 | Mode of automatic creation test cases (**It's optional**). Default value - false. The adapter supports following modes:<br/>true - in this mode, the adapter will create a test case linked to the created autotest (not to the updated autotest)<br/>false - in this mode, the adapter will not create a test case                                                                    | automaticCreationTestCases        | TMS_AUTOMATIC_CREATION_TEST_CASES          |
 | Mode of automatic updation links to test cases (**It's optional**). Default value - false. The adapter supports following modes:<br/>true - in this mode, the adapter will update links to test cases<br/>false - in this mode, the adapter will not update link to test cases                                                                                                         | automaticUpdationLinksToTestCases | TMS_AUTOMATIC_UPDATION_LINKS_TO_TEST_CASES |
+| Logger level, default value is `warn`, available values: [`error`, `warn`, `info`, `debug`] | | LOG_LEVEL |
 
 ### File
 

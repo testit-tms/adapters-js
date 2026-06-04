@@ -1,6 +1,8 @@
 import { AdapterConfig, Additions, Attachment, AutotestResult, Step } from "testit-js-commons";
 import { humanize, useCompositeHash, useDefaultHash } from "../common/utils";
 import { Codecept, Origin } from "../types";
+import { logger } from "testit-js-commons";
+
 
 export class ResultBuilder {
   additions: Additions;
@@ -34,11 +36,11 @@ export class ResultBuilder {
     // If TMS_IS_CI env is true, trim traces and message to 20 chars and log this
     if (process.env.TMS_IS_CI === "true") {
       if (typeof traces === "string" && traces.length > 20) {
-        console.log("TMS_IS_CI is true: trimming traces to 20 chars");
+        logger.log("TMS_IS_CI is true: trimming traces to 20 chars");
         traces = traces.slice(0, 20);
       }
       if (typeof message === "string" && message.length > 20) {
-        console.log("TMS_IS_CI is true: trimming message to 20 chars");
+        logger.log("TMS_IS_CI is true: trimming message to 20 chars");
         message = message.slice(0, 20);
       }
     }

@@ -1,64 +1,14 @@
 // @ts-ignore
 import * as TestitApiClient from "testit-api-client";
-import { BaseService, Utils, AdapterConfig, Attachment } from "../../common";
+import { BaseService, Utils, AdapterConfig, Attachment, withHttpRetry } from "../../common";
 import { IAttachmentsService } from "./attachments.type";
 import { Buffer } from "buffer";
 import * as fs from "fs";
+import logger from "../../logger";
 
-const UPLOAD_MAX_ATTEMPTS = 5;
-const UPLOAD_RETRY_BASE_MS = 500;
+const UPLOAD_RETRY_OPTIONS = { maxAttempts: 5, delayMs: 500, backoff: true } as const;
 /** Minimum HTTP timeout for attachment POST (ms); reduces false timeouts on slow TLS. */
 const UPLOAD_CLIENT_TIMEOUT_MS = 120000;
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function unwrapAttachmentError(err: any): any {
-  if (!err || typeof err !== "object") {
-    return err;
-  }
-  const nested = (err as { error?: unknown }).error;
-  if (nested instanceof Error || (nested && typeof nested === "object")) {
-    return nested;
-  }
-  const cause = (err as { cause?: unknown }).cause;
-  if (cause instanceof Error || (cause && typeof cause === "object")) {
-    return cause;
-  }
-  return err;
-}
-
-function isTransientAttachmentError(err: any): boolean {
-  const e = unwrapAttachmentError(err);
-  const status = e?.response?.status ?? err?.response?.status;
-  if (typeof status === "number" && status >= 400 && status < 500) return false;
-  if (typeof status === "number" && status >= 500) return true;
-  const code = e?.code ?? err?.code;
-  if (code === "ECONNRESET" || code === "ETIMEDOUT" || code === "EPIPE" || code === "ECONNABORTED") return true;
-  if (e?.errno === -104 || err?.errno === -104) return true;
-  const msg = e?.message ?? err?.message;
-  if (typeof msg === "string" && /socket hang up|ECONNRESET|ETIMEDOUT|ECONNREFUSED|read ECONNRESET/i.test(msg)) {
-    return true;
-  }
-  return false;
-}
-
-async function withUploadRetry<T>(fn: () => Promise<T>): Promise<T> {
-  let last: unknown;
-  for (let attempt = 1; attempt <= UPLOAD_MAX_ATTEMPTS; attempt++) {
-    try {
-      return await fn();
-    } catch (e) {
-      last = e;
-      if (!isTransientAttachmentError(e) || attempt === UPLOAD_MAX_ATTEMPTS) {
-        throw e;
-      }
-      await sleep(UPLOAD_RETRY_BASE_MS * attempt);
-    }
-  }
-  throw last;
-}
 
 export class AttachmentsService extends BaseService implements IAttachmentsService {
   protected _client: TestitApiClient.AttachmentsApi;
@@ -84,17 +34,22 @@ export class AttachmentsService extends BaseService implements IAttachmentsServi
       try {
         fs.writeFileSync(tempFilePath, bufferContent);
 
-        const id = await withUploadRetry(async () => {
-          const fileStream = fs.createReadStream(tempFilePath);
-          try {
-            // @ts-ignore
-            const response = await this._client.apiV2AttachmentsPost({ file: fileStream });
-            const data = response.body || response;
-            return data.id as string;
-          } finally {
-            fileStream.destroy();
-          }
-        });
+        logger.debug("[attachments] upload text", { fileName, bytes: bufferContent.length });
+        const id = await withHttpRetry(
+          async () => {
+            const fileStream = fs.createReadStream(tempFilePath);
+            try {
+              // @ts-ignore
+              const response = await this._client.apiV2AttachmentsPost({ file: fileStream });
+              const data = response.body || response;
+              return data.id as string;
+            } finally {
+              fileStream.destroy();
+            }
+          },
+          { ...UPLOAD_RETRY_OPTIONS, label: `uploadText:${fileName}` },
+        );
+        logger.debug("[attachments] upload text ok", { fileName, id });
 
         return [{ id }];
       } finally {
@@ -106,13 +61,13 @@ export class AttachmentsService extends BaseService implements IAttachmentsServi
             fs.rmdirSync(tempDir);
           }
         } catch (cleanupError) {
-          console.warn("Failed to cleanup temporary files:", cleanupError);
+          logger.warn("Failed to cleanup temporary files:", cleanupError);
         }
       }
     } catch (error: any) {
-      console.error("Error uploading text attachment:", error);
+      logger.error("Error uploading text attachment:", error);
       if (error.response) {
-        console.error("Response details:", {
+        logger.error("Response details:", {
           status: error.response.status,
           text: error.response.text,
         });
@@ -129,23 +84,28 @@ export class AttachmentsService extends BaseService implements IAttachmentsServi
           throw new Error(`File not found: ${path}`);
         }
 
-        const id = await withUploadRetry(async () => {
-          const fileStream = Utils.readStream(path);
-          try {
-            // @ts-ignore
-            const response = await this._client.apiV2AttachmentsPost({ file: fileStream });
-            const data = response.body || response;
-            return data.id as string;
-          } finally {
-            fileStream.destroy();
-          }
-        });
+        logger.debug("[attachments] upload file", { path });
+        const id = await withHttpRetry(
+          async () => {
+            const fileStream = Utils.readStream(path);
+            try {
+              // @ts-ignore
+              const response = await this._client.apiV2AttachmentsPost({ file: fileStream });
+              const data = response.body || response;
+              return data.id as string;
+            } finally {
+              fileStream.destroy();
+            }
+          },
+          { ...UPLOAD_RETRY_OPTIONS, label: `uploadFile:${path}` },
+        );
+        logger.debug("[attachments] upload file ok", { path, id });
 
         attachmentIds.push(id);
       } catch (error: any) {
-        console.error(`Error uploading attachment ${path}:`, error);
+        logger.error(`Error uploading attachment ${path}:`, error);
         if (error.response) {
-          console.error("Response details:", {
+          logger.error("Response details:", {
             status: error.response.status,
             text: error.response.text,
           });

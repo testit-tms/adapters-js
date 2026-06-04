@@ -17,6 +17,8 @@ import {
 import { ReporterOptions, Context, Test, Hook } from "./types";
 import { ITestStep, TestStep } from "./step";
 import { extractHooks, resolveParallelModeSetupFile } from "./utils";
+import { logger } from "testit-js-commons";
+
 
 const Reporter = reporters.Base;
 const Events = Runner.constants;
@@ -68,9 +70,11 @@ const installSuperagentDoubleCallbackGuard = () => {
 export class TmsReporter extends Reporter {
   private readonly strategy: IStrategy;
   private readonly additions: IAdditions;
+  private readonly importRealtime: boolean;
   private isRunEnded = false;
 
   private attachmentsQueue: Promise<Attachment[]>[] = [];
+  private currentTestAttachmentsQueue: Promise<Attachment[]>[] = [];
   private autotestsQueue: Promise<any>[] = [];
   private autotestsForTestRun: AutotestResult[] = [];
 
@@ -84,6 +88,8 @@ export class TmsReporter extends Reporter {
     installSuperagentDoubleCallbackGuard();
 
     const config = new ConfigComposer().compose(options?.tmsOptions);
+    this.importRealtime = Boolean(config.importRealtime);
+    logger.debug("[mocha] reporter init", { importRealtime: this.importRealtime });
 
     this.strategy = StrategyFactory.create(config);
     this.additions = new Additions(config);
@@ -108,7 +114,7 @@ export class TmsReporter extends Reporter {
 
   onStartRun = () => {
     deasyncPromise(this.strategy.setup().catch((err) => {
-      console.log("Error setup test run. \n", err?.body ?? err);
+      logger.log("Error setup test run. \n", err?.body ?? err);
     }));
   };
 
@@ -120,25 +126,30 @@ export class TmsReporter extends Reporter {
     this.isRunEnded = true;
 
     deasyncPromise(this.teardown().catch((err) => {
-      console.log("Error during teardown. \n", err?.body ?? err);
+      logger.log("Error during teardown. \n", err?.body ?? err);
     }));
   };
 
   private async teardown(): Promise<void> {
     await Promise.all(this.attachmentsQueue).catch((err) => {
-      console.log("Error loading attachments. \n", err?.body ?? err);
+      logger.log("Error loading attachments. \n", err?.body ?? err);
     });
 
     await Promise.all(this.autotestsQueue).catch((err) => {
-      console.log("Error load autotests. \n", err?.body ?? err);
+      logger.log("Error load autotests. \n", err?.body ?? err);
     });
 
-    await this.strategy.loadTestRun(this.autotestsForTestRun).catch((err) => {
-      console.log("Error load test run. \n", err?.body ?? err);
-    });
+    if (!this.importRealtime) {
+      logger.debug("[mocha] onEndRun batch loadTestRun", { count: this.autotestsForTestRun.length });
+      await this.strategy.loadTestRun(this.autotestsForTestRun).catch((err) => {
+        logger.log("Error load test run. \n", err?.body ?? err);
+      });
+    } else {
+      logger.debug("[mocha] onEndRun skip batch (importRealtime)");
+    }
 
     await this.strategy.teardown().catch((err) => {
-      console.log("Error complete test run. \n", err?.body ?? err);
+      logger.log("Error complete test run. \n", err?.body ?? err);
     });
   }
 
@@ -168,6 +179,7 @@ export class TmsReporter extends Reporter {
   onStartTest() {
     this.currentType = "test";
     this.currentTest.startedOn = new Date();
+    this.currentTestAttachmentsQueue = [];
   }
 
   onEndTest(test: Test) {
@@ -193,29 +205,43 @@ export class TmsReporter extends Reporter {
       externalKey: test.title,
     };
 
-    const promise = this.strategy.loadAutotest(
-      autotestPost,
-      this._getOutcome(test.state));
-    this.autotestsQueue.push(promise);
-
-    this.autotestsForTestRun.push({
+    const outcome = this._getOutcome(test.state);
+    const currentTestSnapshot = this.currentTest;
+    const additionsLinksSnapshot = [...this.additions.links];
+    const additionsMessagesSnapshot = [...this.additions.messages];
+    const testRunResult: AutotestResult = {
       autoTestExternalId: autotestPost.externalId,
-      outcome: this._getOutcome(test.state),
-      startedOn: this.currentTest.startedOn,
+      outcome,
+      startedOn: currentTestSnapshot.startedOn,
       completedOn: new Date(),
       duration: this._getDuration(test.duration),
-      stepResults: this.currentTest.stepResults,
+      stepResults: currentTestSnapshot.stepResults,
       setupResults: setup,
       teardownResults: teardown,
-      attachments: this.currentTest.attachments,
-      links: this.additions.links,
+      attachments: currentTestSnapshot.attachments,
+      links: additionsLinksSnapshot,
       message: test.err?.message
-        ? this.additions.messages.concat(test.err.message).join("\n")
-        : this.additions.messages.join("\n"),
+        ? additionsMessagesSnapshot.concat(test.err.message).join("\n")
+        : additionsMessagesSnapshot.join("\n"),
       traces: test.err?.stack,
       parameters: test.ctx?.parameters,
       properties: test.ctx?.properties,
+    };
+
+    const promise = Promise.allSettled(this.currentTestAttachmentsQueue).then(async () => {
+      await this.strategy.loadAutotest(autotestPost, outcome);
+      if (this.importRealtime) {
+        logger.debug("[mocha] onEndTest realtime", {
+          externalId: autotestPost.externalId,
+          outcome,
+          teardownSteps: teardown.length,
+        });
+        await this.strategy.loadTestRun([testRunResult]);
+        return;
+      }
+      this.autotestsForTestRun.push(testRunResult);
     });
+    this.autotestsQueue.push(promise);
 
     this.resetTest(test);
   }
@@ -238,10 +264,11 @@ export class TmsReporter extends Reporter {
     promise.then((attachments) => {
       target.attachments?.push(...attachments);
     }).catch((err) => {
-      console.log("Error loading attachment. \n", err?.body ?? err?.error ?? err);
+      logger.log("Error loading attachment. \n", err?.body ?? err?.error ?? err);
     });
 
     this.attachmentsQueue.push(promise);
+    this.currentTestAttachmentsQueue.push(promise);
 
     return promise;
   };
@@ -268,7 +295,7 @@ export class TmsReporter extends Reporter {
     } catch (err) {
       this.currentStep.outcome = "Failed";
       this.currentTest.outcome = "Failed";
-      console.log("Step failed. \n", err);
+      logger.log("Step failed. \n", err);
     }
 
     this.currentStep.title = step.title;

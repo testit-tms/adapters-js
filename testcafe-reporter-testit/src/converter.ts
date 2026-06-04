@@ -5,6 +5,8 @@ import {
 import Metadata from "./metadata";
 import { ErrorObject, TestRunInfo } from "./types";
 import addNewLine from "./utils";
+import { logger } from "testit-js-commons";
+
 
 
 enum Status {
@@ -94,7 +96,7 @@ const getStatusDetails = (testRunInfo: TestRunInfo): StatusDetails => {
         });
         testDetails = addNewLine(testDetails, `Stacktrace:\n${stacktrace}`);
       } catch (err) {
-        console.error(`Error in callsite.renderSync in reporting:\n${err}`);
+        logger.error(`Error in callsite.renderSync in reporting:\n${err}`);
       }
     }
     if (error.userAgent) {

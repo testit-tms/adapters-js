@@ -1,6 +1,7 @@
 import * as dotenv from "dotenv";
 import { Utils, AdapterConfig, EnvironmentOptions, AdapterMode } from "../../common";
 import { IConfigComposer } from "./config.type";
+import logger from "../../logger";
 
 export const DEFAULT_CONFIG_FILE = "tms.config.json";
 
@@ -16,7 +17,7 @@ export class ConfigComposer implements IConfigComposer {
       const fileConfig: AdapterConfig = JSON.parse(content);
 
       if (fileConfig.privateToken) {
-        console.warn(`
+        logger.warn(`
         The configuration file specifies a private token. It is not safe. 
         Use TMS_PRIVATE_TOKEN environment variable`);
       }
@@ -27,6 +28,14 @@ export class ConfigComposer implements IConfigComposer {
     }
 
     this.validateConfig(config);
+
+    logger.debug("[config] composed", {
+      adapterMode: config.adapterMode,
+      importRealtime: config.importRealtime,
+      syncStorageEnabled: config.syncStorageEnabled,
+      hasTestRunId: Boolean(config.testRunId),
+      projectId: config.projectId,
+    });
 
     return config;
   }
@@ -45,6 +54,7 @@ export class ConfigComposer implements IConfigComposer {
       certValidation: file.certValidation ?? stringToBoolean(env?.TMS_CERT_VALIDATION) ?? base?.certValidation ?? true,
       syncStorageEnabled: file.syncStorageEnabled ?? stringToBoolean(env?.TMS_SYNC_STORAGE_ENABLED) ?? base?.syncStorageEnabled ?? true,
       syncStoragePort: this.resolveAllProperties(file.syncStoragePort, env?.TMS_SYNC_STORAGE_PORT, base?.syncStoragePort) || "49152",
+      importRealtime: file.importRealtime ?? stringToBoolean(env?.TMS_IMPORT_REALTIME) ?? base?.importRealtime ?? false,
     };
   }
 
@@ -62,6 +72,7 @@ export class ConfigComposer implements IConfigComposer {
       certValidation: stringToBoolean(env?.TMS_CERT_VALIDATION) ?? base?.certValidation ?? true,
       syncStorageEnabled: stringToBoolean(env?.TMS_SYNC_STORAGE_ENABLED) ?? base?.syncStorageEnabled ?? true,
       syncStoragePort: this.resolveProperties(env?.TMS_SYNC_STORAGE_PORT, base?.syncStoragePort) || "49152",
+      importRealtime: stringToBoolean(env?.TMS_IMPORT_REALTIME) ?? base?.importRealtime ?? false,
     };
   }
 
@@ -79,6 +90,7 @@ export class ConfigComposer implements IConfigComposer {
       TMS_CERT_VALIDATION: dotEnv?.TMS_CERT_VALIDATION ?? processEnv?.TMS_CERT_VALIDATION,
       TMS_SYNC_STORAGE_ENABLED: dotEnv?.TMS_SYNC_STORAGE_ENABLED ?? processEnv?.TMS_SYNC_STORAGE_ENABLED,
       TMS_SYNC_STORAGE_PORT: this.resolveProperties(dotEnv?.TMS_SYNC_STORAGE_PORT, processEnv?.TMS_SYNC_STORAGE_PORT),
+      TMS_IMPORT_REALTIME: dotEnv?.TMS_IMPORT_REALTIME ?? processEnv?.TMS_IMPORT_REALTIME,
     };
   }
 
@@ -108,32 +120,32 @@ export class ConfigComposer implements IConfigComposer {
     try {
       new URL(config.url);
     } catch (err) {
-      console.error(`Url is invalid`);
+      logger.error(`Url is invalid`);
     }
 
     if (!config.privateToken) {
-      console.error(`Private Token is invalid`);
+      logger.error(`Private Token is invalid`);
     }
 
     if (config.projectId.match('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$') === null) {
-      console.error(`Project ID is invalid`);
+      logger.error(`Project ID is invalid`);
     }
 
     if (config.configurationId.match('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$') === null) {
-      console.error(`Configuration ID is invalid`);
+      logger.error(`Configuration ID is invalid`);
     }
 
     if (config.adapterMode == 2) {
       if (config.testRunId.match('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$') !== null) {
-        console.error(`Adapter works in mode 2. Config should not contains test run id.`);
+        logger.error(`Adapter works in mode 2. Config should not contains test run id.`);
       }
     } else if (config.adapterMode == 1) {
       if (config.testRunId.match('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$') === null) {
-        console.error(`Adapter works in mode 1. Config should contains valid test run id.`);
+        logger.error(`Adapter works in mode 1. Config should contains valid test run id.`);
       }
     } else {
       if (config.testRunId.match('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$') === null) {
-        console.error(`Adapter works in mode 0. Config should contains valid test run id.`);
+        logger.error(`Adapter works in mode 0. Config should contains valid test run id.`);
       }
     }
   }
@@ -158,6 +170,7 @@ function parseProcessEnvConfig(): Partial<EnvironmentOptions> {
     TMS_CONFIG_FILE: process.env.TMS_PRIVATE_TOKEN,
     TMS_SYNC_STORAGE_ENABLED: process.env.TMS_SYNC_STORAGE_ENABLED,
     TMS_SYNC_STORAGE_PORT: process.env.TMS_SYNC_STORAGE_PORT,
+    TMS_IMPORT_REALTIME: process.env.TMS_IMPORT_REALTIME,
   };
 }
 

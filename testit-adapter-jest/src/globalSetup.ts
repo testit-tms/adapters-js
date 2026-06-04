@@ -1,9 +1,11 @@
 import { Config } from "@jest/reporters";
 import { ConfigComposer, StrategyFactory } from "testit-js-commons";
+import { logger } from "testit-js-commons";
+
 
 const globalUnhandledRejectionLogger = (reason: unknown) => {
   const normalized = (reason as any)?.body ?? (reason as any)?.error ?? reason;
-  console.error("[jest-globalSetup] unhandledRejection:", normalized);
+  logger.error("[jest-globalSetup] unhandledRejection:", normalized);
 };
 
 export default async (globalConfig: Config.GlobalConfig, projectConfig: Config.ProjectConfig) => {
@@ -19,6 +21,6 @@ export default async (globalConfig: Config.GlobalConfig, projectConfig: Config.P
     projectConfig.testEnvironmentOptions["testRunId"] = testRunId;
     projectConfig.testEnvironmentOptions["adapterMode"] = 1;
   } catch (err: any) {
-    console.error("Failed globalSetup for testit-adapter-jest:", err?.body ?? err?.error ?? err);
+    logger.error("Failed globalSetup for testit-adapter-jest:", err?.body ?? err?.error ?? err);
   }
 };

@@ -20,8 +20,16 @@ export interface IStorage {
 
   isResolvedTestCase(testCase: TestCase): boolean;
 
+  resolvePickleExternalId(pickle: Pickle): string;
+
   getAutotests(): AutotestPost[];
   getTestRunResults(): AutotestResult[];
+  getRealtimePayload(
+    testCaseStartedId: string,
+  ): { autotest: AutotestPost; result: AutotestResult } | undefined;
+  listCatchUpRealtimePayloads(
+    sentTestCaseStartedIds: ReadonlySet<string>,
+  ): Array<{ testCaseStartedId: string; autotest: AutotestPost; result: AutotestResult }>;
 
   addMessage(testCaseId: string, message: string): void;
   addLinks(testCaseId: string, links: Link[]): void;

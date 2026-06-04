@@ -13,6 +13,7 @@ export interface CliOptions {
   tmsAutomaticUpdationLinksToTestCases: boolean;
   tmsSyncStorageEnabled: boolean;
   tmsSyncStoragePort: string;
+  tmsImportRealtime: boolean;
 }
 
 export interface EnvironmentOptions {
@@ -29,6 +30,7 @@ export interface EnvironmentOptions {
   TMS_CERT_VALIDATION: string;
   TMS_SYNC_STORAGE_ENABLED: string;
   TMS_SYNC_STORAGE_PORT: string;
+  TMS_IMPORT_REALTIME: string;
 }
 
 export interface ProcessEnvOptions {
@@ -45,6 +47,7 @@ export interface ProcessEnvOptions {
   TMS_CERT_VALIDATION?: string;
   TMS_SYNC_STORAGE_ENABLED?: string;
   TMS_SYNC_STORAGE_PORT?: string;
+  TMS_IMPORT_REALTIME?: string;
 }
 
 export interface AdapterConfig {
@@ -60,4 +63,5 @@ export interface AdapterConfig {
   certValidation?: boolean;
   syncStorageEnabled?: boolean;
   syncStoragePort?: string;
+  importRealtime?: boolean;
 }

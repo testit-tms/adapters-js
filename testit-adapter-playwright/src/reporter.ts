@@ -12,6 +12,7 @@ import { MetadataMessage } from "./labels";
 import { getTestStatus, processAttachmentExtensions, stepAttachRegexp } from "./utils";
 import { Result, ResultAttachment } from "./models/result";
 import path from "path";
+import { logger } from "testit-js-commons";
 
 export type ReporterOptions = {
   detail?: boolean;
@@ -20,6 +21,7 @@ export type ReporterOptions = {
   environmentInfo?: Record<string, string>;
   tmsOptions?: AdapterConfig;
 };
+type ReporterAdapterConfig = AdapterConfig & { importRealtime?: boolean };
 
 class TmsReporter implements Reporter {
   config!: FullConfig;
@@ -33,12 +35,16 @@ class TmsReporter implements Reporter {
   private attachmentsMap = new Map<Attachment, TestStep>();
   private loadTestPromises = new Array<Promise<void>>();
   private setupPromise: Promise<void> = Promise.resolve();
+  private readonly adapterConfig: ReporterAdapterConfig;
+  private bufferedResults: Array<{ test: TestCase; result: Result }> = [];
 
   constructor(options: ReporterOptions) {
     this.options = { suiteTitle: true, detail: true, ...options };
-    const config = new ConfigComposer().compose(options.tmsOptions);
+    const config = new ConfigComposer().compose(options.tmsOptions) as ReporterAdapterConfig;
+    this.adapterConfig = config;
     this.strategy = StrategyFactory.create(config);
     this.additions = new Additions(config);
+    logger.debug("[playwright] reporter init", { importRealtime: Boolean(config.importRealtime) });
   }
 
   onBegin(config: FullConfig, suite: Suite): void {
@@ -52,20 +58,20 @@ class TmsReporter implements Reporter {
   }
 
   onTestEnd(test: TestCase, result: TestResult): void {
-    this.loadTestPromises.push(
-      this.setupPromise.then(() => this.loadTest(
-        test,
-        {
-          status: result.status,
-          attachments: this._processAttachmentsWithExtensions(result),
-          duration: result.duration,
-          errors: result.errors,
-          error: result.error,
-          steps: result.steps,
-        })).catch((err) => {
-          console.log("Error processing test result. \n", err?.body ?? err?.error ?? err);
-        })
-    );
+    const currentResult: Result = {
+      status: result.status,
+      attachments: this._processAttachmentsWithExtensions(result),
+      duration: result.duration,
+      errors: result.errors,
+      error: result.error,
+      steps: result.steps,
+    };
+    if (this.adapterConfig.importRealtime) {
+      logger.debug("[playwright] onTestEnd realtime", { title: test.title, status: result.status });
+      this.loadTestPromises.push(this.runLoadTest(test, currentResult));
+      return;
+    }
+    this.bufferedResults.push({ test, result: currentResult });
   }
 
   // fix issues with trace and video files on playwright
@@ -96,15 +102,21 @@ class TmsReporter implements Reporter {
   async onEnd(): Promise<void> {
     try {
       await this.setupPromise.catch((err: any) => {
-        console.error("TMS Playwright setup failed:", err?.body ?? err?.error ?? err);
+        logger.error("TMS Playwright setup failed:", err?.body ?? err?.error ?? err);
       });
+      if (!this.adapterConfig.importRealtime) {
+        logger.debug("[playwright] onEnd batch flush", { count: this.bufferedResults.length });
+        await Promise.allSettled(this.bufferedResults.map(({ test, result }) => this.runLoadTest(test, result)));
+      } else {
+        logger.debug("[playwright] onEnd await realtime", { pending: this.loadTestPromises.length });
+      }
       await Promise.allSettled(this.loadTestPromises);
       await this.addSkippedResults();
     } catch (err: any) {
-      console.error("TMS Playwright onEnd failed:", err?.body ?? err?.error ?? err);
+      logger.error("TMS Playwright onEnd failed:", err?.body ?? err?.error ?? err);
     } finally {
       await this.strategy.teardown().catch((err: any) => {
-        console.error("TMS Playwright teardown failed:", err?.body ?? err?.error ?? err);
+        logger.error("TMS Playwright teardown failed:", err?.body ?? err?.error ?? err);
       });
     }
   }
@@ -123,7 +135,7 @@ class TmsReporter implements Reporter {
           errors: [],
           steps: [],
         }).catch((err: any) => {
-          console.error(
+          logger.error(
             "TMS Playwright loadTest (skipped) failed:",
             testCase?.title,
             err?.body ?? err?.error ?? err,
@@ -131,6 +143,14 @@ class TmsReporter implements Reporter {
         }),
       ),
     );
+  }
+
+  private runLoadTest(test: TestCase, result: Result): Promise<void> {
+    return this.setupPromise
+      .then(() => this.loadTest(test, result))
+      .catch((err) => {
+        logger.log("Error processing test result. \n", err?.body ?? err?.error ?? err);
+      });
   }
 
   printsToStdio(): boolean {
@@ -174,7 +194,7 @@ class TmsReporter implements Reporter {
             const ids: any = await this.additions.addAttachments(content, attachment.name);
             autotestData.addAttachments?.push(...ids);
           } catch (err: any) {
-            console.log("Error uploading file attachment. \n", err?.body ?? err?.error ?? err);
+            logger.log("Error uploading file attachment. \n", err?.body ?? err?.error ?? err);
           }
         }
         
@@ -252,7 +272,7 @@ class TmsReporter implements Reporter {
           }
           autotestData.addAttachments?.push(...ids);
         } catch (err: any) {
-          console.log("Error uploading text attachment. \n", err?.body ?? err?.error ?? err);
+          logger.log("Error uploading text attachment. \n", err?.body ?? err?.error ?? err);
         }
       }
     }
@@ -261,6 +281,7 @@ class TmsReporter implements Reporter {
   }
 
   private async loadTest(test: TestCase, result: Result): Promise<void> {
+    logger.debug("[playwright] loadTest", { title: test.title, status: result.status });
     const autotestData = await this.getAutotestData(test, result);
 
     const origin = await (this.strategy as BaseStrategy).client.autoTests.getAutotestByExternalId(
