@@ -9,6 +9,7 @@ import {
 import { ConfigComposer, StrategyFactory, IStrategy, Utils, Additions, Attachment, AdapterConfig, BaseStrategy } from "testit-js-commons";
 import { Converter } from "./converter";
 import { MetadataMessage } from "./labels";
+import { applyMetadataTo, consumeTestMetadata, metadataKey } from "./metadata-store";
 import { getTestStatus, processAttachmentExtensions, stepAttachRegexp } from "./utils";
 import { Result, ResultAttachment } from "./models/result";
 import path from "path";
@@ -225,6 +226,11 @@ class TmsReporter implements Reporter {
 
     this.applyMetadataAttachments(autotestData, result.attachments);
 
+    const stored = consumeTestMetadata(metadataKey(test.location.file, test.title));
+    if (stored) {
+      applyMetadataTo(autotestData, stored);
+    }
+
     return autotestData;
   }
 
@@ -267,45 +273,7 @@ class TmsReporter implements Reporter {
       merged = { ...merged, ...JSON.parse(body.toString()) };
     }
 
-    if (merged.externalId) {
-      autotestData.externalId = merged.externalId;
-    }
-    if (merged.displayName) {
-      autotestData.displayName = merged.displayName;
-    }
-    if (merged.title) {
-      autotestData.title = merged.title;
-    }
-    if (merged.description) {
-      autotestData.description = merged.description;
-    }
-    if (merged.labels) {
-      autotestData.labels = merged.labels;
-    }
-    if (merged.tags) {
-      autotestData.tags = merged.tags;
-    }
-    if (merged.links) {
-      autotestData.links = merged.links;
-    }
-    if (merged.namespace) {
-      autotestData.namespace = merged.namespace;
-    }
-    if (merged.classname) {
-      autotestData.classname = merged.classname;
-    }
-    if (merged.addLinks) {
-      autotestData.addLinks = merged.addLinks;
-    }
-    if (merged.addMessage) {
-      autotestData.addMessage = merged.addMessage;
-    }
-    if (merged.params) {
-      autotestData.params = merged.params;
-    }
-    if (merged.workItemIds) {
-      autotestData.workItemIds = merged.workItemIds;
-    }
+    applyMetadataTo(autotestData, merged);
   }
 
   private async loadTest(test: TestCase, result: Result): Promise<void> {

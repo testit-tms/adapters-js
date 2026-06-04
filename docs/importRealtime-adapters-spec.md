@@ -86,7 +86,8 @@ API `testit.*` из `labels.ts` пишет поля в attachment `tms-metadata.
 **Решение (два уровня):**
 
 1. **`labels.ts`** — перед `test.info().attach` читаются уже добавленные metadata-вложения из `test.info().attachments`, поля мержатся, в attachment уходит полный JSON.
-2. **`reporter.ts`** — `applyMetadataAttachments()` после обхода вложений мержит **все** metadata-вложения (`contentType` или имя `tms-metadata.json`) в один `MetadataMessage`. Тело читается из `attachment.body` **или** `attachment.path` (Playwright в reporter чаще отдаёт только path после копирования attach на диск).
+2. **`reporter.ts`** — `applyMetadataAttachments()` мержит metadata-вложения (`body` или `path`).
+3. **`metadata-store.ts`** — при каждом `testit.*()` metadata пишется в in-memory Map по ключу `file + title`; reporter читает через `consumeTestMetadata()` (основной канал — attachments в reporter ненадёжны).
 
 **Приоритет `namespace` / `classname`:**
 

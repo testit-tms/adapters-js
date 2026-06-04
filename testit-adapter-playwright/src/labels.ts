@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import test from "@playwright/test";
 import { Link, Label, Attachment, Utils } from "testit-js-commons";
+import { metadataKey, patchTestMetadata } from "./metadata-store";
 import { processAttachmentNameExtensions } from "./utils";
 
 export interface MetadataMessage {
@@ -100,6 +101,8 @@ export class testit {
   }
 
   private static async addMetadataAttachment(metadata: MetadataMessage) {
+    const info = test.info();
+    patchTestMetadata(metadataKey(info.file, info.title), metadata);
     const merged = { ...this.mergeMetadataAttachments(), ...metadata };
     await test.info().attach("tms-metadata.json", {
       contentType: "application/vnd.tms.metadata+json",
