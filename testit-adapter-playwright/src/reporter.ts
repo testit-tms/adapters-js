@@ -202,60 +202,6 @@ class TmsReporter implements Reporter {
       }
   
       if (attachment.contentType === "application/vnd.tms.metadata+json") {
-        const metadata: MetadataMessage = JSON.parse(attachment.body.toString());
-
-        if (metadata.externalId) {
-          autotestData.externalId = metadata.externalId;
-        }
-
-        if (metadata.displayName) {
-          autotestData.displayName = metadata.displayName;
-        }
-
-        if (metadata.title) {
-          autotestData.title = metadata.title;
-        }
-
-        if (metadata.description) {
-          autotestData.description = metadata.description;
-        }
-
-        if (metadata.labels) {
-          autotestData.labels = metadata.labels;
-        }
-
-        if (metadata.tags) {
-          autotestData.tags = metadata.tags;
-        }
-
-        if (metadata.links) {
-          autotestData.links = metadata.links;
-        }
-
-        if (metadata.namespace) {
-          autotestData.namespace = metadata.namespace;
-        }
-
-        if (metadata.classname) {
-          autotestData.classname = metadata.classname;
-        }
-
-        if (metadata.addLinks) {
-          autotestData.addLinks = metadata.addLinks;
-        }
-
-        if (metadata.addMessage) {
-          autotestData.addMessage = metadata.addMessage;
-        }
-
-        if (metadata.params) {
-          autotestData.params = metadata.params;
-        }
-
-        if (metadata.workItemIds) {
-          autotestData.workItemIds = metadata.workItemIds;
-        }
-
         continue;
       }
 
@@ -277,27 +223,75 @@ class TmsReporter implements Reporter {
       }
     }
 
+    this.applyMetadataAttachments(autotestData, result.attachments);
+
     return autotestData;
+  }
+
+  /** Each testit.*() call may add a separate tms-metadata.json; merge all of them. */
+  private applyMetadataAttachments(autotestData: MetadataMessage, attachments: Result["attachments"]): void {
+    let merged: MetadataMessage = {};
+    for (const attachment of attachments) {
+      if (attachment.contentType !== "application/vnd.tms.metadata+json" || !attachment.body) {
+        continue;
+      }
+      merged = { ...merged, ...JSON.parse(attachment.body.toString()) };
+    }
+
+    if (merged.externalId) {
+      autotestData.externalId = merged.externalId;
+    }
+    if (merged.displayName) {
+      autotestData.displayName = merged.displayName;
+    }
+    if (merged.title) {
+      autotestData.title = merged.title;
+    }
+    if (merged.description) {
+      autotestData.description = merged.description;
+    }
+    if (merged.labels) {
+      autotestData.labels = merged.labels;
+    }
+    if (merged.tags) {
+      autotestData.tags = merged.tags;
+    }
+    if (merged.links) {
+      autotestData.links = merged.links;
+    }
+    if (merged.namespace) {
+      autotestData.namespace = merged.namespace;
+    }
+    if (merged.classname) {
+      autotestData.classname = merged.classname;
+    }
+    if (merged.addLinks) {
+      autotestData.addLinks = merged.addLinks;
+    }
+    if (merged.addMessage) {
+      autotestData.addMessage = merged.addMessage;
+    }
+    if (merged.params) {
+      autotestData.params = merged.params;
+    }
+    if (merged.workItemIds) {
+      autotestData.workItemIds = merged.workItemIds;
+    }
   }
 
   private async loadTest(test: TestCase, result: Result): Promise<void> {
     logger.debug("[playwright] loadTest", { title: test.title, status: result.status });
     const autotestData = await this.getAutotestData(test, result);
 
-    const origin = await (this.strategy as BaseStrategy).client.autoTests.getAutotestByExternalId(
-      autotestData.externalId!
-    );
-    if (!origin) {
-      const dictionaries = this.getDictionariesByTest(test);
-      const pathNamespace = dictionaries.slice(0, -1).join(path.sep);
-      const pathClassname = dictionaries[dictionaries.length - 1];
-      // Prefer testit.namespace / testit.classname from attachments; file path is the default only when missing.
-      if (pathNamespace.length > 0 && autotestData.namespace == null) {
-        autotestData.namespace = pathNamespace;
-      }
-      if (pathClassname?.length && autotestData.classname == null) {
-        autotestData.classname = pathClassname;
-      }
+    const dictionaries = this.getDictionariesByTest(test);
+    const pathNamespace = dictionaries.slice(0, -1).join(path.sep);
+    const pathClassname = dictionaries[dictionaries.length - 1];
+    // Prefer testit.namespace / testit.classname from metadata; file path only when missing.
+    if (pathNamespace.length > 0 && autotestData.namespace == null) {
+      autotestData.namespace = pathNamespace;
+    }
+    if (pathClassname?.length && autotestData.classname == null) {
+      autotestData.classname = pathClassname;
     }
 
     const autotest = Converter.convertTestCaseToAutotestPost(autotestData);

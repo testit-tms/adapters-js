@@ -55,10 +55,22 @@ export enum Extensions {
 type Parameters = Record<string, string>;
 
 export class testit {
+  private static mergeMetadataAttachments(): MetadataMessage {
+    let merged: MetadataMessage = {};
+    for (const attachment of test.info().attachments) {
+      if (attachment.contentType !== "application/vnd.tms.metadata+json" || !attachment.body) {
+        continue;
+      }
+      merged = { ...merged, ...JSON.parse(attachment.body.toString()) };
+    }
+    return merged;
+  }
+
   private static async addMetadataAttachment(metadata: MetadataMessage) {
+    const merged = { ...this.mergeMetadataAttachments(), ...metadata };
     await test.info().attach("tms-metadata.json", {
       contentType: "application/vnd.tms.metadata+json",
-      body: Buffer.from(JSON.stringify(metadata), "utf8"),
+      body: Buffer.from(JSON.stringify(merged), "utf8"),
     });
   }
 
