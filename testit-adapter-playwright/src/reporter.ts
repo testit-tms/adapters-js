@@ -9,6 +9,7 @@ import {
 import { ConfigComposer, StrategyFactory, IStrategy, Utils, Additions, Attachment, AdapterConfig, BaseStrategy } from "testit-js-commons";
 import { Converter } from "./converter";
 import { MetadataMessage } from "./labels";
+import { applyMetadataTo, releaseTestMetadata, resolveTestMetadata } from "./metadata-store";
 import { getTestStatus, processAttachmentExtensions, stepAttachRegexp } from "./utils";
 import { Result, ResultAttachment } from "./models/result";
 import path from "path";
@@ -76,7 +77,20 @@ class TmsReporter implements Reporter {
 
   // fix issues with trace and video files on playwright
   private _processAttachmentsWithExtensions(result: TestResult): ResultAttachment[] {
-    return result.attachments.map(processAttachmentExtensions)
+    return result.attachments.map(processAttachmentExtensions);
+  }
+
+  private metadataContext(test: TestCase) {
+    const titlePath =
+      typeof (test as TestCase & { titlePath?: () => string[] }).titlePath === "function"
+        ? (test as TestCase & { titlePath: () => string[] }).titlePath()
+        : [test.title];
+    return {
+      testId: test.id,
+      file: test.location.file,
+      titlePath,
+      title: test.title,
+    };
   }
 
   onStepBegin(test: TestCase, _result: TestResult, step: TestStep): void {
@@ -179,6 +193,10 @@ class TmsReporter implements Reporter {
     };
 
     for (const attachment of result.attachments) {
+      if (this.isMetadataAttachment(attachment)) {
+        continue;
+      }
+
       if (!attachment.body) {
         if (attachment.path && attachment.name !== "screenshot") {
           let content: Buffer;
@@ -201,64 +219,6 @@ class TmsReporter implements Reporter {
         continue;
       }
   
-      if (attachment.contentType === "application/vnd.tms.metadata+json") {
-        const metadata: MetadataMessage = JSON.parse(attachment.body.toString());
-
-        if (metadata.externalId) {
-          autotestData.externalId = metadata.externalId;
-        }
-
-        if (metadata.displayName) {
-          autotestData.displayName = metadata.displayName;
-        }
-
-        if (metadata.title) {
-          autotestData.title = metadata.title;
-        }
-
-        if (metadata.description) {
-          autotestData.description = metadata.description;
-        }
-
-        if (metadata.labels) {
-          autotestData.labels = metadata.labels;
-        }
-
-        if (metadata.tags) {
-          autotestData.tags = metadata.tags;
-        }
-
-        if (metadata.links) {
-          autotestData.links = metadata.links;
-        }
-
-        if (metadata.namespace) {
-          autotestData.namespace = metadata.namespace;
-        }
-
-        if (metadata.classname) {
-          autotestData.classname = metadata.classname;
-        }
-
-        if (metadata.addLinks) {
-          autotestData.addLinks = metadata.addLinks;
-        }
-
-        if (metadata.addMessage) {
-          autotestData.addMessage = metadata.addMessage;
-        }
-
-        if (metadata.params) {
-          autotestData.params = metadata.params;
-        }
-
-        if (metadata.workItemIds) {
-          autotestData.workItemIds = metadata.workItemIds;
-        }
-
-        continue;
-      }
-
       if (attachment.name.match(stepAttachRegexp)) {
         const step = this.attachmentStepsCache.find((step: TestStep) => step.title === attachment.name);
         try {
@@ -277,52 +237,105 @@ class TmsReporter implements Reporter {
       }
     }
 
+    this.applyMetadataAttachments(autotestData, result.attachments);
+
+    const stored = resolveTestMetadata(this.metadataContext(test));
+    if (stored) {
+      applyMetadataTo(autotestData, stored);
+      logger.debug("[playwright] metadata from store", {
+        title: test.title,
+        namespace: autotestData.namespace,
+        classname: autotestData.classname,
+      });
+    }
+
     return autotestData;
+  }
+
+  private isMetadataAttachment(attachment: ResultAttachment): boolean {
+    return (
+      attachment.contentType === "application/vnd.tms.metadata+json" ||
+      attachment.name === "tms-metadata.json"
+    );
+  }
+
+  /** Playwright copies inline attach to disk — reporter often gets path only, not body. */
+  private readAttachmentBuffer(attachment: ResultAttachment): Buffer | undefined {
+    if (attachment.body) {
+      return attachment.body;
+    }
+    if (!attachment.path) {
+      return undefined;
+    }
+    try {
+      return Utils.readBufferSync(attachment.path);
+    } catch (err: any) {
+      if (err?.code === "ENOENT") {
+        return undefined;
+      }
+      throw err;
+    }
+  }
+
+  /** Each testit.*() call may add a separate tms-metadata.json; merge all of them. */
+  private applyMetadataAttachments(autotestData: MetadataMessage, attachments: Result["attachments"]): void {
+    let merged: MetadataMessage = {};
+    for (const attachment of attachments) {
+      if (!this.isMetadataAttachment(attachment)) {
+        continue;
+      }
+      const body = this.readAttachmentBuffer(attachment);
+      if (!body) {
+        continue;
+      }
+      merged = { ...merged, ...JSON.parse(body.toString()) };
+    }
+
+    applyMetadataTo(autotestData, merged);
   }
 
   private async loadTest(test: TestCase, result: Result): Promise<void> {
     logger.debug("[playwright] loadTest", { title: test.title, status: result.status });
-    const autotestData = await this.getAutotestData(test, result);
+    try {
+      const autotestData = await this.getAutotestData(test, result);
 
-    const origin = await (this.strategy as BaseStrategy).client.autoTests.getAutotestByExternalId(
-      autotestData.externalId!
-    );
-    if (!origin) {
       const dictionaries = this.getDictionariesByTest(test);
       const pathNamespace = dictionaries.slice(0, -1).join(path.sep);
       const pathClassname = dictionaries[dictionaries.length - 1];
-      // Prefer testit.namespace / testit.classname from attachments; file path is the default only when missing.
+      // Prefer testit.namespace / testit.classname from metadata; file path only when missing.
       if (pathNamespace.length > 0 && autotestData.namespace == null) {
         autotestData.namespace = pathNamespace;
       }
       if (pathClassname?.length && autotestData.classname == null) {
         autotestData.classname = pathClassname;
       }
+
+      const autotest = Converter.convertTestCaseToAutotestPost(autotestData);
+      const rawSteps =
+        result.steps?.length
+          ? result.steps
+          : [...this.stepsMap.keys()].filter((step: TestStep) => this.stepsMap.get(step) === test);
+      const stepResults = Converter.convertTestStepsToSteps(rawSteps, this.attachmentsMap);
+
+      result.status = getTestStatus(test);
+
+      autotest.steps = Converter.convertTestStepsToShortSteps(rawSteps);
+
+      await this.strategy.loadAutotest(
+        autotest,
+        Converter.convertStatus(result.status, test.expectedStatus));
+
+      const autotestResult = Converter.convertAutotestPostToAutotestResult(
+        autotestData,
+        test,
+        result);
+
+      autotestResult.stepResults = stepResults;
+
+      await this.strategy.loadTestRun([autotestResult]);
+    } finally {
+      releaseTestMetadata(this.metadataContext(test));
     }
-
-    const autotest = Converter.convertTestCaseToAutotestPost(autotestData);
-    const rawSteps =
-      result.steps?.length
-        ? result.steps
-        : [...this.stepsMap.keys()].filter((step: TestStep) => this.stepsMap.get(step) === test);
-    const stepResults = Converter.convertTestStepsToSteps(rawSteps, this.attachmentsMap);
-
-    result.status = getTestStatus(test);
-
-    autotest.steps = Converter.convertTestStepsToShortSteps(rawSteps);
-
-    await this.strategy.loadAutotest(
-      autotest,
-      Converter.convertStatus(result.status, test.expectedStatus));
-
-    const autotestResult = Converter.convertAutotestPostToAutotestResult(
-      autotestData,
-      test,
-      result);
-
-    autotestResult.stepResults = stepResults;
-
-    await this.strategy.loadTestRun([autotestResult]);
   }
 }
 

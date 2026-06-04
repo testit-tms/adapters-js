@@ -57,6 +57,7 @@
 ### Изменённые файлы
 
 - `testit-adapter-playwright/src/reporter.ts`
+- `testit-adapter-playwright/src/labels.ts`
 
 ### Поведение
 
@@ -75,6 +76,43 @@
 
 - Логика шагов/вложений не менялась.
 - При `ENOENT` на attachment path (Playwright `preserveOutput: 'never'`) — пропуск файла, без падения reporter.
+
+### `testit.namespace` / `testit.classname` (metadata)
+
+API `testit.*` из `labels.ts` пишет поля в attachment `tms-metadata.json` (`contentType: application/vnd.tms.metadata+json`).
+
+**Проблема:** каждый вызов (`namespace`, `classname`, `description`, …) создавал отдельный attachment с одним именем. В `result.attachments` reporter видел только последний фрагмент (например, только `classname` без `namespace`).
+
+**Решение (два уровня):**
+
+1. **`labels.ts`** — перед `test.info().attach` читаются уже добавленные metadata-вложения из `test.info().attachments`, поля мержатся, в attachment уходит полный JSON.
+2. **`reporter.ts`** — `applyMetadataAttachments()` мержит metadata-вложения (`body` или `path`).
+3. **`metadata-store.ts`** — при каждом `testit.*()` metadata пишется в in-memory Map по ключу `file + title`; reporter читает через `consumeTestMetadata()` (основной канал — attachments в reporter ненадёжны).
+
+**Приоритет `namespace` / `classname`:**
+
+| Источник | Когда применяется |
+|----------|-------------------|
+| `testit.namespace()` / `testit.classname()` | Всегда, если поле есть в merged metadata |
+| Путь к файлу теста (`getDictionariesByTest`) | Только если в metadata поле **не задано** (`== null`), независимо от того, есть ли autotest в TMS |
+
+Раньше fallback из пути срабатывал только при отсутствии autotest в TMS (`!origin`), из‑за чего при потере `namespace` в metadata сохранялось значение из папки (например `"tests"` вместо `"Отладка автотестов"`).
+
+При update существующего autotest в commons по-прежнему: `namespace: autotest.namespace ?? originAutotest.namespace` — поэтому корректный `namespace` в payload после merge metadata обязателен.
+
+### Типичные проблемы (Playwright)
+
+| Симптом | Причина | Решение |
+|---------|---------|---------|
+| Validator: `AutoTest.Namespace` = имя папки (`tests`), ожидался `testit.namespace()` | Несколько `tms-metadata.json`, в отчёте остался последний без `namespace` | Merge в `labels.ts` + `applyMetadataAttachments` в `reporter.ts` |
+| `classname` верный, `namespace` из пути | То же: последний metadata-attachment без `namespace` | То же |
+| Metadata в тесте есть, reporter не видит `namespace` | `applyMetadataAttachments` читал только `body`, в `onTestEnd` у attach только `path` | `readAttachmentBuffer()` + не грузить metadata как файл в TMS |
+
+Пример: тест «Тест поломки дерева» — `await testit.namespace('Отладка автотестов')` и `await testit.classname('Баг поломки дерева')` должны уходить в TMS оба поля.
+
+**Фикстура `prepare` с падением до `await use()`:** тело теста не выполняется → `testit.namespace` в теле не вызывается → в TMS остаётся fallback `tests` / `steps.test.ts`. Metadata нужно вызывать **до** падающего шага в фикстуре или после `await use()`.
+
+**Ключ store:** `testId`, `file + titlePath` (не только `title` — иначе ключи в labels и reporter не совпадают).
 
 ---
 
@@ -253,6 +291,7 @@ PickleStep содержит только `text` (`return true`). Keyword (`Then`
 - HTTP retry в `autotests` / `testruns` / `attachments` (5xx, сетевые коды).
 - `toOriginLink` — default `Related`, если `type` не задан (400 от API).
 - Sync-storage: InProgress cut, master/non-master (логи `[syncstorage]` при debug).
+- Playwright: merge `tms-metadata.json` и приоритет `testit.namespace` / `testit.classname` над путём к файлу (см. §1).
 
 ---
 
@@ -276,3 +315,4 @@ PickleStep содержит только `text` (`return true`). Keyword (`Then`
 3. Jest: сценарий с `afterAll` — teardown в TMS после `run_finish`.
 4. Cucumber: обычный Scenario и Scenario Outline (3 строки Examples) — отдельные результаты, шаги с `Then`/`When`.
 5. Playwright/Cypress/Mocha — нет дублей в конце прогона.
+6. Playwright: несколько `testit.namespace()` / `testit.classname()` в одном тесте — в TMS оба поля, не fallback из папки `tests/`.

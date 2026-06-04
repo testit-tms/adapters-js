@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import test from "@playwright/test";
-import { Link, Label, Attachment } from "testit-js-commons";
+import { Link, Label, Attachment, Utils } from "testit-js-commons";
+import { patchTestMetadataForRun } from "./metadata-store";
 import { processAttachmentNameExtensions } from "./utils";
 
 export interface MetadataMessage {
@@ -55,10 +56,60 @@ export enum Extensions {
 type Parameters = Record<string, string>;
 
 export class testit {
+  private static isMetadataAttachment(attachment: {
+    name: string;
+    contentType: string;
+    body?: Buffer;
+    path?: string;
+  }): boolean {
+    return (
+      attachment.contentType === "application/vnd.tms.metadata+json" ||
+      attachment.name === "tms-metadata.json"
+    );
+  }
+
+  private static readAttachmentBuffer(attachment: {
+    body?: Buffer;
+    path?: string;
+  }): Buffer | undefined {
+    if (attachment.body) {
+      return attachment.body;
+    }
+    if (!attachment.path) {
+      return undefined;
+    }
+    try {
+      return Utils.readBufferSync(attachment.path);
+    } catch {
+      return undefined;
+    }
+  }
+
+  private static mergeMetadataAttachments(): MetadataMessage {
+    let merged: MetadataMessage = {};
+    for (const attachment of test.info().attachments) {
+      if (!this.isMetadataAttachment(attachment)) {
+        continue;
+      }
+      const body = this.readAttachmentBuffer(attachment);
+      if (!body) {
+        continue;
+      }
+      merged = { ...merged, ...JSON.parse(body.toString()) };
+    }
+    return merged;
+  }
+
   private static async addMetadataAttachment(metadata: MetadataMessage) {
+    const info = test.info();
+    patchTestMetadataForRun(
+      { testId: info.testId, file: info.file, titlePath: info.titlePath, title: info.title },
+      metadata,
+    );
+    const merged = { ...this.mergeMetadataAttachments(), ...metadata };
     await test.info().attach("tms-metadata.json", {
       contentType: "application/vnd.tms.metadata+json",
-      body: Buffer.from(JSON.stringify(metadata), "utf8"),
+      body: Buffer.from(JSON.stringify(merged), "utf8"),
     });
   }
 
