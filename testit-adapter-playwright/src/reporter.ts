@@ -61,7 +61,7 @@ class TmsReporter implements Reporter {
   onTestEnd(test: TestCase, result: TestResult): void {
     const currentResult: Result = {
       status: result.status,
-      attachments: this.collectAllAttachments(result),
+      attachments: this._processAttachmentsWithExtensions(result),
       duration: result.duration,
       errors: result.errors,
       error: result.error,
@@ -78,20 +78,6 @@ class TmsReporter implements Reporter {
   // fix issues with trace and video files on playwright
   private _processAttachmentsWithExtensions(result: TestResult): ResultAttachment[] {
     return result.attachments.map(processAttachmentExtensions);
-  }
-
-  private collectAllAttachments(result: TestResult): ResultAttachment[] {
-    const out = this._processAttachmentsWithExtensions(result);
-    const visitSteps = (steps?: TestStep[]): void => {
-      for (const step of steps ?? []) {
-        for (const attachment of step.attachments ?? []) {
-          out.push(processAttachmentExtensions(attachment));
-        }
-        visitSteps(step.steps);
-      }
-    };
-    visitSteps(result.steps);
-    return out;
   }
 
   private metadataContext(test: TestCase) {
