@@ -137,7 +137,8 @@ export class ConfigComposer implements IConfigComposer {
 
     if (config.adapterMode == 2) {
       if (config.testRunId.match('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$') !== null) {
-        logger.error(`Adapter works in mode 2. Config should not contains test run id.`);
+        logger.warn(`Adapter works in mode 2. Config should not contains test run id.`);
+        config.testRunId = "";
       }
     } else if (config.adapterMode == 1) {
       if (config.testRunId.match('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$') === null) {
