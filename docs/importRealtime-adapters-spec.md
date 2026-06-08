@@ -100,6 +100,15 @@ API `testit.*` из `labels.ts` пишет поля в attachment `tms-metadata.
 
 При update существующего autotest в commons по-прежнему: `namespace: autotest.namespace ?? originAutotest.namespace` — поэтому корректный `namespace` в payload после merge metadata обязателен.
 
+### Финальный результат: POST vs PUT (commons)
+
+| Этап | API |
+|------|-----|
+| InProgress stub (`postInProgressAutotestResult`) | POST `setAutoTestResults` — **без изменений** |
+| Финал (`loadAutotests`) | Если для `autoTestExternalId` уже есть test result в прогоне (кэш после InProgress POST или search) → **PUT** `apiV2/testResults/{id}`; иначе POST `setAutoTestResults` |
+
+Нужно для `importRealtime`: повторная отправка (Jest `flushRealtimeTeardown`, повторный `loadTestRun` для того же теста) не создаёт второй результат в прогоне.
+
 ### Типичные проблемы (Playwright)
 
 | Симптом | Причина | Решение |
