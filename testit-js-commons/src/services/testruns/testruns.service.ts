@@ -2,6 +2,7 @@
 import * as TestitApiClient from "testit-api-client";
 import { AdapterConfig, BaseService } from "../../common";
 import { escapeHtmlInObject, escapeHtmlInObjectArray, logTmsLoadTestRun, withHttpRetry } from "../../common/utils";
+import { TestResultsService } from "../testresults";
 import { type ITestRunsService, TestRunId, AutotestResult, TestRunGet } from "./testruns.type";
 import { type ITestRunConverter, TestRunConverter } from "./testruns.converter";
 import { TestRunErrorHandler } from "./testruns.handler";
@@ -10,10 +11,15 @@ import logger from "../../logger";
 export class TestRunsService extends BaseService implements ITestRunsService {
   protected _client;
   protected _converter: ITestRunConverter;
+  private readonly _testResults: TestResultsService;
+  /** testResultId by autoTestExternalId within current run (InProgress POST + search). */
+  private readonly testResultIdsByExternalId = new Map<string, string>();
+
   constructor(protected readonly config: AdapterConfig) {
     super(config);
     this._client = new TestitApiClient.TestRunsApi();
     this._converter = new TestRunConverter(config);
+    this._testResults = new TestResultsService(config);
   }
 
   public async createTestRun(): Promise<TestRunId> {
@@ -26,7 +32,6 @@ export class TestRunsService extends BaseService implements ITestRunsService {
       .createEmpty({ createEmptyTestRunApiModel: escapeHtmlInObject(createRequest) })
       // @ts-ignore
       .then((response) => {
-        //logger.debug("Full response from createEmpty:", response);
         const data = response.body || response;
         if (!data) {
           throw new Error("API returned undefined response");
@@ -109,10 +114,31 @@ export class TestRunsService extends BaseService implements ITestRunsService {
   }
 
   public async loadAutotests(testRunId: string, results: Array<AutotestResult>) {
-    const autotestResultsForTestRun = results.map((result) => this._converter.toOriginAutotestResult(result));
-    escapeHtmlInObjectArray(autotestResultsForTestRun);
+    for (const result of results) {
+      const externalId = result.autoTestExternalId;
+      const existingId = await this.resolveExistingTestResultId(externalId);
 
-    for (const autotestResult of autotestResultsForTestRun) {
+      if (existingId) {
+        logTmsLoadTestRun("PUT updateTestResult (final)", {
+          testRunId,
+          autoTestExternalId: externalId,
+          testResultId: existingId,
+          stepCount: result.stepResults?.length ?? 0,
+        });
+        await this.updateAutotestResultWithRetry(existingId, result).catch((err: any) => {
+          const normalized = err?.body ?? err?.error ?? err;
+          logger.error("[testit-js-commons:loadTestRun] FAILED to update final result", {
+            testRunId,
+            autoTestExternalId: externalId,
+            testResultId: existingId,
+            error: normalized,
+          });
+        });
+        continue;
+      }
+
+      const autotestResult = this._converter.toOriginAutotestResult(result);
+      escapeHtmlInObject(autotestResult);
       logTmsLoadTestRun("POST setAutoTestResults (final)", {
         testRunId,
         autoTestExternalId: autotestResult.autoTestExternalId,
@@ -131,8 +157,32 @@ export class TestRunsService extends BaseService implements ITestRunsService {
     }
   }
 
+  private async resolveExistingTestResultId(externalId: string): Promise<string | undefined> {
+    const cached = this.testResultIdsByExternalId.get(externalId);
+    if (cached) {
+      return cached;
+    }
+
+    const found = await this._testResults.findTestResultIdByExternalId(externalId);
+    if (found) {
+      this.testResultIdsByExternalId.set(externalId, found);
+    }
+    return found;
+  }
+
+  private rememberCreatedTestResultId(externalId: string | undefined, ids: unknown): void {
+    if (!externalId) {
+      return;
+    }
+    const list = Array.isArray(ids) ? ids : ids != null ? [ids] : [];
+    const id = list[0];
+    if (typeof id === "string" && id.length > 0) {
+      this.testResultIdsByExternalId.set(externalId, id);
+    }
+  }
+
   private async sendAutotestResultWithRetry(testRunId: string, autotestResult: any): Promise<void> {
-    await withHttpRetry(
+    const ids = await withHttpRetry(
       () =>
         this._client.setAutoTestResultsForTestRun(testRunId, {
           autoTestResultsForTestRunModel: [autotestResult],
@@ -141,11 +191,26 @@ export class TestRunsService extends BaseService implements ITestRunsService {
         label: `setAutoTestResults:${autotestResult.autoTestExternalId}:${autotestResult.statusCode ?? autotestResult.statusType}`,
       },
     );
+    this.rememberCreatedTestResultId(autotestResult.autoTestExternalId, ids);
     logger.debug("[testruns] setAutoTestResults ok", {
       testRunId,
       autoTestExternalId: autotestResult.autoTestExternalId,
       statusCode: autotestResult.statusCode,
       statusType: autotestResult.statusType,
+      testResultId: this.testResultIdsByExternalId.get(autotestResult.autoTestExternalId),
+    });
+  }
+
+  private async updateAutotestResultWithRetry(testResultId: string, result: AutotestResult): Promise<void> {
+    const model = this._converter.toOriginTestResultUpdate(result);
+    escapeHtmlInObject(model);
+    await withHttpRetry(
+      () => this._testResults.updateTestResult(testResultId, model),
+      { label: `updateTestResult:${result.autoTestExternalId}` },
+    );
+    logger.debug("[testruns] updateTestResult ok", {
+      testResultId,
+      autoTestExternalId: result.autoTestExternalId,
     });
   }
 }

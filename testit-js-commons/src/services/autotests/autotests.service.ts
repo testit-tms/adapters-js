@@ -6,7 +6,7 @@ import { AutoTestSearchIncludeApiModel, AutoTestSearchApiModel } from "testit-ap
 import { BaseService, AdapterConfig, escapeHtmlInObject, withHttpRetry } from "../../common";
 import { AutotestGet, AutotestPost, type IAutotestService, Status } from "./autotests.type";
 import { AutotestConverter, type IAutotestConverter } from "./autotests.converter";
-import { handleHttpError } from "./autotests.handler";
+import { handleHttpError, isConflictError } from "./autotests.handler";
 import logger from "../../logger";
 
 export class AutotestsService extends BaseService implements IAutotestService {
@@ -24,11 +24,24 @@ export class AutotestsService extends BaseService implements IAutotestService {
     escapeHtmlInObject(autotestPost);
 
     logger.debug("[autotests] createAutoTest", { externalId: autotest.externalId, name: autotest.name });
-    return await withHttpRetry(() => this._client
-      .createAutoTest({ autoTestCreateApiModel: autotestPost }), { label: "createAutoTest" })
-      .then(() => logger.log(`Create autotest "${autotest.name}".`))
+    try {
+      await withHttpRetry(
+        () => this._client.createAutoTest({ autoTestCreateApiModel: autotestPost }),
+        { label: "createAutoTest" },
+      );
+      logger.log(`Create autotest "${autotest.name}".`);
+    } catch (err) {
+      if (isConflictError(err)) {
+        logger.debug("[autotests] createAutoTest skipped: already exists", {
+          externalId: autotest.externalId,
+          name: autotest.name,
+        });
+        return;
+      }
       // @ts-ignore
-      .catch((err) => handleHttpError(err, `Failed create autotest "${autotestPost.name}"`));
+      handleHttpError(err, `Failed create autotest "${autotestPost.name}"`);
+      throw err;
+    }
   }
 
   public async updateAutotest(autotest: AutotestPost): Promise<void> {
@@ -45,15 +58,19 @@ export class AutotestsService extends BaseService implements IAutotestService {
 
   // sometimes status is lowercase
   public async loadAutotest(autotest: AutotestPost, status: string): Promise<void> {
-    const originAutotest = await this.getAutotestByExternalId(autotest.externalId);
+    let originAutotest = await this.getAutotestByExternalId(autotest.externalId);
 
     if (!originAutotest) {
       logger.debug("[autotests] loadAutotest → create", { externalId: autotest.externalId, status });
       await this.createAutotest(autotest);
-      return;
+      originAutotest = await this.getAutotestByExternalId(autotest.externalId);
+      if (!originAutotest) {
+        logger.log(`Cannot load autotest "${autotest.name}": not found after create`);
+        return;
+      }
+    } else {
+      logger.debug("[autotests] loadAutotest → update path", { externalId: autotest.externalId, status });
     }
-
-    logger.debug("[autotests] loadAutotest → update path", { externalId: autotest.externalId, status });
 
     const mergedAutotest: AutotestPost = {
       ...autotest,
@@ -156,19 +173,22 @@ export class AutotestsService extends BaseService implements IAutotestService {
       includes: includesModel,
     };
 
-    return await this._client
-      .apiV2AutoTestsSearchPost({ autoTestSearchApiModel: requestModel } as any)
+    try {
+      const response = await withHttpRetry(
+        () => this._client.apiV2AutoTestsSearchPost({ autoTestSearchApiModel: requestModel } as any),
+        { label: `searchAutoTest:${externalId}` },
+      );
       // @ts-ignore
-      .then((response) => {
-        const data = response.body || response;
-        return data ? data[0] : null;
-      })
-      .then((autotest: any | undefined) => {
-        return autotest ? this._converter.toLocalAutotest(autotest) : null;
-      })
-      .catch((reason: any) => {
-        logger.error(reason);
-        return null;
+      const data = response.body || response;
+      const autotest = data ? data[0] : null;
+      return autotest ? this._converter.toLocalAutotest(autotest) : null;
+    } catch (reason: any) {
+      logger.error("[autotests] getAutotestByExternalId failed", {
+        externalId,
+        code: reason?.code,
+        status: reason?.status ?? reason?.statusCode,
       });
+      return null;
+    }
   }
 }

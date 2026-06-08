@@ -14,6 +14,7 @@ export interface ITestRunConverter {
   toLocalTestRun(testRun: TestRunV2ApiResult): TestRunGet;
   toOriginAutotestResult(autotest: AutotestResult): AutoTestResultsForTestRunModel;
   toOriginAutotestResultInProgress(autotest: AutotestResult): AutoTestResultsForTestRunModel;
+  toOriginTestResultUpdate(autotest: AutotestResult): unknown;
 }
 
 export class TestRunConverter extends BaseConverter implements ITestRunConverter {
@@ -83,6 +84,28 @@ export class TestRunConverter extends BaseConverter implements ITestRunConverter
 
     if (autotest.completedOn !== undefined) {
       model.completedOn = autotest.completedOn;
+    }
+
+    return model;
+  }
+
+  toOriginTestResultUpdate(autotest: AutotestResult): unknown {
+    const model: Record<string, unknown> = {
+      outcome: this.toOriginOutcome(autotest.outcome),
+      statusType: this.mapToStatusType(autotest.outcome),
+      statusCode: null,
+      links: autotest.links?.map((link) => this.toOriginLink(link)),
+      stepResults: autotest.stepResults?.map((step) => this.toOriginStep(step)),
+      setupResults: autotest.setupResults?.map((step) => this.toOriginStep(step)),
+      teardownResults: autotest.teardownResults?.map((step) => this.toOriginStep(step)),
+      attachments: autotest.attachments?.map((attachment) => ({ id: attachment.id })),
+      message: autotest.message,
+      trace: autotest.traces,
+    };
+
+    if (autotest.duration !== undefined) {
+      model.durationInMs = autotest.duration;
+      model.duration = autotest.duration;
     }
 
     return model;

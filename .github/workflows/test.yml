@@ -193,6 +193,19 @@ jobs:
           dotnet test --configuration Debug --no-build --logger:"console;verbosity=detailed" api-validator-dotnet
 
 
+      - name: Create TestRun
+        run: |
+          testit testrun create --token ${{ env.TMS_PRIVATE_TOKEN }} --output ${{ env.TEMP_FILE }}
+
+          echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> $GITHUB_ENV
+          echo "TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})" >> .env
+          export TMS_TEST_RUN_ID=$(<${{ env.TEMP_FILE }})
+          echo "{{ $(cat .env) }}"
+          echo "${{ env.TMS_TEST_RUN_ID }}"
+          echo "${{ env.TMS_URL }}"
+          echo "${{ env.TMS_ADAPTER_MODE }}"
+          echo "$GITHUB_ENV"
+
       - name: Test import realtime false
         run: |
           export TMS_IMPORT_REALTIME=false
@@ -207,7 +220,7 @@ jobs:
           # start sync storage before all other processes
           ../../scripts/get_sync_storage.sh $SYNC_STORAGE_VERSION
           nohup .caches/syncstorage-linux-amd64 --testRunId ${{ env.TMS_TEST_RUN_ID }} --port ${{ env.TMS_SYNC_STORAGE_PORT }} \
-          --baseURL ${{ env.TMS_URL }} --privateToken ${{ env.TMS_PRIVATE_TOKEN }}  > service.log 2>&1 &  
+          --baseURL ${{ env.TMS_URL }} --privateToken ${{ env.TMS_PRIVATE_TOKEN }}  > service2.log 2>&1 &  
           curl -v http://127.0.0.1:${{ env.TMS_SYNC_STORAGE_PORT }}/health || true
           
           if [ "${{ matrix.project_name }}" = "testcafe" ]; then
@@ -219,7 +232,7 @@ jobs:
 
           # sleep 10
           curl -v http://127.0.0.1:${{ env.TMS_SYNC_STORAGE_PORT }}/wait-completion?testRunId=${{ env.TMS_TEST_RUN_ID }} || true
-          cat service.log
+          cat service2.log
 
       - name: Validate import realtime false
         run: |
