@@ -173,6 +173,7 @@ jobs:
           
           # start sync storage before all other processes
           ../../scripts/get_sync_storage.sh $SYNC_STORAGE_VERSION
+          pkill -f 'syncstorage-linux-amd64.*--port ${{ env.TMS_SYNC_STORAGE_PORT }}' 2>/dev/null || true
           nohup .caches/syncstorage-linux-amd64 --testRunId ${{ env.TMS_TEST_RUN_ID }} --port ${{ env.TMS_SYNC_STORAGE_PORT }} \
           --baseURL ${{ env.TMS_URL }} --privateToken ${{ env.TMS_PRIVATE_TOKEN }}  > service.log 2>&1 &  
           curl -v http://127.0.0.1:${{ env.TMS_SYNC_STORAGE_PORT }}/health || true
@@ -219,6 +220,7 @@ jobs:
           
           # start sync storage before all other processes
           ../../scripts/get_sync_storage.sh $SYNC_STORAGE_VERSION
+          pkill -f 'syncstorage-linux-amd64.*--port ${{ env.TMS_SYNC_STORAGE_PORT }}' 2>/dev/null || true
           nohup .caches/syncstorage-linux-amd64 --testRunId ${{ env.TMS_TEST_RUN_ID }} --port ${{ env.TMS_SYNC_STORAGE_PORT }} \
           --baseURL ${{ env.TMS_URL }} --privateToken ${{ env.TMS_PRIVATE_TOKEN }}  > service2.log 2>&1 &  
           curl -v http://127.0.0.1:${{ env.TMS_SYNC_STORAGE_PORT }}/health || true
