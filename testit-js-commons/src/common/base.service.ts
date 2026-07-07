@@ -12,7 +12,7 @@ export class BaseService {
 
     const defaultClient = TestitApiClient.ApiClient.instance;
     defaultClient.basePath = config.url;
-    const auth = defaultClient.authentications["Bearer or PrivateToken"];
+    const auth = defaultClient.authentications["PrivateToken"];
     auth.apiKeyPrefix = "PrivateToken";
     auth.apiKey = config.privateToken;
 
