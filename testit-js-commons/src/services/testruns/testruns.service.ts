@@ -1,5 +1,5 @@
 // @ts-ignore
-import * as TestitApiClient from "testit-api-client";
+import * as AdaptersApi from "../../adapters-api";
 import { AdapterConfig, BaseService } from "../../common";
 import { escapeHtmlInObject, escapeHtmlInObjectArray, logTmsLoadTestRun, withHttpRetry } from "../../common/utils";
 import { TestResultsService } from "../testresults";
@@ -17,7 +17,7 @@ export class TestRunsService extends BaseService implements ITestRunsService {
 
   constructor(protected readonly config: AdapterConfig) {
     super(config);
-    this._client = new TestitApiClient.TestRunsApi();
+    this._client = new AdaptersApi.TestRunsApi();
     this._converter = new TestRunConverter(config);
     this._testResults = new TestResultsService(config);
   }
@@ -29,10 +29,10 @@ export class TestRunsService extends BaseService implements ITestRunsService {
     };
 
     return await this._client
-      .createEmpty({ createEmptyTestRunApiModel: escapeHtmlInObject(createRequest) })
+      .adaptersTestRunsPost({ createEmptyTestRunApiModel: escapeHtmlInObject(createRequest) })
       // @ts-ignore
       .then((response) => {
-        const data = response.body || response;
+        const data = response?.body || response;
         if (!data) {
           throw new Error("API returned undefined response");
         }
@@ -49,10 +49,10 @@ export class TestRunsService extends BaseService implements ITestRunsService {
 
   public async getTestRun(testRunId: TestRunId): Promise<TestRunGet> {
     return await this._client
-      .getTestRunById(testRunId)
+      .adaptersTestRunsIdGet(testRunId)
       // @ts-ignore
       .then((response) => {
-        const data = response.body || response;
+        const data = response?.body || response;
         return data;
       })
       // @ts-ignore
@@ -61,11 +61,11 @@ export class TestRunsService extends BaseService implements ITestRunsService {
 
   public async updateTestRun(testRun: TestRunGet): Promise<void> {
     await this._client
-      .updateEmpty({ updateEmptyTestRunApiModel: testRun })
+      .adaptersTestRunsPut({ updateEmptyTestRunApiModel: testRun })
       // @ts-ignore
       .then((response) => {
-        logger.log("Full response from updateEmpty:", response);
-        const data = response.body || response;
+        logger.log("Full response from adaptersTestRunsPut:", response);
+        const data = response?.body || response;
         if (!data) {
           throw new Error("API returned undefined response");
         }
@@ -79,7 +79,7 @@ export class TestRunsService extends BaseService implements ITestRunsService {
     try {
       const testRun = await this.getTestRun(testRunId);
       if (testRun.stateName === "NotStarted") {
-        await this._client.startTestRun(testRunId);
+        await this._client.adaptersTestRunsIdStartPost(testRunId);
       }
     } catch (err) {
       TestRunErrorHandler.handleErrorStartTestRun(err);
@@ -90,7 +90,7 @@ export class TestRunsService extends BaseService implements ITestRunsService {
     try {
       const testRun = await this.getTestRun(testRunId);
       if (testRun.stateName === "InProgress") {
-        await this._client.completeTestRun(testRunId);
+        await this._client.adaptersTestRunsIdCompletePost(testRunId);
       }
     } catch (err) {
       TestRunErrorHandler.handleErrorCompletedTestRun(err);
@@ -184,7 +184,7 @@ export class TestRunsService extends BaseService implements ITestRunsService {
   private async sendAutotestResultWithRetry(testRunId: string, autotestResult: any): Promise<void> {
     const ids = await withHttpRetry(
       () =>
-        this._client.setAutoTestResultsForTestRun(testRunId, {
+        this._client.adaptersTestRunsIdTestResultsPost(testRunId, {
           autoTestResultsForTestRunModel: [autotestResult],
         }),
       {

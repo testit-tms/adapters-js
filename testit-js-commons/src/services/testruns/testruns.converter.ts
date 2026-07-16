@@ -1,9 +1,9 @@
 import {
   AutoTestResultsForTestRunModel,
   TestRunState,
-  TestRunV2ApiResult,
+  TestRunApiResult,
   // @ts-ignore
-} from "testit-api-client";
+} from "../../adapters-api";
 import { BaseConverter, AdapterConfig, Outcome } from "../../common";
 import { AutotestConverter, IAutotestConverter } from "../autotests";
 import { AutotestResult, RunState, TestRunGet } from "./testruns.type";
@@ -11,7 +11,7 @@ import { AutotestResult, RunState, TestRunGet } from "./testruns.type";
 export interface ITestRunConverter {
   toOriginState(state: RunState): TestRunState;
   toLocalState(state: TestRunState): RunState;
-  toLocalTestRun(testRun: TestRunV2ApiResult): TestRunGet;
+  toLocalTestRun(testRun: TestRunApiResult): TestRunGet;
   toOriginAutotestResult(autotest: AutotestResult): AutoTestResultsForTestRunModel;
   toOriginAutotestResultInProgress(autotest: AutotestResult): AutoTestResultsForTestRunModel;
   toOriginTestResultUpdate(autotest: AutotestResult): unknown;
@@ -111,17 +111,24 @@ export class TestRunConverter extends BaseConverter implements ITestRunConverter
     return model;
   }
 
-  toLocalTestRun(testRun: TestRunV2ApiResult): TestRunGet {
+  toLocalTestRun(testRun: TestRunApiResult): TestRunGet {
+    // @ts-ignore — adapters TestRunApiResult may omit optional fields present on older V2 model
+    const run = testRun as TestRunApiResult & {
+      startedOn?: Date;
+      completedOn?: Date;
+      description?: string;
+      launchSource?: string;
+    };
     return {
-      id: testRun.id,
-      name: testRun.name,
-      startedOn: testRun.startedOn ?? undefined,
-      completedOn: testRun.completedOn ?? undefined,
-      description: testRun.description ?? undefined,
-      launchSource: testRun.launchSource ?? undefined,
-      stateName: this.toLocalState(testRun.stateName),
-      attachments: testRun.attachments,
-      links: testRun.links,
+      id: run.id,
+      name: run.name,
+      startedOn: run.startedOn ?? undefined,
+      completedOn: run.completedOn ?? undefined,
+      description: run.description ?? undefined,
+      launchSource: run.launchSource ?? undefined,
+      stateName: this.toLocalState(run.stateName),
+      attachments: run.attachments,
+      links: run.links,
     };
   }
 }

@@ -6,7 +6,7 @@ import {
   LinkPutModel,
   AutoTestStepModel,
   // @ts-ignore
-} from "testit-api-client";
+} from "../adapters-api";
 import { AdapterConfig, Link, LinkType, Outcome, ShortStep, Step } from "./types";
 
 export interface IBaseConverter {

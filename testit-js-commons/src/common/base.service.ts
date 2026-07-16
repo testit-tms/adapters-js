@@ -1,6 +1,6 @@
 import { AdapterConfig } from "../common";
 // @ts-ignore
-import * as TestitApiClient from "testit-api-client";
+import * as AdaptersApi from "../adapters-api";
 
 export class BaseService {
   constructor(protected readonly config: AdapterConfig) {
@@ -10,9 +10,9 @@ export class BaseService {
     if (!config.configurationId) throw new Error("Configuration id is not defined");
     if (!config.projectId) throw new Error("Project id is not defined");
 
-    const defaultClient = TestitApiClient.ApiClient.instance;
+    const defaultClient = AdaptersApi.ApiClient.instance;
     defaultClient.basePath = config.url;
-    const auth = defaultClient.authentications["Bearer or PrivateToken"];
+    const auth = defaultClient.authentications["PrivateToken"];
     auth.apiKeyPrefix = "PrivateToken";
     auth.apiKey = config.privateToken;
 

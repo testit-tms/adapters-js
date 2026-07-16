@@ -1,10 +1,10 @@
 // @ts-ignore
-import * as TestitApiClient from "testit-api-client";
+import * as AdaptersApi from "../../adapters-api";
 // @ts-ignore
-import { AutoTestSearchIncludeApiModel, AutoTestSearchApiModel } from "testit-api-client";
+import { AutoTestSearchIncludeApiModel, AutoTestSearchApiModel } from "../../adapters-api";
 
 import { BaseService, AdapterConfig, escapeHtmlInObject, withHttpRetry } from "../../common";
-import { AutotestGet, AutotestPost, type IAutotestService, Status } from "./autotests.type";
+import { AutotestGet, AutotestPost, type IAutotestService } from "./autotests.type";
 import { AutotestConverter, type IAutotestConverter } from "./autotests.converter";
 import { handleHttpError, isConflictError } from "./autotests.handler";
 import logger from "../../logger";
@@ -14,7 +14,7 @@ export class AutotestsService extends BaseService implements IAutotestService {
   protected _converter: IAutotestConverter;
   constructor(protected readonly config: AdapterConfig) {
     super(config);
-    this._client = new TestitApiClient.AutoTestsApi();
+    this._client = new AdaptersApi.AutoTestsApi();
 
     this._converter = new AutotestConverter(config);
   }
@@ -26,7 +26,7 @@ export class AutotestsService extends BaseService implements IAutotestService {
     logger.debug("[autotests] createAutoTest", { externalId: autotest.externalId, name: autotest.name });
     try {
       await withHttpRetry(
-        () => this._client.createAutoTest({ autoTestCreateApiModel: autotestPost }),
+        () => this._client.adaptersAutoTestsPost({ autoTestCreateApiModel: autotestPost }),
         { label: "createAutoTest" },
       );
       logger.log(`Create autotest "${autotest.name}".`);
@@ -50,7 +50,7 @@ export class AutotestsService extends BaseService implements IAutotestService {
 
     logger.debug("[autotests] updateAutoTest", { externalId: autotest.externalId, name: autotest.name });
     await withHttpRetry(() => this._client
-      .updateAutoTest({ autoTestUpdateApiModel: autotestPost }), { label: "updateAutoTest" })
+      .adaptersAutoTestsPut({ autoTestUpdateApiModel: autotestPost }), { label: "updateAutoTest" })
       .then(() => logger.log(`Update autotest "${autotest.name}".`))
       // @ts-ignore
       .catch((err) => handleHttpError(err, `Failed update autotest "${autotestPost.name}"`));
@@ -125,7 +125,7 @@ export class AutotestsService extends BaseService implements IAutotestService {
   public async linkToWorkItems(internalId: string, workItemIds: Array<string>) {
     const promises = workItemIds.map(async (workItemId) => {
       try {
-        await this._client.linkAutoTestToWorkItem(internalId, { workItemIdApiModel: { id: workItemId } });
+        await this._client.adaptersAutoTestsIdWorkItemsPost(internalId, { workItemIdApiModel: { id: workItemId } });
         logger.log(`Link autotest ${internalId} to workitem ${workItemId} is successfully`);
       } catch (e: any) {
         logger.error(`Cannot link autotest ${internalId} to work item ${workItemId}`, e?.body ?? e?.error ?? e);
@@ -137,7 +137,7 @@ export class AutotestsService extends BaseService implements IAutotestService {
 
   public async unlinkToWorkItem(internalId: string, workItemId: string): Promise<void> {
     try {
-      await this._client.deleteAutoTestLinkFromWorkItem(internalId, { workItemId: workItemId });
+      await this._client.adaptersAutoTestsIdWorkItemsDelete(internalId, { workItemId: workItemId });
       logger.log(`Unlink autotest ${internalId} from workitem ${workItemId} is successfully`);
     } catch (e) {
       logger.log(`Cannot unlink autotest ${internalId} from work item ${workItemId}: ${e}`);
@@ -146,9 +146,9 @@ export class AutotestsService extends BaseService implements IAutotestService {
 
   public async getWorkItemsLinkedToAutoTest(internalId: string): Promise<Array<any>> {
     return await this._client
-      .getWorkItemsLinkedToAutoTest(internalId, {} as any)
+      .adaptersAutoTestsIdWorkItemsGet(internalId, {} as any)
       // @ts-ignore
-      .then((res) => res.body)
+      .then((res) => res?.body || res || [])
       // @ts-ignore
       .catch((e) => {
         logger.log(`Cannot get linked workitems to autotest ${internalId}: ${e}`);
@@ -175,11 +175,11 @@ export class AutotestsService extends BaseService implements IAutotestService {
 
     try {
       const response = await withHttpRetry(
-        () => this._client.apiV2AutoTestsSearchPost({ autoTestSearchApiModel: requestModel } as any),
+        () => this._client.adaptersAutoTestsSearchPost({ autoTestSearchApiModel: requestModel } as any),
         { label: `searchAutoTest:${externalId}` },
       );
       // @ts-ignore
-      const data = response.body || response;
+      const data = response?.body || response;
       const autotest = data ? data[0] : null;
       return autotest ? this._converter.toLocalAutotest(autotest) : null;
     } catch (reason: any) {

@@ -1,5 +1,3 @@
-// @ts-ignore
-// import { WorkItemIdentifierModel } from "testit-api-client";
 import { Label, Link, ShortStep } from "../../common";
 
 export enum Status {

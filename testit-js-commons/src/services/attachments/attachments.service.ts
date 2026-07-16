@@ -1,5 +1,5 @@
 // @ts-ignore
-import * as TestitApiClient from "testit-api-client";
+import * as AdaptersApi from "../../adapters-api";
 import { BaseService, Utils, AdapterConfig, Attachment, withHttpRetry } from "../../common";
 import { IAttachmentsService } from "./attachments.type";
 import { Buffer } from "buffer";
@@ -11,11 +11,11 @@ const UPLOAD_RETRY_OPTIONS = { maxAttempts: 5, delayMs: 500, backoff: true } as 
 const UPLOAD_CLIENT_TIMEOUT_MS = 120000;
 
 export class AttachmentsService extends BaseService implements IAttachmentsService {
-  protected _client: TestitApiClient.AttachmentsApi;
+  protected _client: AdaptersApi.AttachmentsApi;
 
   constructor(protected readonly config: AdapterConfig) {
     super(config);
-    this._client = new TestitApiClient.AttachmentsApi();
+    this._client = new AdaptersApi.AttachmentsApi();
     if (this.config.url) {
       this._client.apiClient.basePath = this.config.url.replace(/\/+$/, "");
     }
@@ -40,8 +40,8 @@ export class AttachmentsService extends BaseService implements IAttachmentsServi
             const fileStream = fs.createReadStream(tempFilePath);
             try {
               // @ts-ignore
-              const response = await this._client.apiV2AttachmentsPost({ file: fileStream });
-              const data = response.body || response;
+              const response = await this._client.adaptersAttachmentsPost({ file: fileStream });
+              const data = response?.body || response;
               return data.id as string;
             } finally {
               fileStream.destroy();
@@ -90,8 +90,8 @@ export class AttachmentsService extends BaseService implements IAttachmentsServi
             const fileStream = Utils.readStream(path);
             try {
               // @ts-ignore
-              const response = await this._client.apiV2AttachmentsPost({ file: fileStream });
-              const data = response.body || response;
+              const response = await this._client.adaptersAttachmentsPost({ file: fileStream });
+              const data = response?.body || response;
               return data.id as string;
             } finally {
               fileStream.destroy();

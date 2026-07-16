@@ -1,5 +1,5 @@
 // @ts-ignore
-import { AutoTestModelV2GetModel, AutoTestApiResult } from "testit-api-client";
+import { AutoTestApiResult } from "../../adapters-api";
 import { BaseConverter, AdapterConfig } from "../../common";
 import { AutotestGet, AutotestPost } from "./autotests.type";
 

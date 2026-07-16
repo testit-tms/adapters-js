@@ -1,5 +1,5 @@
 // @ts-ignore
-import * as TestitApiClient from "testit-api-client";
+import * as AdaptersApi from "../../adapters-api";
 import { AdapterConfig, BaseService } from "../../common";
 import { withHttpRetry } from "../../common/utils";
 import { handleHttpError } from "./testresults.handler";
@@ -13,7 +13,7 @@ export class TestResultsService extends BaseService implements ITestResultsServi
 
   constructor(protected readonly config: AdapterConfig) {
     super(config);
-    this._client = new TestitApiClient.TestResultsApi();
+    this._client = new AdaptersApi.TestResultsApi();
     this._converter = new TestResultsConverter(config);
   }
 
@@ -66,19 +66,19 @@ export class TestResultsService extends BaseService implements ITestResultsServi
   public async updateTestResult(testResultId: string, model: unknown): Promise<void> {
     await withHttpRetry(
       () =>
-        this._client.apiV2TestResultsIdPut(testResultId, {
-          testResultUpdateV2Request: model,
+        this._client.adaptersTestResultsIdPut(testResultId, {
+          testResultUpdateRequest: model,
         }),
-      { label: `apiV2TestResultsIdPut:${testResultId}` },
+      { label: `adaptersTestResultsIdPut:${testResultId}` },
     );
   }
 
   private async getTestResults(skip: number, model: any): Promise<any> {
     return await this._client
-      .apiV2TestResultsSearchPost({ skip: skip, take: this._testsLimit, testResultsFilterApiModel: model } as any)
+      .adaptersTestResultsSearchPost({ skip: skip, take: this._testsLimit, testResultsFilterApiModel: model } as any)
       // @ts-ignore
       .then((response) => {
-        const data = response.body || response;
+        const data = response?.body || response;
         return data;
       })
       // @ts-ignore
