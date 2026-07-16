@@ -1,13 +1,15 @@
-import {
-  AvailableTestResultOutcome,
-  LinkPostModel,
-  LinkType as OriginLinkType,
-  AttachmentPutModelAutoTestStepResultsModel,
-  LinkPutModel,
-  AutoTestStepModel,
-  // @ts-ignore
-} from "../adapters-api";
+import type AvailableTestResultOutcome from "adapters-api/model/AvailableTestResultOutcome";
+import type LinkPostModel from "adapters-api/model/LinkPostModel";
+import type OriginLinkType from "adapters-api/model/LinkType";
+import type AttachmentPutModelAutoTestStepResultsModel from "adapters-api/model/AttachmentPutModelAutoTestStepResultsModel";
+import type LinkPutModel from "adapters-api/model/LinkPutModel";
+import type AutoTestStepModel from "adapters-api/model/AutoTestStepModel";
 import { AdapterConfig, Link, LinkType, Outcome, ShortStep, Step } from "./types";
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const AdaptersApi = require("../adapters-api/dist/index") as typeof import("adapters-api/index");
+const AvailableTestResultOutcomeEnum = AdaptersApi.AvailableTestResultOutcome;
+const OriginLinkTypeEnum = AdaptersApi.LinkType;
 
 export interface IBaseConverter {
   toOriginOutcome(outcome: Outcome): AvailableTestResultOutcome;
@@ -29,22 +31,22 @@ export class BaseConverter implements IBaseConverter {
 
   toOriginOutcome(outcome: Outcome): AvailableTestResultOutcome {
     // @ts-ignore
-    return AvailableTestResultOutcome[outcome];
+    return AvailableTestResultOutcomeEnum[outcome];
   }
 
   toLocalOutcome(outcome: AvailableTestResultOutcome): Outcome {
     // @ts-ignore
-    return AvailableTestResultOutcome[outcome] as Outcome;
+    return AvailableTestResultOutcomeEnum[outcome] as Outcome;
   }
 
   toOriginLinkType(linkType: LinkType): OriginLinkType {
     // @ts-ignore
-    return OriginLinkType[linkType];
+    return OriginLinkTypeEnum[linkType];
   }
 
   toLocalLinkType(linkType: OriginLinkType): LinkType {
     // @ts-ignore
-    return OriginLinkType[linkType] as LinkType;
+    return OriginLinkTypeEnum[linkType] as LinkType;
   }
 
   toOriginLink(link: Link): LinkPostModel {
@@ -56,10 +58,9 @@ export class BaseConverter implements IBaseConverter {
         type = mapped;
       }
     }
-    // @ts-ignore
     return {
       ...link,
-      type,
+      type: type as unknown as string,
       hasInfo: true,
     };
   }
@@ -69,7 +70,9 @@ export class BaseConverter implements IBaseConverter {
       url: link.url,
       title: link.title ?? link.url,
       description: link.description ?? undefined,
-      type: link.type ? this.toLocalLinkType(link.type) : ("Related" as LinkType),
+      type: link.type
+        ? this.toLocalLinkType(link.type as unknown as OriginLinkType)
+        : ("Related" as LinkType),
     };
   }
 
@@ -77,31 +80,27 @@ export class BaseConverter implements IBaseConverter {
     return {
       title: step.title,
       description: step.description ?? undefined,
-      // @ts-ignore
-      steps: step.steps?.map((step) => this.toLocalShortStep(step)),
+      steps: step.steps?.map((s) => this.toLocalShortStep(s)),
     };
   }
 
   toOriginStep(step: Step): AttachmentPutModelAutoTestStepResultsModel {
-    // @ts-ignore
     const model: AttachmentPutModelAutoTestStepResultsModel = {
       title: step.title,
       description: step.description,
       parameters: step.parameters,
       attachments: step.attachments,
       outcome: step.outcome ? step.outcome : undefined,
-      stepResults: step.steps?.map((step) => this.toOriginStep(step)),
+      stepResults: step.steps?.map((s) => this.toOriginStep(s)),
     };
 
     if (step.duration !== undefined) {
       model.duration = step.duration;
     }
     if (step.startedOn !== undefined) {
-      // @ts-ignore
       model.startedOn = step.startedOn;
     }
     if (step.completedOn !== undefined) {
-      // @ts-ignore
       model.completedOn = step.completedOn;
     }
 

@@ -1,10 +1,10 @@
-// @ts-ignore
-import { AutoTestApiResult } from "../../adapters-api";
+import type AutoTestApiResult from "adapters-api/model/AutoTestApiResult";
+import type AutoTestCreateApiModel from "adapters-api/model/AutoTestCreateApiModel";
 import { BaseConverter, AdapterConfig } from "../../common";
 import { AutotestGet, AutotestPost } from "./autotests.type";
 
 export interface IAutotestConverter {
-  toOriginAutotest(autotest: AutotestPost): any;
+  toOriginAutotest(autotest: AutotestPost): AutoTestCreateApiModel;
   toLocalAutotest(autotest: AutoTestApiResult): AutotestGet;
 }
 
@@ -13,7 +13,7 @@ export class AutotestConverter extends BaseConverter implements IAutotestConvert
     super(config);
   }
 
-  public toOriginAutotest(autotest: AutotestPost): any {
+  public toOriginAutotest(autotest: AutotestPost): AutoTestCreateApiModel {
     return {
       externalId: autotest.externalId,
       name: autotest.name,
@@ -39,18 +39,13 @@ export class AutotestConverter extends BaseConverter implements IAutotestConvert
       id: autotest.id,
       name: autotest.name ?? undefined,
       externalId: autotest.externalId ?? undefined,
-      // @ts-ignore
       links: autotest.links?.map((link) => this.toLocalLink(link)),
       namespace: autotest.namespace ?? undefined,
       classname: autotest.classname ?? undefined,
-      // @ts-ignore
       steps: autotest.steps?.map((step) => this.toLocalShortStep(step)),
-      // @ts-ignore
       setup: autotest.setup?.map((step) => this.toLocalShortStep(step)),
-      // @ts-ignore
       teardown: autotest.teardown?.map((step) => this.toLocalShortStep(step)),
       labels: autotest.labels ?? undefined,
-      // @ts-ignore
       tags: autotest.tags ?? undefined,
     };
   }

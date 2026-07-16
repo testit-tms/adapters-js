@@ -45,8 +45,7 @@ class ApiClient {
          * @type {Array.<String>}
          */
         this.authentications = {
-            'PrivateToken': {type: 'apiKey', 'in': 'header', name: 'Authorization'},
-            'Cookies': {type: 'apiKey', 'in': 'query', name: 'session'},
+            'Bearer or PrivateToken': {type: 'apiKey', 'in': 'header', name: 'Authorization'},
         }
 
 	/**

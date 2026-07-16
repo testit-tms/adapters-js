@@ -1,7 +1,7 @@
-// @ts-ignore
-import * as AdaptersApi from "../../adapters-api";
-// @ts-ignore
-import { AutoTestSearchIncludeApiModel, AutoTestSearchApiModel } from "../../adapters-api";
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const AdaptersApi = require("../../adapters-api/dist/index") as typeof import("adapters-api/index");
+import type AutoTestSearchApiModel from "adapters-api/model/AutoTestSearchApiModel";
+import type AutoTestSearchIncludeApiModel from "adapters-api/model/AutoTestSearchIncludeApiModel";
 
 import { BaseService, AdapterConfig, escapeHtmlInObject, withHttpRetry } from "../../common";
 import { AutotestGet, AutotestPost, type IAutotestService } from "./autotests.type";
@@ -10,11 +10,11 @@ import { handleHttpError, isConflictError } from "./autotests.handler";
 import logger from "../../logger";
 
 export class AutotestsService extends BaseService implements IAutotestService {
-  protected _client;
+  protected _client: InstanceType<typeof AdaptersApi.AutoTestsApi>;
   protected _converter: IAutotestConverter;
   constructor(protected readonly config: AdapterConfig) {
     super(config);
-    this._client = new AdaptersApi.AutoTestsApi();
+    this._client = new AdaptersApi.AutoTestsApi(AdaptersApi.ApiClient.instance);
 
     this._converter = new AutotestConverter(config);
   }

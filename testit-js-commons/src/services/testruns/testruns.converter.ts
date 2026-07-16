@@ -1,12 +1,14 @@
-import {
-  AutoTestResultsForTestRunModel,
-  TestRunState,
-  TestRunApiResult,
-  // @ts-ignore
-} from "../../adapters-api";
+import type AutoTestResultsForTestRunModel from "adapters-api/model/AutoTestResultsForTestRunModel";
+import type TestResultUpdateRequest from "adapters-api/model/TestResultUpdateRequest";
+import type TestRunState from "adapters-api/model/TestRunState";
+import type TestRunApiResult from "adapters-api/model/TestRunApiResult";
 import { BaseConverter, AdapterConfig, Outcome } from "../../common";
 import { AutotestConverter, IAutotestConverter } from "../autotests";
 import { AutotestResult, RunState, TestRunGet } from "./testruns.type";
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const AdaptersApi = require("../../adapters-api/dist/index") as typeof import("adapters-api/index");
+const TestRunStateEnum = AdaptersApi.TestRunState;
 
 export interface ITestRunConverter {
   toOriginState(state: RunState): TestRunState;
@@ -14,7 +16,7 @@ export interface ITestRunConverter {
   toLocalTestRun(testRun: TestRunApiResult): TestRunGet;
   toOriginAutotestResult(autotest: AutotestResult): AutoTestResultsForTestRunModel;
   toOriginAutotestResultInProgress(autotest: AutotestResult): AutoTestResultsForTestRunModel;
-  toOriginTestResultUpdate(autotest: AutotestResult): unknown;
+  toOriginTestResultUpdate(autotest: AutotestResult): TestResultUpdateRequest;
 }
 
 export class TestRunConverter extends BaseConverter implements ITestRunConverter {
@@ -27,12 +29,12 @@ export class TestRunConverter extends BaseConverter implements ITestRunConverter
 
   toLocalState(state: TestRunState): RunState {
     // @ts-ignore
-    return TestRunState[state] as RunState;
+    return TestRunStateEnum[state] as RunState;
   }
 
   toOriginState(state: RunState): TestRunState {
     // @ts-ignore
-    return TestRunState[state];
+    return TestRunStateEnum[state];
   }
 
   mapToStatusType(status: Outcome): string {
@@ -89,9 +91,9 @@ export class TestRunConverter extends BaseConverter implements ITestRunConverter
     return model;
   }
 
-  toOriginTestResultUpdate(autotest: AutotestResult): unknown {
-    const model: Record<string, unknown> = {
-      outcome: this.toOriginOutcome(autotest.outcome),
+  toOriginTestResultUpdate(autotest: AutotestResult): TestResultUpdateRequest {
+    const model: TestResultUpdateRequest = {
+      outcome: this.toOriginOutcome(autotest.outcome) as unknown as string,
       statusType: this.mapToStatusType(autotest.outcome),
       statusCode: null,
       links: autotest.links?.map((link) => this.toOriginLink(link)),
@@ -112,23 +114,22 @@ export class TestRunConverter extends BaseConverter implements ITestRunConverter
   }
 
   toLocalTestRun(testRun: TestRunApiResult): TestRunGet {
-    // @ts-ignore — adapters TestRunApiResult may omit optional fields present on older V2 model
-    const run = testRun as TestRunApiResult & {
-      startedOn?: Date;
-      completedOn?: Date;
-      description?: string;
-      launchSource?: string;
-    };
     return {
-      id: run.id,
-      name: run.name,
-      startedOn: run.startedOn ?? undefined,
-      completedOn: run.completedOn ?? undefined,
-      description: run.description ?? undefined,
-      launchSource: run.launchSource ?? undefined,
-      stateName: this.toLocalState(run.stateName),
-      attachments: run.attachments,
-      links: run.links,
+      id: testRun.id,
+      name: testRun.name,
+      startedOn: testRun.startedOn ?? undefined,
+      completedOn: testRun.completedOn ?? undefined,
+      description: testRun.description ?? undefined,
+      launchSource: testRun.launchSource ?? undefined,
+      stateName: this.toLocalState(testRun.stateName as unknown as TestRunState),
+      attachments: testRun.attachments?.map((a) => ({ id: a.id })),
+      links: testRun.links?.map((link) => ({
+        url: link.url,
+        id: link.id,
+        title: link.title,
+        description: link.description,
+        hasInfo: link.hasInfo ?? true,
+      })),
     };
   }
 }

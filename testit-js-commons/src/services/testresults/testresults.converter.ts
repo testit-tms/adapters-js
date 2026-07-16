@@ -1,5 +1,4 @@
-// @ts-ignore
-import { TestResultsFilterApiModel } from "../../adapters-api";
+import type TestResultsFilterApiModel from "adapters-api/model/TestResultsFilterApiModel";
 import { AdapterConfig, BaseConverter } from "../../common";
 
 export interface ITestResultsConverter {
@@ -17,7 +16,7 @@ export class TestResultsConverter extends BaseConverter implements ITestResultsC
       testRunIds: [this.config.testRunId],
       configurationIds: [this.config.configurationId],
       statusTypes,
-    } as TestResultsFilterApiModel;
+    };
   }
 
   getTestResultsFilterApiModel(): TestResultsFilterApiModel {

@@ -1,5 +1,8 @@
-// @ts-ignore
-import * as AdaptersApi from "../../adapters-api";
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const AdaptersApi = require("../../adapters-api/dist/index") as typeof import("adapters-api/index");
+import type TestResultShortResponse from "adapters-api/model/TestResultShortResponse";
+import type TestResultsFilterApiModel from "adapters-api/model/TestResultsFilterApiModel";
+import type TestResultUpdateRequest from "adapters-api/model/TestResultUpdateRequest";
 import { AdapterConfig, BaseService } from "../../common";
 import { withHttpRetry } from "../../common/utils";
 import { handleHttpError } from "./testresults.handler";
@@ -7,13 +10,13 @@ import { ITestResultsConverter, TestResultsConverter } from "./testresults.conve
 import { ITestResultsService } from "./testresults.type";
 
 export class TestResultsService extends BaseService implements ITestResultsService {
-  protected _client;
+  protected _client: InstanceType<typeof AdaptersApi.TestResultsApi>;
   protected _converter: ITestResultsConverter;
   protected _testsLimit: number = 100;
 
   constructor(protected readonly config: AdapterConfig) {
     super(config);
-    this._client = new AdaptersApi.TestResultsApi();
+    this._client = new AdaptersApi.TestResultsApi(AdaptersApi.ApiClient.instance);
     this._converter = new TestResultsConverter(config);
   }
 
@@ -63,7 +66,7 @@ export class TestResultsService extends BaseService implements ITestResultsServi
     }
   }
 
-  public async updateTestResult(testResultId: string, model: unknown): Promise<void> {
+  public async updateTestResult(testResultId: string, model: TestResultUpdateRequest): Promise<void> {
     await withHttpRetry(
       () =>
         this._client.adaptersTestResultsIdPut(testResultId, {
@@ -73,19 +76,26 @@ export class TestResultsService extends BaseService implements ITestResultsServi
     );
   }
 
-  private async getTestResults(skip: number, model: any): Promise<any> {
+  private async getTestResults(
+    skip: number,
+    model: TestResultsFilterApiModel,
+  ): Promise<TestResultShortResponse[]> {
     return await this._client
-      .adaptersTestResultsSearchPost({ skip: skip, take: this._testsLimit, testResultsFilterApiModel: model } as any)
+      .adaptersTestResultsSearchPost({
+        skip: skip,
+        take: this._testsLimit,
+        testResultsFilterApiModel: model,
+      } as any)
       // @ts-ignore
       .then((response) => {
         const data = response?.body || response;
-        return data;
+        return (data ?? []) as TestResultShortResponse[];
       })
       // @ts-ignore
       .catch((err) => {
         handleHttpError(err);
 
-        return [];
+        return [] as TestResultShortResponse[];
       });
   }
 }

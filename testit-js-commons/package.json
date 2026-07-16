@@ -6,10 +6,11 @@
   "types": "lib/index.d.ts",
   "source": "src/index.ts",
   "scripts": {
-    "prebuild": "npm install && npm --prefix src/sync-storage install && npm --prefix src/sync-storage run build",
-    "build": "tsc && npm run copy:sync-storage",
+    "prebuild": "npm install && npm --prefix src/sync-storage install && npm --prefix src/sync-storage run build && npm --prefix src/adapters-api install && npm --prefix src/adapters-api run build",
+    "build": "tsc && npm run copy:adapters-api && npm run copy:sync-storage",
+    "copy:adapters-api": "node -e \"const fs=require('fs');fs.rmSync('lib/adapters-api',{recursive:true,force:true});fs.mkdirSync('lib/adapters-api',{recursive:true});fs.cpSync('src/adapters-api/dist','lib/adapters-api/dist',{recursive:true});fs.copyFileSync('src/adapters-api/index.d.ts','lib/adapters-api/index.d.ts');\"",
     "copy:sync-storage": "node -e \"const fs=require('fs');fs.rmSync('lib/sync-storage',{recursive:true,force:true});fs.mkdirSync('lib/sync-storage',{recursive:true});fs.cpSync('src/sync-storage/dist','lib/sync-storage/dist',{recursive:true});fs.copyFileSync('src/sync-storage/index.d.ts','lib/sync-storage/index.d.ts');\"",
-    "pretest": "npm --prefix src/sync-storage run build",
+    "pretest": "npm --prefix src/sync-storage run build && npm --prefix src/adapters-api run build",
     "watch": "tsc -w",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -39,11 +40,11 @@
   },
   "dependencies": {
     "dotenv": "^16.0.3",
-    "form-data": "^4.0.6",
     "superagent": "^10.3.0"
   },
   "files": [
     "lib",
+    "lib/adapters-api",
     "lib/sync-storage"
   ]
 }

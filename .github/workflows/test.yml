@@ -108,8 +108,8 @@ jobs:
           npm i
 
           # Copy testit-api-client
-          rm -rf node_modules/testit-api-client
-          cp -r ../../testit-js-commons/node_modules/testit-api-client node_modules/testit-api-client
+          # rm -rf node_modules/testit-api-client
+          # cp -r ../../testit-js-commons/node_modules/testit-api-client node_modules/testit-api-client
 
           # Copy testit-js-commons
           cp -r ../../testit-js-commons/lib node_modules/testit-js-commons/

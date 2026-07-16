@@ -1,5 +1,6 @@
-// @ts-ignore
-import * as AdaptersApi from "../../adapters-api";
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const AdaptersApi = require("../../adapters-api/dist/index") as typeof import("adapters-api/index");
+import type AutoTestResultsForTestRunModel from "adapters-api/model/AutoTestResultsForTestRunModel";
 import { AdapterConfig, BaseService } from "../../common";
 import { escapeHtmlInObject, escapeHtmlInObjectArray, logTmsLoadTestRun, withHttpRetry } from "../../common/utils";
 import { TestResultsService } from "../testresults";
@@ -9,7 +10,7 @@ import { TestRunErrorHandler } from "./testruns.handler";
 import logger from "../../logger";
 
 export class TestRunsService extends BaseService implements ITestRunsService {
-  protected _client;
+  protected _client: InstanceType<typeof AdaptersApi.TestRunsApi>;
   protected _converter: ITestRunConverter;
   private readonly _testResults: TestResultsService;
   /** testResultId by autoTestExternalId within current run (InProgress POST + search). */
@@ -17,7 +18,7 @@ export class TestRunsService extends BaseService implements ITestRunsService {
 
   constructor(protected readonly config: AdapterConfig) {
     super(config);
-    this._client = new AdaptersApi.TestRunsApi();
+    this._client = new AdaptersApi.TestRunsApi(AdaptersApi.ApiClient.instance);
     this._converter = new TestRunConverter(config);
     this._testResults = new TestResultsService(config);
   }
@@ -181,7 +182,10 @@ export class TestRunsService extends BaseService implements ITestRunsService {
     }
   }
 
-  private async sendAutotestResultWithRetry(testRunId: string, autotestResult: any): Promise<void> {
+  private async sendAutotestResultWithRetry(
+    testRunId: string,
+    autotestResult: AutoTestResultsForTestRunModel,
+  ): Promise<void> {
     const ids = await withHttpRetry(
       () =>
         this._client.adaptersTestRunsIdTestResultsPost(testRunId, {
