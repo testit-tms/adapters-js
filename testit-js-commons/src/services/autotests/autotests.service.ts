@@ -1,7 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const AdaptersApi = require("../../adapters-api/dist/index") as typeof import("adapters-api/index");
-import type AutoTestSearchApiModel from "adapters-api/model/AutoTestSearchApiModel";
-import type AutoTestSearchIncludeApiModel from "adapters-api/model/AutoTestSearchIncludeApiModel";
+const AdaptersApi = require("../../adapters-api/dist/index");
 
 import { BaseService, AdapterConfig, escapeHtmlInObject, withHttpRetry } from "../../common";
 import { AutotestGet, AutotestPost, type IAutotestService } from "./autotests.type";
@@ -10,7 +8,7 @@ import { handleHttpError, isConflictError } from "./autotests.handler";
 import logger from "../../logger";
 
 export class AutotestsService extends BaseService implements IAutotestService {
-  protected _client: InstanceType<typeof AdaptersApi.AutoTestsApi>;
+  protected _client: any;
   protected _converter: IAutotestConverter;
   constructor(protected readonly config: AdapterConfig) {
     super(config);
@@ -163,12 +161,12 @@ export class AutotestsService extends BaseService implements IAutotestService {
       projectIds: [this.config.projectId],
       isDeleted: false,
     };
-    const includesModel: AutoTestSearchIncludeApiModel = {
+    const includesModel: any = {
       includeSteps: false,
       includeLinks: false,
       includeLabels: false,
     };
-    const requestModel: AutoTestSearchApiModel = {
+    const requestModel: any = {
       filter: filterModel,
       includes: includesModel,
     };

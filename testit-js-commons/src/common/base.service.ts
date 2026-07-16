@@ -1,8 +1,8 @@
-import { AdapterConfig } from "../common";
+import { AdapterConfig } from "./types";
 
 // Generated adapters-api client is bundled into lib/adapters-api/dist during build.
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const AdaptersApi = require("../adapters-api/dist/index") as typeof import("adapters-api/index");
+const AdaptersApi = require("../adapters-api/dist/index");
 
 export class BaseService {
   constructor(protected readonly config: AdapterConfig) {
@@ -14,7 +14,7 @@ export class BaseService {
 
     const defaultClient = AdaptersApi.ApiClient.instance;
     defaultClient.basePath = config.url;
-    // @ts-ignore — ambient ApiClient types authentications loosely
+    // @ts-ignore
     const auth = defaultClient.authentications["PrivateToken"];
     auth.apiKeyPrefix = "PrivateToken";
     auth.apiKey = config.privateToken;

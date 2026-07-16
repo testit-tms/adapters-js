@@ -1,5 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const AdaptersApi = require("../../adapters-api/dist/index") as typeof import("adapters-api/index");
+const AdaptersApi = require("../../adapters-api/dist/index");
 import { BaseService, Utils, AdapterConfig, Attachment, withHttpRetry } from "../../common";
 import { IAttachmentsService } from "./attachments.type";
 import { Buffer } from "buffer";
@@ -11,7 +11,7 @@ const UPLOAD_RETRY_OPTIONS = { maxAttempts: 5, delayMs: 500, backoff: true } as 
 const UPLOAD_CLIENT_TIMEOUT_MS = 120000;
 
 export class AttachmentsService extends BaseService implements IAttachmentsService {
-  protected _client: InstanceType<typeof AdaptersApi.AttachmentsApi>;
+  protected _client: any;
 
   constructor(protected readonly config: AdapterConfig) {
     super(config);

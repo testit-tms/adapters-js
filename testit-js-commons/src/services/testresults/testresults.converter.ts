@@ -1,9 +1,8 @@
-import type TestResultsFilterApiModel from "adapters-api/model/TestResultsFilterApiModel";
 import { AdapterConfig, BaseConverter } from "../../common";
 
 export interface ITestResultsConverter {
-  getTestResultsFilterApiModel(): TestResultsFilterApiModel;
-  getTestResultsFilterForRun(): TestResultsFilterApiModel;
+  getTestResultsFilterApiModel(): any;
+  getTestResultsFilterForRun(): any;
 }
 
 export class TestResultsConverter extends BaseConverter implements ITestResultsConverter {
@@ -11,7 +10,7 @@ export class TestResultsConverter extends BaseConverter implements ITestResultsC
     super(config);
   }
 
-  private buildRunFilter(statusTypes?: string[]): TestResultsFilterApiModel {
+  private buildRunFilter(statusTypes?: string[]): any {
     return {
       testRunIds: [this.config.testRunId],
       configurationIds: [this.config.configurationId],
@@ -19,11 +18,11 @@ export class TestResultsConverter extends BaseConverter implements ITestResultsC
     };
   }
 
-  getTestResultsFilterApiModel(): TestResultsFilterApiModel {
+  getTestResultsFilterApiModel(): any {
     return this.buildRunFilter(["InProgress"]);
   }
 
-  getTestResultsFilterForRun(): TestResultsFilterApiModel {
+  getTestResultsFilterForRun(): any {
     return this.buildRunFilter(undefined);
   }
 }

@@ -1,11 +1,9 @@
-import type AutoTestApiResult from "adapters-api/model/AutoTestApiResult";
-import type AutoTestCreateApiModel from "adapters-api/model/AutoTestCreateApiModel";
 import { BaseConverter, AdapterConfig } from "../../common";
 import { AutotestGet, AutotestPost } from "./autotests.type";
 
 export interface IAutotestConverter {
-  toOriginAutotest(autotest: AutotestPost): AutoTestCreateApiModel;
-  toLocalAutotest(autotest: AutoTestApiResult): AutotestGet;
+  toOriginAutotest(autotest: AutotestPost): any;
+  toLocalAutotest(autotest: any): AutotestGet;
 }
 
 export class AutotestConverter extends BaseConverter implements IAutotestConverter {
@@ -13,7 +11,7 @@ export class AutotestConverter extends BaseConverter implements IAutotestConvert
     super(config);
   }
 
-  public toOriginAutotest(autotest: AutotestPost): AutoTestCreateApiModel {
+  public toOriginAutotest(autotest: AutotestPost): any {
     return {
       externalId: autotest.externalId,
       name: autotest.name,
@@ -34,17 +32,17 @@ export class AutotestConverter extends BaseConverter implements IAutotestConvert
     };
   }
 
-  public toLocalAutotest(autotest: AutoTestApiResult): AutotestGet {
+  public toLocalAutotest(autotest: any): AutotestGet {
     return {
       id: autotest.id,
       name: autotest.name ?? undefined,
       externalId: autotest.externalId ?? undefined,
-      links: autotest.links?.map((link) => this.toLocalLink(link)),
+      links: autotest.links?.map((link: any) => this.toLocalLink(link)),
       namespace: autotest.namespace ?? undefined,
       classname: autotest.classname ?? undefined,
-      steps: autotest.steps?.map((step) => this.toLocalShortStep(step)),
-      setup: autotest.setup?.map((step) => this.toLocalShortStep(step)),
-      teardown: autotest.teardown?.map((step) => this.toLocalShortStep(step)),
+      steps: autotest.steps?.map((step: any) => this.toLocalShortStep(step)),
+      setup: autotest.setup?.map((step: any) => this.toLocalShortStep(step)),
+      teardown: autotest.teardown?.map((step: any) => this.toLocalShortStep(step)),
       labels: autotest.labels ?? undefined,
       tags: autotest.tags ?? undefined,
     };

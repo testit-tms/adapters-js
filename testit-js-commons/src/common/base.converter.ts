@@ -1,57 +1,51 @@
-import type AvailableTestResultOutcome from "adapters-api/model/AvailableTestResultOutcome";
-import type LinkPostModel from "adapters-api/model/LinkPostModel";
-import type OriginLinkType from "adapters-api/model/LinkType";
-import type AttachmentPutModelAutoTestStepResultsModel from "adapters-api/model/AttachmentPutModelAutoTestStepResultsModel";
-import type LinkPutModel from "adapters-api/model/LinkPutModel";
-import type AutoTestStepModel from "adapters-api/model/AutoTestStepModel";
 import { AdapterConfig, Link, LinkType, Outcome, ShortStep, Step } from "./types";
 
+// Generated adapters-api client is bundled into lib/adapters-api/dist during build.
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const AdaptersApi = require("../adapters-api/dist/index") as typeof import("adapters-api/index");
+const AdaptersApi = require("../adapters-api/dist/index");
 const AvailableTestResultOutcomeEnum = AdaptersApi.AvailableTestResultOutcome;
 const OriginLinkTypeEnum = AdaptersApi.LinkType;
 
 export interface IBaseConverter {
-  toOriginOutcome(outcome: Outcome): AvailableTestResultOutcome;
-  toLocalOutcome(outcome: AvailableTestResultOutcome): Outcome;
+  toOriginOutcome(outcome: Outcome): any;
+  toLocalOutcome(outcome: any): Outcome;
 
-  toOriginLinkType(linkType: LinkType): OriginLinkType;
-  toLocalLinkType(linkType: OriginLinkType): LinkType;
+  toOriginLinkType(linkType: LinkType): any;
+  toLocalLinkType(linkType: any): LinkType;
 
-  toOriginLink(link: Link): LinkPostModel;
-  toLocalLink(link: LinkPutModel): Link;
+  toOriginLink(link: Link): any;
+  toLocalLink(link: any): Link;
 
-  toLocalShortStep(step: AutoTestStepModel): ShortStep;
+  toLocalShortStep(step: any): ShortStep;
 
-  toOriginStep(step: Step): AttachmentPutModelAutoTestStepResultsModel;
+  toOriginStep(step: Step): any;
 }
 
 export class BaseConverter implements IBaseConverter {
   constructor(protected readonly config: AdapterConfig) {}
 
-  toOriginOutcome(outcome: Outcome): AvailableTestResultOutcome {
+  toOriginOutcome(outcome: Outcome): any {
     // @ts-ignore
     return AvailableTestResultOutcomeEnum[outcome];
   }
 
-  toLocalOutcome(outcome: AvailableTestResultOutcome): Outcome {
+  toLocalOutcome(outcome: any): Outcome {
     // @ts-ignore
     return AvailableTestResultOutcomeEnum[outcome] as Outcome;
   }
 
-  toOriginLinkType(linkType: LinkType): OriginLinkType {
+  toOriginLinkType(linkType: LinkType): any {
     // @ts-ignore
     return OriginLinkTypeEnum[linkType];
   }
 
-  toLocalLinkType(linkType: OriginLinkType): LinkType {
+  toLocalLinkType(linkType: any): LinkType {
     // @ts-ignore
     return OriginLinkTypeEnum[linkType] as LinkType;
   }
 
-  toOriginLink(link: Link): LinkPostModel {
-    const defaultType = "Related" as unknown as OriginLinkType;
-    let type = defaultType;
+  toOriginLink(link: Link): any {
+    let type: any = "Related";
     if (link.type) {
       const mapped = this.toOriginLinkType(link.type);
       if (mapped != null) {
@@ -60,32 +54,30 @@ export class BaseConverter implements IBaseConverter {
     }
     return {
       ...link,
-      type: type as unknown as string,
+      type,
       hasInfo: true,
     };
   }
 
-  toLocalLink(link: LinkPutModel): Link {
+  toLocalLink(link: any): Link {
     return {
       url: link.url,
       title: link.title ?? link.url,
       description: link.description ?? undefined,
-      type: link.type
-        ? this.toLocalLinkType(link.type as unknown as OriginLinkType)
-        : ("Related" as LinkType),
+      type: link.type ? this.toLocalLinkType(link.type) : ("Related" as LinkType),
     };
   }
 
-  toLocalShortStep(step: AutoTestStepModel): ShortStep {
+  toLocalShortStep(step: any): ShortStep {
     return {
       title: step.title,
       description: step.description ?? undefined,
-      steps: step.steps?.map((s) => this.toLocalShortStep(s)),
+      steps: step.steps?.map((s: any) => this.toLocalShortStep(s)),
     };
   }
 
-  toOriginStep(step: Step): AttachmentPutModelAutoTestStepResultsModel {
-    const model: AttachmentPutModelAutoTestStepResultsModel = {
+  toOriginStep(step: Step): any {
+    const model: any = {
       title: step.title,
       description: step.description,
       parameters: step.parameters,
