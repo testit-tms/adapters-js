@@ -10,4 +10,4 @@ module.exports = {
     'src/**/*.ts',
     '!src/**/*.d.ts',
   ],
-}; 
+};

@@ -1,11 +1,9 @@
-// @ts-ignore
-import { AutoTestModelV2GetModel, AutoTestApiResult } from "testit-api-client";
 import { BaseConverter, AdapterConfig } from "../../common";
 import { AutotestGet, AutotestPost } from "./autotests.type";
 
 export interface IAutotestConverter {
   toOriginAutotest(autotest: AutotestPost): any;
-  toLocalAutotest(autotest: AutoTestApiResult): AutotestGet;
+  toLocalAutotest(autotest: any): AutotestGet;
 }
 
 export class AutotestConverter extends BaseConverter implements IAutotestConverter {
@@ -34,23 +32,18 @@ export class AutotestConverter extends BaseConverter implements IAutotestConvert
     };
   }
 
-  public toLocalAutotest(autotest: AutoTestApiResult): AutotestGet {
+  public toLocalAutotest(autotest: any): AutotestGet {
     return {
       id: autotest.id,
       name: autotest.name ?? undefined,
       externalId: autotest.externalId ?? undefined,
-      // @ts-ignore
-      links: autotest.links?.map((link) => this.toLocalLink(link)),
+      links: autotest.links?.map((link: any) => this.toLocalLink(link)),
       namespace: autotest.namespace ?? undefined,
       classname: autotest.classname ?? undefined,
-      // @ts-ignore
-      steps: autotest.steps?.map((step) => this.toLocalShortStep(step)),
-      // @ts-ignore
-      setup: autotest.setup?.map((step) => this.toLocalShortStep(step)),
-      // @ts-ignore
-      teardown: autotest.teardown?.map((step) => this.toLocalShortStep(step)),
+      steps: autotest.steps?.map((step: any) => this.toLocalShortStep(step)),
+      setup: autotest.setup?.map((step: any) => this.toLocalShortStep(step)),
+      teardown: autotest.teardown?.map((step: any) => this.toLocalShortStep(step)),
       labels: autotest.labels ?? undefined,
-      // @ts-ignore
       tags: autotest.tags ?? undefined,
     };
   }

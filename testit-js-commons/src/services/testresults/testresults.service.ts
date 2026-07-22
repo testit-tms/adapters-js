@@ -1,5 +1,5 @@
-// @ts-ignore
-import * as TestitApiClient from "testit-api-client";
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const AdaptersApi = require("../../adapters-api/dist/index");
 import { AdapterConfig, BaseService } from "../../common";
 import { withHttpRetry } from "../../common/utils";
 import { handleHttpError } from "./testresults.handler";
@@ -7,13 +7,13 @@ import { ITestResultsConverter, TestResultsConverter } from "./testresults.conve
 import { ITestResultsService } from "./testresults.type";
 
 export class TestResultsService extends BaseService implements ITestResultsService {
-  protected _client;
+  protected _client: any;
   protected _converter: ITestResultsConverter;
   protected _testsLimit: number = 100;
 
   constructor(protected readonly config: AdapterConfig) {
     super(config);
-    this._client = new TestitApiClient.TestResultsApi();
+    this._client = new AdaptersApi.TestResultsApi(AdaptersApi.ApiClient.instance);
     this._converter = new TestResultsConverter(config);
   }
 
@@ -27,8 +27,9 @@ export class TestResultsService extends BaseService implements ITestResultsServi
 
       if (testResults.length != 0) {
         externalIds = externalIds.concat(
-        testResults.map((// @ts-ignore
-          result) => result.autotestExternalId ?? result.autoTest?.externalId).filter((id): id is string => id !== undefined)
+          testResults
+            .map((result: any) => result.autotestExternalId ?? result.autoTest?.externalId)
+            .filter((id: any): id is string => id !== undefined),
         );
         skip += this._testsLimit;
 
@@ -63,29 +64,33 @@ export class TestResultsService extends BaseService implements ITestResultsServi
     }
   }
 
-  public async updateTestResult(testResultId: string, model: unknown): Promise<void> {
+  public async updateTestResult(testResultId: string, model: any): Promise<void> {
     await withHttpRetry(
       () =>
-        this._client.apiV2TestResultsIdPut(testResultId, {
-          testResultUpdateV2Request: model,
+        this._client.adaptersTestResultsIdPut(testResultId, {
+          testResultUpdateRequest: model,
         }),
-      { label: `apiV2TestResultsIdPut:${testResultId}` },
+      { label: `adaptersTestResultsIdPut:${testResultId}` },
     );
   }
 
-  private async getTestResults(skip: number, model: any): Promise<any> {
+  private async getTestResults(skip: number, model: any): Promise<any[]> {
     return await this._client
-      .apiV2TestResultsSearchPost({ skip: skip, take: this._testsLimit, testResultsFilterApiModel: model } as any)
+      .adaptersTestResultsSearchPost({
+        skip: skip,
+        take: this._testsLimit,
+        testResultsFilterApiModel: model,
+      })
       // @ts-ignore
       .then((response) => {
-        const data = response.body || response;
-        return data;
+        const data = response?.body || response;
+        return (data ?? []) as any[];
       })
       // @ts-ignore
       .catch((err) => {
         handleHttpError(err);
 
-        return [];
+        return [] as any[];
       });
   }
 }

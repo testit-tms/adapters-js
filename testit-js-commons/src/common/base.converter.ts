@@ -1,62 +1,57 @@
-import {
-  AvailableTestResultOutcome,
-  LinkPostModel,
-  LinkType as OriginLinkType,
-  AttachmentPutModelAutoTestStepResultsModel,
-  LinkPutModel,
-  AutoTestStepModel,
-  // @ts-ignore
-} from "testit-api-client";
 import { AdapterConfig, Link, LinkType, Outcome, ShortStep, Step } from "./types";
 
+// Generated adapters-api client is bundled into lib/adapters-api/dist during build.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const AdaptersApi = require("../adapters-api/dist/index");
+const AvailableTestResultOutcomeEnum = AdaptersApi.AvailableTestResultOutcome;
+const OriginLinkTypeEnum = AdaptersApi.LinkType;
+
 export interface IBaseConverter {
-  toOriginOutcome(outcome: Outcome): AvailableTestResultOutcome;
-  toLocalOutcome(outcome: AvailableTestResultOutcome): Outcome;
+  toOriginOutcome(outcome: Outcome): any;
+  toLocalOutcome(outcome: any): Outcome;
 
-  toOriginLinkType(linkType: LinkType): OriginLinkType;
-  toLocalLinkType(linkType: OriginLinkType): LinkType;
+  toOriginLinkType(linkType: LinkType): any;
+  toLocalLinkType(linkType: any): LinkType;
 
-  toOriginLink(link: Link): LinkPostModel;
-  toLocalLink(link: LinkPutModel): Link;
+  toOriginLink(link: Link): any;
+  toLocalLink(link: any): Link;
 
-  toLocalShortStep(step: AutoTestStepModel): ShortStep;
+  toLocalShortStep(step: any): ShortStep;
 
-  toOriginStep(step: Step): AttachmentPutModelAutoTestStepResultsModel;
+  toOriginStep(step: Step): any;
 }
 
 export class BaseConverter implements IBaseConverter {
   constructor(protected readonly config: AdapterConfig) {}
 
-  toOriginOutcome(outcome: Outcome): AvailableTestResultOutcome {
+  toOriginOutcome(outcome: Outcome): any {
     // @ts-ignore
-    return AvailableTestResultOutcome[outcome];
+    return AvailableTestResultOutcomeEnum[outcome];
   }
 
-  toLocalOutcome(outcome: AvailableTestResultOutcome): Outcome {
+  toLocalOutcome(outcome: any): Outcome {
     // @ts-ignore
-    return AvailableTestResultOutcome[outcome] as Outcome;
+    return AvailableTestResultOutcomeEnum[outcome] as Outcome;
   }
 
-  toOriginLinkType(linkType: LinkType): OriginLinkType {
+  toOriginLinkType(linkType: LinkType): any {
     // @ts-ignore
-    return OriginLinkType[linkType];
+    return OriginLinkTypeEnum[linkType];
   }
 
-  toLocalLinkType(linkType: OriginLinkType): LinkType {
+  toLocalLinkType(linkType: any): LinkType {
     // @ts-ignore
-    return OriginLinkType[linkType] as LinkType;
+    return OriginLinkTypeEnum[linkType] as LinkType;
   }
 
-  toOriginLink(link: Link): LinkPostModel {
-    const defaultType = "Related" as unknown as OriginLinkType;
-    let type = defaultType;
+  toOriginLink(link: Link): any {
+    let type: any = "Related";
     if (link.type) {
       const mapped = this.toOriginLinkType(link.type);
       if (mapped != null) {
         type = mapped;
       }
     }
-    // @ts-ignore
     return {
       ...link,
       type,
@@ -64,7 +59,7 @@ export class BaseConverter implements IBaseConverter {
     };
   }
 
-  toLocalLink(link: LinkPutModel): Link {
+  toLocalLink(link: any): Link {
     return {
       url: link.url,
       title: link.title ?? link.url,
@@ -73,35 +68,31 @@ export class BaseConverter implements IBaseConverter {
     };
   }
 
-  toLocalShortStep(step: AutoTestStepModel): ShortStep {
+  toLocalShortStep(step: any): ShortStep {
     return {
       title: step.title,
       description: step.description ?? undefined,
-      // @ts-ignore
-      steps: step.steps?.map((step) => this.toLocalShortStep(step)),
+      steps: step.steps?.map((s: any) => this.toLocalShortStep(s)),
     };
   }
 
-  toOriginStep(step: Step): AttachmentPutModelAutoTestStepResultsModel {
-    // @ts-ignore
-    const model: AttachmentPutModelAutoTestStepResultsModel = {
+  toOriginStep(step: Step): any {
+    const model: any = {
       title: step.title,
       description: step.description,
       parameters: step.parameters,
       attachments: step.attachments,
       outcome: step.outcome ? step.outcome : undefined,
-      stepResults: step.steps?.map((step) => this.toOriginStep(step)),
+      stepResults: step.steps?.map((s) => this.toOriginStep(s)),
     };
 
     if (step.duration !== undefined) {
       model.duration = step.duration;
     }
     if (step.startedOn !== undefined) {
-      // @ts-ignore
       model.startedOn = step.startedOn;
     }
     if (step.completedOn !== undefined) {
-      // @ts-ignore
       model.completedOn = step.completedOn;
     }
 

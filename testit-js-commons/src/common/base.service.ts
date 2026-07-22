@@ -1,6 +1,8 @@
-import { AdapterConfig } from "../common";
-// @ts-ignore
-import * as TestitApiClient from "testit-api-client";
+import { AdapterConfig } from "./types";
+
+// Generated adapters-api client is bundled into lib/adapters-api/dist during build.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const AdaptersApi = require("../adapters-api/dist/index");
 
 export class BaseService {
   constructor(protected readonly config: AdapterConfig) {
@@ -10,13 +12,15 @@ export class BaseService {
     if (!config.configurationId) throw new Error("Configuration id is not defined");
     if (!config.projectId) throw new Error("Project id is not defined");
 
-    const defaultClient = TestitApiClient.ApiClient.instance;
+    const defaultClient = AdaptersApi.ApiClient.instance;
     defaultClient.basePath = config.url;
-    const auth = defaultClient.authentications["Bearer or PrivateToken"];
+    // @ts-ignore
+    const auth = defaultClient.authentications["PrivateToken"];
     auth.apiKeyPrefix = "PrivateToken";
     auth.apiKey = config.privateToken;
 
     if (config.certValidation === false) {
+      // @ts-ignore
       defaultClient.rejectUnauthorized = config.certValidation;
     }
   }
