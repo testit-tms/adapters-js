@@ -39,6 +39,7 @@ export class TestRunsService extends BaseService implements ITestRunsService {
         if (!data.id) {
           throw new Error("API response missing 'id' field: " + JSON.stringify(data));
         }
+        this.config.testRunId = data.id;
         return data.id;
       })
       .catch((err: any) => {
