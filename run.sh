@@ -1,9 +1,9 @@
 #!/bin/bash
 
-VERSION=4.1.3
-API_CLIENT_VERSION=7.2.6
+VERSION=5.0.2-TMS-5.8
+# API_CLIENT_VERSION=7.2.6
 
 node update_version.js $VERSION
 
 # Update testit-api-client version in package.json using sed
-sed -i "s/\"testit-api-client\": \".*\"/\"testit-api-client\": \"$API_CLIENT_VERSION\"/g" testit-js-commons/package.json
+# sed -i "s/\"testit-api-client\": \".*\"/\"testit-api-client\": \"$API_CLIENT_VERSION\"/g" testit-js-commons/package.json

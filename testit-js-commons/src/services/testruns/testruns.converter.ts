@@ -1,4 +1,4 @@
-import { BaseConverter, AdapterConfig, Outcome } from "../../common";
+import { BaseConverter, AdapterConfig, Link, Outcome } from "../../common";
 import { AutotestConverter, IAutotestConverter } from "../autotests";
 import { AutotestResult, RunState, TestRunGet } from "./testruns.type";
 
@@ -10,6 +10,7 @@ export interface ITestRunConverter {
   toOriginState(state: RunState): any;
   toLocalState(state: any): RunState;
   toLocalTestRun(testRun: any): TestRunGet;
+  toOriginLink(link: Link): any;
   toOriginAutotestResult(autotest: AutotestResult): any;
   toOriginAutotestResultInProgress(autotest: AutotestResult): any;
   toOriginTestResultUpdate(autotest: AutotestResult): any;
@@ -119,11 +120,13 @@ export class TestRunConverter extends BaseConverter implements ITestRunConverter
       launchSource: testRun.launchSource ?? undefined,
       stateName: this.toLocalState(testRun.stateName),
       attachments: testRun.attachments?.map((a: any) => ({ id: a.id })),
+      tags: Array.isArray(testRun.tags) ? testRun.tags.map((t: any) => String(t)) : undefined,
       links: testRun.links?.map((link: any) => ({
         url: link.url,
         id: link.id,
         title: link.title,
         description: link.description,
+        type: link.type,
         hasInfo: link.hasInfo ?? true,
       })),
     };

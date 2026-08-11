@@ -15,6 +15,7 @@ export interface TestRunGet {
   stateName: RunState;
   attachments?: Array<Attachment>;
   links?: Array<LinkGet>;
+  tags?: string[];
 }
 
 export interface LinkGet {
@@ -22,6 +23,7 @@ export interface LinkGet {
   id?: string | null;
   title?: string | null;
   description?: string | null;
+  type?: string | null;
   hasInfo: boolean;
 }
 
