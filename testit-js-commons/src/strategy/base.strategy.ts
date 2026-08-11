@@ -1,7 +1,8 @@
 import { Client, IClient } from "../client";
-import { AdapterConfig } from "../common";
+import { AdapterConfig, Link } from "../common";
 import { logTmsLoadTestRun } from "../common/utils";
-import { AutotestPost, AutotestResult, TestRunId } from "../services";
+import { mergeLinkLists, mergeTagLists } from "../helpers/config/test-run-metadata.util";
+import { AutotestPost, AutotestResult, LinkGet, TestRunId } from "../services";
 import { SyncStorageRunner, toTestResultCutModel } from "../services/syncstorage";
 import { IStrategy } from "./strategy.type";
 import logger from "../logger";
@@ -19,6 +20,7 @@ export class BaseStrategy implements IStrategy {
 
   async setup(): Promise<void> {
     const testRunId = await this.testRunId;
+    await this.updateTestRun(this.config);
     await this.tryStartSyncStorage(testRunId);
     await this.syncStorageRunner?.setWorkerStatus("in_progress");
     await this.client.testRuns.startTestRun(testRunId);
@@ -167,21 +169,64 @@ export class BaseStrategy implements IStrategy {
   }
 
   protected async updateTestRun(config: AdapterConfig): Promise<void> {
-    const testRunId = config.testRunId;
-
-    if (config.testRunName == undefined) {
+    const testRunId = config.testRunId || (await this.testRunId);
+    if (!testRunId) {
       return;
     }
 
-    const testRun = await this.client.testRuns.getTestRun(testRunId);
-
-    if (config.testRunName == testRun.name) {
+    const hasName = config.testRunName != undefined;
+    const hasTags = Boolean(config.testRunTags?.length);
+    const hasLinks = Boolean(config.testRunLinks?.length);
+    if (!hasName && !hasTags && !hasLinks) {
       return;
     }
 
-    testRun.name = config.testRunName;
+    try {
+      const testRun = await this.client.testRuns.getTestRun(testRunId);
+      let changed = false;
 
-    this.client.testRuns.updateTestRun(testRun);
+      if (hasName && config.testRunName !== testRun.name) {
+        testRun.name = config.testRunName!;
+        changed = true;
+      }
+
+      if (hasTags) {
+        const merged = mergeTagLists(testRun.tags, config.testRunTags);
+        if (merged.length !== (testRun.tags?.length ?? 0) || merged.some((t, i) => t !== testRun.tags?.[i])) {
+          testRun.tags = merged;
+          changed = true;
+        }
+      }
+
+      if (hasLinks) {
+        const existing: LinkGet[] = testRun.links ?? [];
+        const incoming: LinkGet[] = (config.testRunLinks as Link[]).map((link) => ({
+          url: link.url,
+          title: link.title,
+          description: link.description,
+          type: link.type,
+          hasInfo: true,
+        }));
+        const merged = mergeLinkLists(existing, incoming);
+        if (merged.length !== existing.length) {
+          testRun.links = merged;
+          changed = true;
+        }
+      }
+
+      if (!changed) {
+        return;
+      }
+
+      await this.client.testRuns.updateTestRun(testRun);
+      logger.log(
+        `Updated test run "${testRunId}"` +
+          (hasTags ? ` tags=[${(testRun.tags ?? []).join(",")}]` : "") +
+          (hasLinks ? ` links=${testRun.links?.length ?? 0}` : "")
+      );
+    } catch (err) {
+      logger.error(`Failed to apply test run tags/links for "${testRunId}"`, err);
+    }
   }
 
   private getInProgressFirstGraceMs(): number {

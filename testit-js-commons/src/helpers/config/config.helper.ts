@@ -1,6 +1,7 @@
 import * as dotenv from "dotenv";
-import { Utils, AdapterConfig, EnvironmentOptions, AdapterMode } from "../../common";
+import { Utils, AdapterConfig, EnvironmentOptions, AdapterMode, Link } from "../../common";
 import { IConfigComposer } from "./config.type";
+import { parseTestRunLinks, parseTestRunTags } from "./test-run-metadata.util";
 import logger from "../../logger";
 
 export const DEFAULT_CONFIG_FILE = "tms.config.json";
@@ -35,6 +36,8 @@ export class ConfigComposer implements IConfigComposer {
       syncStorageEnabled: config.syncStorageEnabled,
       hasTestRunId: Boolean(config.testRunId),
       projectId: config.projectId,
+      testRunTags: config.testRunTags?.length ?? 0,
+      testRunLinks: config.testRunLinks?.length ?? 0,
     });
 
     return config;
@@ -55,6 +58,8 @@ export class ConfigComposer implements IConfigComposer {
       syncStorageEnabled: file.syncStorageEnabled ?? stringToBoolean(env?.TMS_SYNC_STORAGE_ENABLED) ?? base?.syncStorageEnabled ?? true,
       syncStoragePort: this.resolveAllProperties(file.syncStoragePort, env?.TMS_SYNC_STORAGE_PORT, base?.syncStoragePort) || "49152",
       importRealtime: file.importRealtime ?? stringToBoolean(env?.TMS_IMPORT_REALTIME) ?? base?.importRealtime ?? false,
+      testRunTags: this.resolveTestRunTags(file.testRunTags, env?.TMS_TEST_RUN_TAGS, base?.testRunTags),
+      testRunLinks: this.resolveTestRunLinks(file.testRunLinks, env?.TMS_TEST_RUN_LINKS, base?.testRunLinks),
     };
   }
 
@@ -73,6 +78,8 @@ export class ConfigComposer implements IConfigComposer {
       syncStorageEnabled: stringToBoolean(env?.TMS_SYNC_STORAGE_ENABLED) ?? base?.syncStorageEnabled ?? true,
       syncStoragePort: this.resolveProperties(env?.TMS_SYNC_STORAGE_PORT, base?.syncStoragePort) || "49152",
       importRealtime: stringToBoolean(env?.TMS_IMPORT_REALTIME) ?? base?.importRealtime ?? false,
+      testRunTags: this.resolveTestRunTags(undefined, env?.TMS_TEST_RUN_TAGS, base?.testRunTags),
+      testRunLinks: this.resolveTestRunLinks(undefined, env?.TMS_TEST_RUN_LINKS, base?.testRunLinks),
     };
   }
 
@@ -91,7 +98,39 @@ export class ConfigComposer implements IConfigComposer {
       TMS_SYNC_STORAGE_ENABLED: dotEnv?.TMS_SYNC_STORAGE_ENABLED ?? processEnv?.TMS_SYNC_STORAGE_ENABLED,
       TMS_SYNC_STORAGE_PORT: this.resolveProperties(dotEnv?.TMS_SYNC_STORAGE_PORT, processEnv?.TMS_SYNC_STORAGE_PORT),
       TMS_IMPORT_REALTIME: dotEnv?.TMS_IMPORT_REALTIME ?? processEnv?.TMS_IMPORT_REALTIME,
+      TMS_TEST_RUN_TAGS: this.resolveProperties(dotEnv?.TMS_TEST_RUN_TAGS, processEnv?.TMS_TEST_RUN_TAGS),
+      TMS_TEST_RUN_LINKS: this.resolveProperties(dotEnv?.TMS_TEST_RUN_LINKS, processEnv?.TMS_TEST_RUN_LINKS),
     };
+  }
+
+  private resolveTestRunTags(
+    file?: string[] | string,
+    env?: string,
+    base?: string[]
+  ): string[] | undefined {
+    if (base?.length) {
+      return base;
+    }
+    const fromEnv = parseTestRunTags(env);
+    if (fromEnv?.length) {
+      return fromEnv;
+    }
+    return parseTestRunTags(file);
+  }
+
+  private resolveTestRunLinks(
+    file?: Link[] | string,
+    env?: string,
+    base?: Link[]
+  ): Link[] | undefined {
+    if (base?.length) {
+      return base;
+    }
+    const fromEnv = parseTestRunLinks(env);
+    if (fromEnv?.length) {
+      return fromEnv;
+    }
+    return parseTestRunLinks(file as Link[] | string | undefined);
   }
 
   private resolveAllProperties(file?: string, env?: string, base?: string): string {
@@ -172,6 +211,8 @@ function parseProcessEnvConfig(): Partial<EnvironmentOptions> {
     TMS_SYNC_STORAGE_ENABLED: process.env.TMS_SYNC_STORAGE_ENABLED,
     TMS_SYNC_STORAGE_PORT: process.env.TMS_SYNC_STORAGE_PORT,
     TMS_IMPORT_REALTIME: process.env.TMS_IMPORT_REALTIME,
+    TMS_TEST_RUN_TAGS: process.env.TMS_TEST_RUN_TAGS,
+    TMS_TEST_RUN_LINKS: process.env.TMS_TEST_RUN_LINKS,
   };
 }
 
@@ -198,3 +239,5 @@ function stringToBoolean(str: string | undefined): boolean | undefined {
       return undefined;
   }
 }
+
+export { parseTestRunTags, parseTestRunLinks, mergeTagLists, mergeLinkLists } from "./test-run-metadata.util";

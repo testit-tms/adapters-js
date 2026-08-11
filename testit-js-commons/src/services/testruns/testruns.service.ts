@@ -23,10 +23,18 @@ export class TestRunsService extends BaseService implements ITestRunsService {
   }
 
   public async createTestRun(): Promise<TestRunId> {
-    const createRequest = {
+    const tags = this.config.testRunTags;
+    const links = this.config.testRunLinks?.map((link) => this._converter.toOriginLink(link));
+    const createRequest: Record<string, unknown> = {
       projectId: this.config.projectId,
       name: this.config.testRunName,
     };
+    if (tags?.length) {
+      createRequest.tags = tags;
+    }
+    if (links?.length) {
+      createRequest.links = links;
+    }
 
     return await this._client
       .adaptersTestRunsPost({ createEmptyTestRunApiModel: escapeHtmlInObject(createRequest) })
@@ -40,6 +48,11 @@ export class TestRunsService extends BaseService implements ITestRunsService {
           throw new Error("API response missing 'id' field: " + JSON.stringify(data));
         }
         this.config.testRunId = data.id;
+        logger.log(
+          `Create test run "${data.id}"` +
+            (tags?.length ? ` tags=[${tags.join(",")}]` : "") +
+            (links?.length ? ` links=${links.length}` : "")
+        );
         return data.id;
       })
       .catch((err: any) => {
@@ -61,8 +74,25 @@ export class TestRunsService extends BaseService implements ITestRunsService {
   }
 
   public async updateTestRun(testRun: TestRunGet): Promise<void> {
+    const updateModel = {
+      id: testRun.id,
+      name: testRun.name,
+      description: testRun.description,
+      launchSource: testRun.launchSource,
+      attachments: testRun.attachments?.map((a) => ({ id: a.id })),
+      tags: testRun.tags,
+      links: testRun.links?.map((link) =>
+        this._converter.toOriginLink({
+          url: link.url,
+          title: link.title ?? link.url,
+          description: link.description ?? undefined,
+          type: (link as { type?: string }).type as any,
+        })
+      ),
+    };
+
     await this._client
-      .adaptersTestRunsPut({ updateEmptyTestRunApiModel: testRun })
+      .adaptersTestRunsPut({ updateEmptyTestRunApiModel: escapeHtmlInObject(updateModel) })
       // @ts-ignore
       .then((response) => {
         logger.log("Full response from adaptersTestRunsPut:", response);
