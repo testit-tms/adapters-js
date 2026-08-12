@@ -102,11 +102,6 @@ export class TestRunConverter extends BaseConverter implements ITestRunConverter
       trace: autotest.traces,
     };
 
-    if (autotest.duration !== undefined) {
-      model.durationInMs = autotest.duration;
-      model.duration = autotest.duration;
-    }
-
     return model;
   }
 
