@@ -1,3 +1,5 @@
+import { Link } from "./common.type";
+
 export type AdapterMode = 0 | 1 | 2;
 
 export interface CliOptions {
@@ -14,6 +16,8 @@ export interface CliOptions {
   tmsSyncStorageEnabled: boolean;
   tmsSyncStoragePort: string;
   tmsImportRealtime: boolean;
+  tmsTestRunTags: string;
+  tmsTestRunLinks: string;
 }
 
 export interface EnvironmentOptions {
@@ -31,6 +35,8 @@ export interface EnvironmentOptions {
   TMS_SYNC_STORAGE_ENABLED: string;
   TMS_SYNC_STORAGE_PORT: string;
   TMS_IMPORT_REALTIME: string;
+  TMS_TEST_RUN_TAGS: string;
+  TMS_TEST_RUN_LINKS: string;
 }
 
 export interface ProcessEnvOptions {
@@ -48,6 +54,8 @@ export interface ProcessEnvOptions {
   TMS_SYNC_STORAGE_ENABLED?: string;
   TMS_SYNC_STORAGE_PORT?: string;
   TMS_IMPORT_REALTIME?: string;
+  TMS_TEST_RUN_TAGS?: string;
+  TMS_TEST_RUN_LINKS?: string;
 }
 
 export interface AdapterConfig {
@@ -64,4 +72,8 @@ export interface AdapterConfig {
   syncStorageEnabled?: boolean;
   syncStoragePort?: string;
   importRealtime?: boolean;
+  /** Test run tags (not autotest tags). */
+  testRunTags?: string[];
+  /** Test run links (e.g. CI job URL). */
+  testRunLinks?: Link[];
 }
