@@ -61,7 +61,7 @@ export default class ParametersApi {
       let formParams = {
       };
 
-      let authNames = ['PrivateToken', 'Cookies'];
+      let authNames = ['PrivateToken', 'Identity.Application'];
       let contentTypes = [];
       let accepts = ['application/json'];
       let returnType = ParameterApiResult;
@@ -104,7 +104,7 @@ export default class ParametersApi {
       let formParams = {
       };
 
-      let authNames = ['PrivateToken', 'Cookies'];
+      let authNames = ['PrivateToken', 'Identity.Application'];
       let contentTypes = ['application/json'];
       let accepts = ['application/json'];
       let returnType = ParameterApiResult;
@@ -158,7 +158,7 @@ export default class ParametersApi {
       let formParams = {
       };
 
-      let authNames = ['PrivateToken', 'Cookies'];
+      let authNames = ['PrivateToken', 'Identity.Application'];
       let contentTypes = ['application/json'];
       let accepts = ['application/json'];
       let returnType = [ParameterApiResult];

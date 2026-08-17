@@ -71,7 +71,7 @@ export default class ProjectSectionsApi {
       let formParams = {
       };
 
-      let authNames = ['PrivateToken', 'Cookies'];
+      let authNames = ['PrivateToken', 'Identity.Application'];
       let contentTypes = [];
       let accepts = ['application/json'];
       let returnType = [SectionModel];

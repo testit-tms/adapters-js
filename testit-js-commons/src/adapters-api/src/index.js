@@ -51,7 +51,7 @@ import CreateProjectApiModel from './model/CreateProjectApiModel';
 import CreateStepApiModel from './model/CreateStepApiModel';
 import CreateWorkItemApiModel from './model/CreateWorkItemApiModel';
 import CustomAttributeApiResult from './model/CustomAttributeApiResult';
-import CustomAttributeGetModel from './model/CustomAttributeGetModel';
+import CustomAttributeModel from './model/CustomAttributeModel';
 import CustomAttributeOptionApiResult from './model/CustomAttributeOptionApiResult';
 import CustomAttributeOptionModel from './model/CustomAttributeOptionModel';
 import CustomAttributePutModel from './model/CustomAttributePutModel';
@@ -416,10 +416,10 @@ export {
     CustomAttributeApiResult,
 
     /**
-     * The CustomAttributeGetModel model constructor.
-     * @property {module:model/CustomAttributeGetModel}
+     * The CustomAttributeModel model constructor.
+     * @property {module:model/CustomAttributeModel}
      */
-    CustomAttributeGetModel,
+    CustomAttributeModel,
 
     /**
      * The CustomAttributeOptionApiResult model constructor.

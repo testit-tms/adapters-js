@@ -45,8 +45,9 @@ class ApiClient {
          * @type {Array.<String>}
          */
         this.authentications = {
+            // ALWAYS KEEP 'PrivateToken' without changes!
             'PrivateToken': {type: 'apiKey', 'in': 'header', name: 'Authorization'},
-            'Cookies': {type: 'apiKey', 'in': 'query', name: 'session'},
+            // reject any changes here
         }
 
 	/**
@@ -308,6 +309,10 @@ class ApiClient {
     applyAuthToRequest(request, authNames) {
         authNames.forEach((authName) => {
             var auth = this.authentications[authName];
+            // KEEP without changes
+            if (!auth) {
+                return;
+            }
             switch (auth.type) {
                 case 'basic':
                     if (auth.username || auth.password) {

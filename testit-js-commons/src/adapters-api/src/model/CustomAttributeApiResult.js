@@ -25,7 +25,7 @@ class CustomAttributeApiResult {
      * Constructs a new <code>CustomAttributeApiResult</code>.
      * @alias module:model/CustomAttributeApiResult
      * @param id {String} Unique ID of the attribute
-     * @param options {Array.<module:model/CustomAttributeOptionApiResult>} Collection of the attribute options      Available for attributes of type `options` and `multiple options` only
+     * @param options {Array.<module:model/CustomAttributeOptionApiResult>} Collection of the attribute options   Available for attributes of type `options` and `multiple options` only
      * @param type {module:model/CustomAttributeType} Type of the attribute
      * @param isDeleted {Boolean} Indicates if the attribute is deleted
      * @param name {String} Name of the attribute
@@ -139,7 +139,7 @@ CustomAttributeApiResult.RequiredProperties = ["id", "options", "type", "isDelet
 CustomAttributeApiResult.prototype['id'] = undefined;
 
 /**
- * Collection of the attribute options      Available for attributes of type `options` and `multiple options` only
+ * Collection of the attribute options   Available for attributes of type `options` and `multiple options` only
  * @member {Array.<module:model/CustomAttributeOptionApiResult>} options
  */
 CustomAttributeApiResult.prototype['options'] = undefined;

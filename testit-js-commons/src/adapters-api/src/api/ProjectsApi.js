@@ -65,7 +65,7 @@ export default class ProjectsApi {
       let formParams = {
       };
 
-      let authNames = ['PrivateToken', 'Cookies'];
+      let authNames = ['PrivateToken', 'Identity.Application'];
       let contentTypes = ['application/json'];
       let accepts = ['application/json'];
       let returnType = null;
@@ -113,7 +113,7 @@ export default class ProjectsApi {
       let formParams = {
       };
 
-      let authNames = ['PrivateToken', 'Cookies'];
+      let authNames = ['PrivateToken', 'Identity.Application'];
       let contentTypes = [];
       let accepts = ['application/json'];
       let returnType = DetailedProjectApiResult;
@@ -156,7 +156,7 @@ export default class ProjectsApi {
       let formParams = {
       };
 
-      let authNames = ['PrivateToken', 'Cookies'];
+      let authNames = ['PrivateToken', 'Identity.Application'];
       let contentTypes = ['application/json'];
       let accepts = ['application/json'];
       let returnType = ProjectApiResult;
@@ -210,7 +210,7 @@ export default class ProjectsApi {
       let formParams = {
       };
 
-      let authNames = ['PrivateToken', 'Cookies'];
+      let authNames = ['PrivateToken', 'Identity.Application'];
       let contentTypes = ['application/json'];
       let accepts = ['application/json'];
       let returnType = [ProjectApiResult];

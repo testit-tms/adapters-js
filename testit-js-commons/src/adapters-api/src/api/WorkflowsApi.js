@@ -58,7 +58,7 @@ export default class WorkflowsApi {
       let formParams = {
       };
 
-      let authNames = ['PrivateToken', 'Cookies'];
+      let authNames = ['PrivateToken', 'Identity.Application'];
       let contentTypes = [];
       let accepts = ['application/json'];
       let returnType = WorkflowApiResult;

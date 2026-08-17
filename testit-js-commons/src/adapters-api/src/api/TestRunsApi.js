@@ -64,7 +64,7 @@ export default class TestRunsApi {
       let formParams = {
       };
 
-      let authNames = ['PrivateToken', 'Cookies'];
+      let authNames = ['PrivateToken', 'Identity.Application'];
       let contentTypes = [];
       let accepts = ['application/json'];
       let returnType = null;
@@ -110,7 +110,7 @@ export default class TestRunsApi {
       let formParams = {
       };
 
-      let authNames = ['PrivateToken', 'Cookies'];
+      let authNames = ['PrivateToken', 'Identity.Application'];
       let contentTypes = [];
       let accepts = ['application/json'];
       let returnType = TestRunApiResult;
@@ -159,7 +159,7 @@ export default class TestRunsApi {
       let formParams = {
       };
 
-      let authNames = ['PrivateToken', 'Cookies'];
+      let authNames = ['PrivateToken', 'Identity.Application'];
       let contentTypes = ['application/json'];
       let accepts = ['application/json'];
       let returnType = ManualRerunApiResult;
@@ -207,7 +207,7 @@ export default class TestRunsApi {
       let formParams = {
       };
 
-      let authNames = ['PrivateToken', 'Cookies'];
+      let authNames = ['PrivateToken', 'Identity.Application'];
       let contentTypes = [];
       let accepts = ['application/json'];
       let returnType = null;
@@ -253,7 +253,7 @@ export default class TestRunsApi {
       let formParams = {
       };
 
-      let authNames = ['PrivateToken', 'Cookies'];
+      let authNames = ['PrivateToken', 'Identity.Application'];
       let contentTypes = [];
       let accepts = ['application/json'];
       let returnType = null;
@@ -302,7 +302,7 @@ export default class TestRunsApi {
       let formParams = {
       };
 
-      let authNames = ['PrivateToken', 'Cookies'];
+      let authNames = ['PrivateToken', 'Identity.Application'];
       let contentTypes = ['application/json'];
       let accepts = ['application/json'];
       let returnType = ['String'];
@@ -347,7 +347,7 @@ export default class TestRunsApi {
       let formParams = {
       };
 
-      let authNames = ['PrivateToken', 'Cookies'];
+      let authNames = ['PrivateToken', 'Identity.Application'];
       let contentTypes = ['application/json'];
       let accepts = ['application/json'];
       let returnType = TestRunApiResult;
@@ -391,7 +391,7 @@ export default class TestRunsApi {
       let formParams = {
       };
 
-      let authNames = ['PrivateToken', 'Cookies'];
+      let authNames = ['PrivateToken', 'Identity.Application'];
       let contentTypes = ['application/json'];
       let accepts = ['application/json'];
       let returnType = null;
