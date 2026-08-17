@@ -16,4 +16,6 @@
 
 Disable sync-storage explicitly: `TMS_SYNC_STORAGE_ENABLED=false`.
 
+Adapter trace logs (`[syncstorage]`) require `TMS_DEBUG_SYNC_STORAGE=1` (not `LOG_LEVEL=debug`). The sync-storage binary subprocess uses `stdio: "ignore"`, so its stdout/stderr are not forwarded to the test console.
+
 Full detail: [`08_sync_storage_and_playwright_fixes.md`](./08_sync_storage_and_playwright_fixes.md).

@@ -5,7 +5,7 @@ import { join } from "path";
 import { arch, platform } from "process";
 import { spawn, ChildProcess } from "child_process";
 import { AdapterConfig } from "../../common";
-import { isTmsLoadTestRunDebug } from "../../common/utils";
+import { isSyncStorageDebug } from "../../common/utils";
 import { ISyncStorageRunner, TestResultCutModel, WorkerStatus } from "./syncstorage.type";
 import logger from "../../logger";
 
@@ -129,7 +129,7 @@ export class SyncStorageRunner implements ISyncStorageRunner {
 
   public async sendInProgressTestResult(model: TestResultCutModel): Promise<boolean> {
     if (!this.running || !this.isMaster || this.alreadyInProgress || this.inProgressPublishing) {
-      if (isTmsLoadTestRunDebug()) {
+      if (isSyncStorageDebug()) {
         logger.debug("[syncstorage] skip in-progress cut publish", {
           reason: {
             notRunning: !this.running,
@@ -147,7 +147,7 @@ export class SyncStorageRunner implements ISyncStorageRunner {
       logger.warn(
         "Sync storage in-progress payload is incomplete; skipping publish.",
       );
-      if (isTmsLoadTestRunDebug()) {
+      if (isSyncStorageDebug()) {
         logger.debug("[syncstorage] incomplete in-progress cut payload", {
           hasProjectId: Boolean(model.projectId),
           hasAutoTestExternalId: Boolean(model.autoTestExternalId),
@@ -172,7 +172,7 @@ export class SyncStorageRunner implements ISyncStorageRunner {
         SyncStorageRunner.RETRY_COUNT
       );
       this.alreadyInProgress = true;
-      if (isTmsLoadTestRunDebug()) {
+      if (isSyncStorageDebug()) {
         logger.debug("[syncstorage] alreadyInProgress set", {
           workerPid: this.workerPid,
           autoTestExternalId: model.autoTestExternalId,
@@ -185,7 +185,7 @@ export class SyncStorageRunner implements ISyncStorageRunner {
       return true;
     } catch (error) {
       logger.warn(`Sync storage in-progress publish failed: ${error}`);
-      if (isTmsLoadTestRunDebug()) {
+      if (isSyncStorageDebug()) {
         logger.debug("[syncstorage] in-progress cut publish failed", {
           workerPid: this.workerPid,
           autoTestExternalId: model.autoTestExternalId,
@@ -264,6 +264,7 @@ export class SyncStorageRunner implements ISyncStorageRunner {
         "--privateToken", this.config.privateToken,
       ];
 
+      // Do not inherit stdout/stderr: sync-storage binary logs stay silent unless TMS_DEBUG_SYNC_STORAGE=1 adapter traces.
       this.syncStorageProcess = spawn(executablePath, command, {
         cwd: join(process.cwd(), "build", ".caches"),
         stdio: "ignore",

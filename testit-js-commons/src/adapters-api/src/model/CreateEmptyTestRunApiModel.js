@@ -24,7 +24,7 @@ class CreateEmptyTestRunApiModel {
     /**
      * Constructs a new <code>CreateEmptyTestRunApiModel</code>.
      * @alias module:model/CreateEmptyTestRunApiModel
-     * @param projectId {String} Project unique identifier                This property is to link test run with a project
+     * @param projectId {String} Project unique identifier              This property is to link test run with a project
      */
     constructor(projectId) { 
         
@@ -138,7 +138,7 @@ class CreateEmptyTestRunApiModel {
 CreateEmptyTestRunApiModel.RequiredProperties = ["projectId"];
 
 /**
- * Project unique identifier                This property is to link test run with a project
+ * Project unique identifier              This property is to link test run with a project
  * @member {String} projectId
  */
 CreateEmptyTestRunApiModel.prototype['projectId'] = undefined;

@@ -13,7 +13,7 @@
 
 
 import ApiClient from "../ApiClient";
-import CustomAttributeGetModel from '../model/CustomAttributeGetModel';
+import CustomAttributeModel from '../model/CustomAttributeModel';
 import CustomAttributePutModel from '../model/CustomAttributePutModel';
 import ProblemDetails from '../model/ProblemDetails';
 import ProjectAttributesFilterModel from '../model/ProjectAttributesFilterModel';
@@ -64,7 +64,7 @@ export default class ProjectAttributesApi {
       let formParams = {
       };
 
-      let authNames = ['PrivateToken', 'Cookies'];
+      let authNames = ['PrivateToken', 'Identity.Application'];
       let contentTypes = ['application/json'];
       let accepts = ['application/json'];
       let returnType = null;
@@ -100,7 +100,7 @@ export default class ProjectAttributesApi {
      * @param {String} [searchField] Property name for searching
      * @param {String} [searchValue] Value for searching
      * @param {module:model/ProjectAttributesFilterModel} [projectAttributesFilterModel] 
-     * @return {Promise} a {@link https://www.promisejs.org/|Promise}, with an object containing data of type {@link Array.<module:model/CustomAttributeGetModel>} and HTTP response
+     * @return {Promise} a {@link https://www.promisejs.org/|Promise}, with an object containing data of type {@link Array.<module:model/CustomAttributeModel>} and HTTP response
      */
     adaptersProjectsProjectIdAttributesSearchPostWithHttpInfo(projectId, opts) {
       opts = opts || {};
@@ -125,10 +125,10 @@ export default class ProjectAttributesApi {
       let formParams = {
       };
 
-      let authNames = ['PrivateToken', 'Cookies'];
+      let authNames = ['PrivateToken', 'Identity.Application'];
       let contentTypes = ['application/json'];
       let accepts = ['application/json'];
-      let returnType = [CustomAttributeGetModel];
+      let returnType = [CustomAttributeModel];
       return this.apiClient.callApi(
         '/adapters/projects/{projectId}/attributes/search', 'POST',
         pathParams, queryParams, headerParams, formParams, postBody,
@@ -146,7 +146,7 @@ export default class ProjectAttributesApi {
      * @param {String} opts.searchField Property name for searching
      * @param {String} opts.searchValue Value for searching
      * @param {module:model/ProjectAttributesFilterModel} opts.projectAttributesFilterModel 
-     * @return {Promise} a {@link https://www.promisejs.org/|Promise}, with data of type {@link Array.<module:model/CustomAttributeGetModel>}
+     * @return {Promise} a {@link https://www.promisejs.org/|Promise}, with data of type {@link Array.<module:model/CustomAttributeModel>}
      */
     adaptersProjectsProjectIdAttributesSearchPost(projectId, opts) {
       return this.adaptersProjectsProjectIdAttributesSearchPostWithHttpInfo(projectId, opts)

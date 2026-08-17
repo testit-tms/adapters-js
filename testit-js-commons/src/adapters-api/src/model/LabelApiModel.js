@@ -23,11 +23,10 @@ class LabelApiModel {
      * Constructs a new <code>LabelApiModel</code>.
      * @alias module:model/LabelApiModel
      * @param name {String} Name of the label
-     * @param globalId {Number} Global ID of the label
      */
-    constructor(name, globalId) { 
+    constructor(name) { 
         
-        LabelApiModel.initialize(this, name, globalId);
+        LabelApiModel.initialize(this, name);
     }
 
     /**
@@ -35,9 +34,8 @@ class LabelApiModel {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, name, globalId) { 
+    static initialize(obj, name) { 
         obj['name'] = name;
-        obj['globalId'] = globalId;
     }
 
     /**
@@ -53,9 +51,6 @@ class LabelApiModel {
 
             if (data.hasOwnProperty('name')) {
                 obj['name'] = ApiClient.convertToType(data['name'], 'String');
-            }
-            if (data.hasOwnProperty('globalId')) {
-                obj['globalId'] = ApiClient.convertToType(data['globalId'], 'Number');
             }
         }
         return obj;
@@ -84,19 +79,13 @@ class LabelApiModel {
 
 }
 
-LabelApiModel.RequiredProperties = ["name", "globalId"];
+LabelApiModel.RequiredProperties = ["name"];
 
 /**
  * Name of the label
  * @member {String} name
  */
 LabelApiModel.prototype['name'] = undefined;
-
-/**
- * Global ID of the label
- * @member {Number} globalId
- */
-LabelApiModel.prototype['globalId'] = undefined;
 
 
 
