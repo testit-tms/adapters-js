@@ -387,7 +387,19 @@ export default class TestItEnvironment extends NodeEnvironment {
     });
     for (const { autotest, result } of this.realtimeSent) {
       try {
-        await this.sendRealtimePayload(autotest, result, true);
+        const setupSteps = this.buildSetupSteps(autotest);
+        const teardownSteps = this.buildTeardownSteps(autotest, true);
+        if (setupSteps.length === 0 && teardownSteps.length === 0) {
+          continue;
+        }
+        await this.strategy.updateSetupTeardown([
+          {
+            autoTestExternalId: autotest.externalId,
+            outcome: result.outcome,
+            setupResults: setupSteps,
+            teardownResults: teardownSteps,
+          },
+        ]);
       } catch (err: any) {
         logger.error("Failed realtime teardown flush in Jest environment:", this.formatError(err));
       }

@@ -1,6 +1,6 @@
 {
   "name": "testcafe-reporter-testit",
-  "version": "5.0.4",
+  "version": "5.0.5",
   "description": "TestCafe adapter for Test IT",
   "keywords": [],
   "author": {
@@ -43,6 +43,6 @@
   },
   "dependencies": {
     "@types/minimatch": "^5.1.2",
-    "testit-js-commons": "5.0.4"
+    "testit-js-commons": "5.0.5"
   }
 }
