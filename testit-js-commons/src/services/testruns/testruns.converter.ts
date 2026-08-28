@@ -14,6 +14,7 @@ export interface ITestRunConverter {
   toOriginAutotestResult(autotest: AutotestResult): any;
   toOriginAutotestResultInProgress(autotest: AutotestResult): any;
   toOriginTestResultUpdate(autotest: AutotestResult): any;
+  toOriginSetupTeardownUpdate(autotest: AutotestResult): any;
 }
 
 export class TestRunConverter extends BaseConverter implements ITestRunConverter {
@@ -102,6 +103,18 @@ export class TestRunConverter extends BaseConverter implements ITestRunConverter
       trace: autotest.traces,
     };
 
+    return model;
+  }
+
+  /** PUT body for fixture setup/teardown only — must not include stepResults or final status. */
+  toOriginSetupTeardownUpdate(autotest: AutotestResult): any {
+    const model: any = {};
+    if (autotest.setupResults?.length) {
+      model.setupResults = autotest.setupResults.map((step) => this.toOriginStep(step));
+    }
+    if (autotest.teardownResults?.length) {
+      model.teardownResults = autotest.teardownResults.map((step) => this.toOriginStep(step));
+    }
     return model;
   }
 

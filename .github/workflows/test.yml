@@ -69,7 +69,7 @@ jobs:
       TMS_IMPORT_REALTIME: true
       TMS_ADAPTER_MODE: 1
       TMS_SYNC_STORAGE_PORT: 49153
-      TMS_DEBUG_SYNC_STORAGE=1
+      TMS_DEBUG_SYNC_STORAGE: 1
       #TMS_DEBUG_LOAD_TEST_RUN: 1
     steps:
       - name: Checkout adapters-js

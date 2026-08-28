@@ -105,9 +105,10 @@ API `testit.*` из `labels.ts` пишет поля в attachment `tms-metadata.
 | Этап | API |
 |------|-----|
 | InProgress stub (`postInProgressAutotestResult`) | POST `setAutoTestResults` — **без изменений** |
-| Финал (`loadAutotests`) | Если для `autoTestExternalId` уже есть test result в прогоне (кэш после InProgress POST или search) → **PUT** `apiV2/testResults/{id}`; иначе POST `setAutoTestResults` |
+| Финал (`loadAutotests`) | **Всегда** POST `setAutoTestResults` (в т.ч. если в прогоне уже есть InProgress от test plan / stub). TMS мержит в существующий слот. Повторный POST для того же `externalId` в одном процессе **пропускается** (`finalizedExternalIds`). |
+| Fixture setup/teardown (`updateSetupTeardown`, `importRealtime` session end) | **Только** PUT `apiV2/testResults/{id}` с полями `setupResults` / `teardownResults` — без `stepResults`, без смены статуса |
 
-Нужно для `importRealtime`: повторная отправка (Jest `flushRealtimeTeardown`, повторный `loadTestRun` для того же теста) не создаёт второй результат в прогоне.
+PUT для финализации статуса и `stepResults` **не используется** (TMS 5.8+: шаги в test result пропадают при PUT-finalize).
 
 ### Типичные проблемы (Playwright)
 
