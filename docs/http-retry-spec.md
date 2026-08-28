@@ -72,7 +72,8 @@ type HttpRetryOptions = {
 | Метод | Retry |
 |-------|-------|
 | `postInProgressAutotestResult` | да (POST `setAutoTestResults`, InProgress) |
-| `loadAutotests` → финал | если результат уже есть в прогоне (после InProgress POST / search) → **PUT** `apiV2/testResults/{id}`; иначе POST `setAutoTestResults` |
+| `loadAutotests` → финал | **всегда** POST `setAutoTestResults`; skip если уже finalized в этом процессе |
+| `updateSetupTeardown` | PUT `apiV2/testResults/{id}` — только `setupResults` / `teardownResults` |
 
 Ошибка после исчерпания попыток логируется через `logger.error` с контекстом `testRunId` / `autoTestExternalId`; отправка остальных результатов продолжается (per-result `catch`).
 

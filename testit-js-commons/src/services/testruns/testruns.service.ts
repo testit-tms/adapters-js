@@ -12,7 +12,9 @@ export class TestRunsService extends BaseService implements ITestRunsService {
   protected _client: any;
   protected _converter: ITestRunConverter;
   private readonly _testResults: TestResultsService;
-  /** testResultId by autoTestExternalId within current run (InProgress POST + search). */
+  /** Finalized via POST setAutoTestResults in this process (skip duplicate bulk send). */
+  private readonly finalizedExternalIds = new Set<string>();
+  /** testResultId by autoTestExternalId within current run (InProgress POST + final POST). */
   private readonly testResultIdsByExternalId = new Map<string, string>();
 
   constructor(protected readonly config: AdapterConfig) {
@@ -147,23 +149,11 @@ export class TestRunsService extends BaseService implements ITestRunsService {
   public async loadAutotests(testRunId: string, results: Array<AutotestResult>) {
     for (const result of results) {
       const externalId = result.autoTestExternalId;
-      const existingId = await this.resolveExistingTestResultId(externalId);
 
-      if (existingId) {
-        logTmsLoadTestRun("PUT updateTestResult (final)", {
+      if (this.finalizedExternalIds.has(externalId)) {
+        logTmsLoadTestRun("Bulk import: skip sendTestResults (already finalized)", {
           testRunId,
           autoTestExternalId: externalId,
-          testResultId: existingId,
-          stepCount: result.stepResults?.length ?? 0,
-        });
-        await this.updateAutotestResultWithRetry(existingId, result).catch((err: any) => {
-          const normalized = err?.body ?? err?.error ?? err;
-          logger.error("[testit-js-commons:loadTestRun] FAILED to update final result", {
-            testRunId,
-            autoTestExternalId: externalId,
-            testResultId: existingId,
-            error: normalized,
-          });
         });
         continue;
       }
@@ -177,12 +167,59 @@ export class TestRunsService extends BaseService implements ITestRunsService {
         statusCode: autotestResult.statusCode,
         stepCount: autotestResult.stepResults?.length ?? 0,
       });
-      await this.sendAutotestResultWithRetry(testRunId, autotestResult).catch((err: any) => {
-        const normalized = err?.body ?? err?.error ?? err;
-        logger.error("[testit-js-commons:loadTestRun] FAILED to post final result", {
-          testRunId,
-          autoTestExternalId: autotestResult.autoTestExternalId,
-          error: normalized,
+      await this.sendAutotestResultWithRetry(testRunId, autotestResult)
+        .then(() => {
+          this.finalizedExternalIds.add(externalId);
+          logTmsLoadTestRun("Finalized test result via sendTestResults", {
+            testRunId,
+            autoTestExternalId: externalId,
+            testResultId: this.testResultIdsByExternalId.get(externalId),
+          });
+        })
+        .catch((err: any) => {
+          const normalized = err?.body ?? err?.error ?? err;
+          logger.error("[testit-js-commons:loadTestRun] FAILED to post final result", {
+            testRunId,
+            autoTestExternalId: autotestResult.autoTestExternalId,
+            error: normalized,
+          });
+        });
+    }
+  }
+
+  public async updateSetupTeardown(results: Array<AutotestResult>): Promise<void> {
+    for (const result of results) {
+      const hasSetup = Boolean(result.setupResults?.length);
+      const hasTeardown = Boolean(result.teardownResults?.length);
+      if (!hasSetup && !hasTeardown) {
+        continue;
+      }
+
+      const testResultId = await this.resolveExistingTestResultId(result.autoTestExternalId);
+      if (!testResultId) {
+        logger.warn("[testruns] skip setup/teardown PUT: test result id not found", {
+          autoTestExternalId: result.autoTestExternalId,
+        });
+        continue;
+      }
+
+      const model = this._converter.toOriginSetupTeardownUpdate(result);
+      if (!model.setupResults?.length && !model.teardownResults?.length) {
+        continue;
+      }
+
+      escapeHtmlInObject(model);
+      logTmsLoadTestRun("PUT updateTestResult (setup/teardown only)", {
+        autoTestExternalId: result.autoTestExternalId,
+        testResultId,
+        setupCount: model.setupResults?.length ?? 0,
+        teardownCount: model.teardownResults?.length ?? 0,
+      });
+      await this.updateSetupTeardownWithRetry(testResultId, result, model).catch((err: unknown) => {
+        logger.error("[testit-js-commons:loadTestRun] FAILED to update setup/teardown", {
+          autoTestExternalId: result.autoTestExternalId,
+          testResultId,
+          error: (err as { body?: unknown })?.body ?? err,
         });
       });
     }
@@ -232,14 +269,16 @@ export class TestRunsService extends BaseService implements ITestRunsService {
     });
   }
 
-  private async updateAutotestResultWithRetry(testResultId: string, result: AutotestResult): Promise<void> {
-    const model = this._converter.toOriginTestResultUpdate(result);
-    escapeHtmlInObject(model);
+  private async updateSetupTeardownWithRetry(
+    testResultId: string,
+    result: AutotestResult,
+    model: Record<string, unknown>,
+  ): Promise<void> {
     await withHttpRetry(
       () => this._testResults.updateTestResult(testResultId, model),
-      { label: `updateTestResult:${result.autoTestExternalId}` },
+      { label: `updateSetupTeardown:${result.autoTestExternalId}` },
     );
-    logger.debug("[testruns] updateTestResult ok", {
+    logger.debug("[testruns] updateSetupTeardown ok", {
       testResultId,
       autoTestExternalId: result.autoTestExternalId,
     });

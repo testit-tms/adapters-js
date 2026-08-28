@@ -26,3 +26,4 @@ package-lock.json
 coverage/
 testing
 .scannerwork
+.user/

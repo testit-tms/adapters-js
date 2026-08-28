@@ -154,6 +154,10 @@ export class BaseStrategy implements IStrategy {
     await this.client.testRuns.loadAutotests(testRunId, autotests);
   }
 
+  async updateSetupTeardown(autotests: AutotestResult[]): Promise<void> {
+    await this.client.testRuns.updateSetupTeardown(autotests);
+  }
+
   private async tryStartSyncStorage(testRunId: string): Promise<void> {
     if (!this.config.syncStorageEnabled) {
       return;
