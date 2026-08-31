@@ -116,6 +116,7 @@ Cucumber tags can be used to specify information about autotest.
 - `@Description` - autotest description specified in the autotest card
 - `@Links` - links listed in the autotest card (`@Link={"url":"http://google.com","hasInfo":true,"description":"GoogleDescription","title":"Google","type":"Defect"}`) or in text (`@Link=http://google.com`)
 - `@Labels` - labels listed in the autotest card
+- `@Layer` - test pyramid layer in the autotest card (source **Run**), e.g. `@Layer=API` or `@Layer=my-custom-layer`
 - `@Tags` - tags listed in the autotest card
 - `@WorkItemIds` - a method that links autotests with manual tests. Receives the array of manual tests' IDs
 - `@NameSpace` - directory in the TMS system
@@ -135,6 +136,7 @@ Feature: Tags
   @Links=http://vk.com
   @Labels=Maths
   @Labels=School
+  @Layer=API
   Scenario: Scenario with links
     When 2+2
     Then Result is 4

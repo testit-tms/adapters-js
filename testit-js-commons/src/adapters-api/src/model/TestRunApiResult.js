@@ -28,15 +28,16 @@ class TestRunApiResult {
      * @alias module:model/TestRunApiResult
      * @param id {String} Test run unique identifier
      * @param name {String} Test run name
+     * @param projectId {String} Project unique identifier              This property is used to link test run with project.
      * @param stateName {module:model/TestRunState} Test run state
      * @param status {module:model/TestStatusApiResult} Test run status
      * @param attachments {Array.<module:model/AttachmentApiResult>} Collection of attachments related to the test run
      * @param links {Array.<module:model/LinkApiResult>} Collection of links related to the test run
      * @param tags {Array.<String>} Collection of tags associated with the test run
      */
-    constructor(id, name, stateName, status, attachments, links, tags) { 
+    constructor(id, name, projectId, stateName, status, attachments, links, tags) { 
         
-        TestRunApiResult.initialize(this, id, name, stateName, status, attachments, links, tags);
+        TestRunApiResult.initialize(this, id, name, projectId, stateName, status, attachments, links, tags);
     }
 
     /**
@@ -44,9 +45,10 @@ class TestRunApiResult {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, id, name, stateName, status, attachments, links, tags) { 
+    static initialize(obj, id, name, projectId, stateName, status, attachments, links, tags) { 
         obj['id'] = id;
         obj['name'] = name;
+        obj['projectId'] = projectId;
         obj['stateName'] = stateName;
         obj['status'] = status;
         obj['attachments'] = attachments;
@@ -70,6 +72,15 @@ class TestRunApiResult {
             }
             if (data.hasOwnProperty('name')) {
                 obj['name'] = ApiClient.convertToType(data['name'], 'String');
+            }
+            if (data.hasOwnProperty('description')) {
+                obj['description'] = ApiClient.convertToType(data['description'], 'String');
+            }
+            if (data.hasOwnProperty('launchSource')) {
+                obj['launchSource'] = ApiClient.convertToType(data['launchSource'], 'String');
+            }
+            if (data.hasOwnProperty('projectId')) {
+                obj['projectId'] = ApiClient.convertToType(data['projectId'], 'String');
             }
             if (data.hasOwnProperty('stateName')) {
                 obj['stateName'] = ApiClient.convertToType(data['stateName'], TestRunState);
@@ -110,6 +121,18 @@ class TestRunApiResult {
         if (data['name'] && !(typeof data['name'] === 'string' || data['name'] instanceof String)) {
             throw new Error("Expected the field `name` to be a primitive type in the JSON string but got " + data['name']);
         }
+        // ensure the json data is a string
+        if (data['description'] && !(typeof data['description'] === 'string' || data['description'] instanceof String)) {
+            throw new Error("Expected the field `description` to be a primitive type in the JSON string but got " + data['description']);
+        }
+        // ensure the json data is a string
+        if (data['launchSource'] && !(typeof data['launchSource'] === 'string' || data['launchSource'] instanceof String)) {
+            throw new Error("Expected the field `launchSource` to be a primitive type in the JSON string but got " + data['launchSource']);
+        }
+        // ensure the json data is a string
+        if (data['projectId'] && !(typeof data['projectId'] === 'string' || data['projectId'] instanceof String)) {
+            throw new Error("Expected the field `projectId` to be a primitive type in the JSON string but got " + data['projectId']);
+        }
         // validate the optional field `status`
         if (data['status']) { // data not null
           TestStatusApiResult.validateJSON(data['status']);
@@ -145,7 +168,7 @@ class TestRunApiResult {
 
 }
 
-TestRunApiResult.RequiredProperties = ["id", "name", "stateName", "status", "attachments", "links", "tags"];
+TestRunApiResult.RequiredProperties = ["id", "name", "projectId", "stateName", "status", "attachments", "links", "tags"];
 
 /**
  * Test run unique identifier
@@ -158,6 +181,24 @@ TestRunApiResult.prototype['id'] = undefined;
  * @member {String} name
  */
 TestRunApiResult.prototype['name'] = undefined;
+
+/**
+ * Test run description
+ * @member {String} description
+ */
+TestRunApiResult.prototype['description'] = undefined;
+
+/**
+ * Test run launch source              Once launch source is specified it cannot be updated.
+ * @member {String} launchSource
+ */
+TestRunApiResult.prototype['launchSource'] = undefined;
+
+/**
+ * Project unique identifier              This property is used to link test run with project.
+ * @member {String} projectId
+ */
+TestRunApiResult.prototype['projectId'] = undefined;
 
 /**
  * Test run state

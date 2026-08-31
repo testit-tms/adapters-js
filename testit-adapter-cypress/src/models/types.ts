@@ -199,6 +199,7 @@ type RuntimeMessageBase<T extends string> = { type: T };
 export type RuntimeMetadataMessage = RuntimeMessageBase<"metadata"> & {
   data: {
     labels?: Label[];
+    layer?: string;
     links?: Link[];
     tags?: string[];
     workItemIds?: string[];

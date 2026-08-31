@@ -160,6 +160,7 @@ export class TmsReporter extends Reporter {
     ctx.description = undefined;
     ctx.links = [];
     ctx.labels = [];
+    ctx.layer = undefined;
     ctx.tags = [];
     ctx.classname = undefined;
     ctx.workItemsIds = [];
@@ -195,6 +196,7 @@ export class TmsReporter extends Reporter {
       title: test.ctx?.title,
       links: test.ctx?.links,
       labels: test.ctx?.labels?.map((label) => ({ name: label })),
+      layer: test.ctx?.layer,
       tags: test.ctx?.tags,
       namespace: test.ctx?.namespace ?? this._getNameSpace(test.file),
       classname: test.ctx?.classname ?? this._getClassName(test.file),

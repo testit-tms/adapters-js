@@ -28,6 +28,8 @@ interface AutotestBase {
   labels?: Array<Label>;
   tags?: Array<string>;
   externalKey?: string;
+  /** Test pyramid layer name from test code annotation (source Run is set by converter). */
+  layer?: string;
 }
 
 export interface AutotestPost extends AutotestBase {

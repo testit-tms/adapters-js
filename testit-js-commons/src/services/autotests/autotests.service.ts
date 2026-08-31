@@ -18,7 +18,7 @@ export class AutotestsService extends BaseService implements IAutotestService {
   }
 
   public async createAutotest(autotest: AutotestPost): Promise<void> {
-    const autotestPost = this._converter.toOriginAutotest(autotest);
+    const autotestPost = this._converter.toOriginAutotestCreate(autotest);
     escapeHtmlInObject(autotestPost);
 
     logger.debug("[autotests] createAutoTest", { externalId: autotest.externalId, name: autotest.name });
@@ -43,7 +43,7 @@ export class AutotestsService extends BaseService implements IAutotestService {
   }
 
   public async updateAutotest(autotest: AutotestPost): Promise<void> {
-    const autotestPost = this._converter.toOriginAutotest(autotest);
+    const autotestPost = this._converter.toOriginAutotestUpdate(autotest);
     escapeHtmlInObject(autotestPost);
 
     logger.debug("[autotests] updateAutoTest", { externalId: autotest.externalId, name: autotest.name });
@@ -114,6 +114,7 @@ export class AutotestsService extends BaseService implements IAutotestService {
       classname: autotest.classname ?? originAutotest.classname,
       labels: autotest.labels,
       tags: autotest.tags,
+      layer: autotest.layer,
       workItemIds: autotest.workItemIds,
       isFlaky: autotest.isFlaky,
       shouldCreateWorkItem: autotest.shouldCreateWorkItem,

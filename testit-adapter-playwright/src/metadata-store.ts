@@ -93,6 +93,9 @@ export function applyMetadataTo(target: MetadataMessage, source: MetadataMessage
   if (source.labels) {
     target.labels = source.labels;
   }
+  if (source.layer) {
+    target.layer = source.layer;
+  }
   if (source.tags) {
     target.tags = source.tags;
   }

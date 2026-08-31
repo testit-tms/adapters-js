@@ -28,6 +28,15 @@ class TmsCypressTestRuntime implements TestRuntime {
     });
   }
 
+  addLayer(layer: string) {
+    return this.#enqueueMessageAsync({
+      type: "metadata",
+      data: {
+        layer,
+      },
+    });
+  }
+
   addTags(...tags: string[]) {
     return this.#enqueueMessageAsync({
       type: "metadata",

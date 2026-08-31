@@ -14,6 +14,7 @@
 import ApiClient from '../ApiClient';
 import AutoTestStepApiModel from './AutoTestStepApiModel';
 import LabelApiModel from './LabelApiModel';
+import LayerApiModel from './LayerApiModel';
 import LinkUpdateApiModel from './LinkUpdateApiModel';
 
 /**
@@ -28,10 +29,11 @@ class AutoTestUpdateApiModel {
      * @param projectId {String} Unique ID of the autotest project
      * @param externalId {String} External ID of the autotest
      * @param name {String} Name of the autotest
+     * @param resetLayer {Boolean} Indicates if the autotest layer should be reset.
      */
-    constructor(projectId, externalId, name) { 
+    constructor(projectId, externalId, name, resetLayer) { 
         
-        AutoTestUpdateApiModel.initialize(this, projectId, externalId, name);
+        AutoTestUpdateApiModel.initialize(this, projectId, externalId, name, resetLayer);
     }
 
     /**
@@ -39,10 +41,11 @@ class AutoTestUpdateApiModel {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, projectId, externalId, name) { 
+    static initialize(obj, projectId, externalId, name, resetLayer) { 
         obj['projectId'] = projectId;
         obj['externalId'] = externalId;
         obj['name'] = name;
+        obj['resetLayer'] = resetLayer;
     }
 
     /**
@@ -85,6 +88,12 @@ class AutoTestUpdateApiModel {
             }
             if (data.hasOwnProperty('isFlaky')) {
                 obj['isFlaky'] = ApiClient.convertToType(data['isFlaky'], 'Boolean');
+            }
+            if (data.hasOwnProperty('layer')) {
+                obj['layer'] = ApiClient.convertToType(data['layer'], LayerApiModel);
+            }
+            if (data.hasOwnProperty('resetLayer')) {
+                obj['resetLayer'] = ApiClient.convertToType(data['resetLayer'], 'Boolean');
             }
             if (data.hasOwnProperty('steps')) {
                 obj['steps'] = ApiClient.convertToType(data['steps'], [AutoTestStepApiModel]);
@@ -156,6 +165,10 @@ class AutoTestUpdateApiModel {
         if (data['description'] && !(typeof data['description'] === 'string' || data['description'] instanceof String)) {
             throw new Error("Expected the field `description` to be a primitive type in the JSON string but got " + data['description']);
         }
+        // validate the optional field `layer`
+        if (data['layer']) { // data not null
+          LayerApiModel.validateJSON(data['layer']);
+        }
         if (data['steps']) { // data not null
             // ensure the json data is an array
             if (!Array.isArray(data['steps'])) {
@@ -217,7 +230,7 @@ class AutoTestUpdateApiModel {
 
 }
 
-AutoTestUpdateApiModel.RequiredProperties = ["projectId", "externalId", "name"];
+AutoTestUpdateApiModel.RequiredProperties = ["projectId", "externalId", "name", "resetLayer"];
 
 /**
  * Autotest unique internal identifier
@@ -278,6 +291,18 @@ AutoTestUpdateApiModel.prototype['description'] = undefined;
  * @member {Boolean} isFlaky
  */
 AutoTestUpdateApiModel.prototype['isFlaky'] = undefined;
+
+/**
+ * Layer of the autotest. Assigns layer by rules if omitted.
+ * @member {module:model/LayerApiModel} layer
+ */
+AutoTestUpdateApiModel.prototype['layer'] = undefined;
+
+/**
+ * Indicates if the autotest layer should be reset.
+ * @member {Boolean} resetLayer
+ */
+AutoTestUpdateApiModel.prototype['resetLayer'] = undefined;
 
 /**
  * Collection of the autotest steps

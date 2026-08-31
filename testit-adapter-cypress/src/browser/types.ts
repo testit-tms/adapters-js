@@ -17,6 +17,7 @@ export interface AttachmentOptions {
 
 export interface TestRuntime {
   addLabels(...labels: string[]): PromiseLike<void>;
+  addLayer(layer: string): PromiseLike<void>;
   addTags(...tags: string[]): PromiseLike<void>;
   addLinks(...links: Link[]): PromiseLike<void>;
   addWorkItemIds(...workItemIds: string[]): PromiseLike<void>;
@@ -36,6 +37,7 @@ const noop = { then: () => noop, catch: () => noop } as PromiseLike<void>;
 
 export const noopRuntime: TestRuntime = {
   addLabels: () => noop,
+  addLayer: () => noop,
   addTags: () => noop,
   addLinks: () => noop,
   addWorkItemIds: () => noop,

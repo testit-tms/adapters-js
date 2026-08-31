@@ -13,7 +13,7 @@
 
 import ApiClient from '../ApiClient';
 import DateTimeRangeSelectorModel from './DateTimeRangeSelectorModel';
-import Int32RangeSelectorModel from './Int32RangeSelectorModel';
+import Int64RangeSelectorModel from './Int64RangeSelectorModel';
 import ProjectTypeModel from './ProjectTypeModel';
 
 /**
@@ -60,16 +60,16 @@ class ProjectsFilterModel {
                 obj['isDeleted'] = ApiClient.convertToType(data['isDeleted'], 'Boolean');
             }
             if (data.hasOwnProperty('testCasesCount')) {
-                obj['testCasesCount'] = ApiClient.convertToType(data['testCasesCount'], Int32RangeSelectorModel);
+                obj['testCasesCount'] = ApiClient.convertToType(data['testCasesCount'], Int64RangeSelectorModel);
             }
             if (data.hasOwnProperty('checklistsCount')) {
-                obj['checklistsCount'] = ApiClient.convertToType(data['checklistsCount'], Int32RangeSelectorModel);
+                obj['checklistsCount'] = ApiClient.convertToType(data['checklistsCount'], Int64RangeSelectorModel);
             }
             if (data.hasOwnProperty('sharedStepsCount')) {
-                obj['sharedStepsCount'] = ApiClient.convertToType(data['sharedStepsCount'], Int32RangeSelectorModel);
+                obj['sharedStepsCount'] = ApiClient.convertToType(data['sharedStepsCount'], Int64RangeSelectorModel);
             }
             if (data.hasOwnProperty('autotestsCount')) {
-                obj['autotestsCount'] = ApiClient.convertToType(data['autotestsCount'], Int32RangeSelectorModel);
+                obj['autotestsCount'] = ApiClient.convertToType(data['autotestsCount'], Int64RangeSelectorModel);
             }
             if (data.hasOwnProperty('globalIds')) {
                 obj['globalIds'] = ApiClient.convertToType(data['globalIds'], ['Number']);
@@ -99,19 +99,19 @@ class ProjectsFilterModel {
         }
         // validate the optional field `testCasesCount`
         if (data['testCasesCount']) { // data not null
-          Int32RangeSelectorModel.validateJSON(data['testCasesCount']);
+          Int64RangeSelectorModel.validateJSON(data['testCasesCount']);
         }
         // validate the optional field `checklistsCount`
         if (data['checklistsCount']) { // data not null
-          Int32RangeSelectorModel.validateJSON(data['checklistsCount']);
+          Int64RangeSelectorModel.validateJSON(data['checklistsCount']);
         }
         // validate the optional field `sharedStepsCount`
         if (data['sharedStepsCount']) { // data not null
-          Int32RangeSelectorModel.validateJSON(data['sharedStepsCount']);
+          Int64RangeSelectorModel.validateJSON(data['sharedStepsCount']);
         }
         // validate the optional field `autotestsCount`
         if (data['autotestsCount']) { // data not null
-          Int32RangeSelectorModel.validateJSON(data['autotestsCount']);
+          Int64RangeSelectorModel.validateJSON(data['autotestsCount']);
         }
         // ensure the json data is an array
         if (!Array.isArray(data['globalIds'])) {
@@ -158,25 +158,25 @@ ProjectsFilterModel.prototype['isDeleted'] = undefined;
 
 /**
  * Specifies a project range of test cases count to search for
- * @member {module:model/Int32RangeSelectorModel} testCasesCount
+ * @member {module:model/Int64RangeSelectorModel} testCasesCount
  */
 ProjectsFilterModel.prototype['testCasesCount'] = undefined;
 
 /**
  * Specifies a project range of checklists count to search for
- * @member {module:model/Int32RangeSelectorModel} checklistsCount
+ * @member {module:model/Int64RangeSelectorModel} checklistsCount
  */
 ProjectsFilterModel.prototype['checklistsCount'] = undefined;
 
 /**
  * Specifies a project range of shared steps count to search for
- * @member {module:model/Int32RangeSelectorModel} sharedStepsCount
+ * @member {module:model/Int64RangeSelectorModel} sharedStepsCount
  */
 ProjectsFilterModel.prototype['sharedStepsCount'] = undefined;
 
 /**
  * Specifies a project range of autotests count to search for
- * @member {module:model/Int32RangeSelectorModel} autotestsCount
+ * @member {module:model/Int64RangeSelectorModel} autotestsCount
  */
 ProjectsFilterModel.prototype['autotestsCount'] = undefined;
 

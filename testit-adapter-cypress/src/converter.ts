@@ -29,6 +29,7 @@ export interface TestData {
   namespace?: string;
   classname?: string;
   labels: string[];
+  layer?: string;
   tags: string[];
   links: Link[];
   workItemIds: string[];
@@ -82,6 +83,7 @@ export function toAutotestPost(specPath: string, t: TestData): AutotestPost {
     classname: t.classname,
     links: t.links?.length ? t.links : [],
     labels: t.labels?.map((l) => ({ name: l })) ?? [],
+    layer: t.layer,
     tags: t.tags?.length ? t.tags : [],
     steps: t.steps.map(s => stepDataToShortStep(s)),
     externalKey: t.externalKey,

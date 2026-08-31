@@ -82,6 +82,7 @@ export function mapScenario(document: GherkinDocument, scenario: Scenario, setup
     namespace: tags.nameSpace ?? docTags.nameSpace,
     classname: tags.className ?? docTags.className ?? document.feature?.name ?? scenario.name,
     labels: tags.labels?.map((label) => ({ name: label })) ?? docTags.labels?.map((label) => ({ name: label })),
+    layer: tags.layer ?? docTags.layer,
     tags: tags.tags ?? docTags.tags,
     externalKey: scenario.name,
   };
@@ -280,6 +281,7 @@ export function mapPickleToAutotestPost(
       (pickleTags.labels.length > 0 ? pickleTags.labels : scenarioTags.labels.length > 0 ? scenarioTags.labels : docTags.labels)?.map(
         (label) => ({ name: label }),
       ),
+    layer: pickleTags.layer ?? scenarioTags.layer ?? docTags.layer,
     tags: pickleTags.tags.length > 0 ? pickleTags.tags : scenarioTags.tags.length > 0 ? scenarioTags.tags : docTags.tags,
     workItemIds:
       (pickleTags.workItemIds?.length ?? 0) > 0

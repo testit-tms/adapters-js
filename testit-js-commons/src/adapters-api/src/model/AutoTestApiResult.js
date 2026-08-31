@@ -14,6 +14,7 @@
 import ApiClient from '../ApiClient';
 import AutoTestStepApiResult from './AutoTestStepApiResult';
 import LabelApiResult from './LabelApiResult';
+import LayerApiResult from './LayerApiResult';
 import LinkApiResult from './LinkApiResult';
 
 /**
@@ -101,6 +102,9 @@ class AutoTestApiResult {
             }
             if (data.hasOwnProperty('globalId')) {
                 obj['globalId'] = ApiClient.convertToType(data['globalId'], 'Number');
+            }
+            if (data.hasOwnProperty('layer')) {
+                obj['layer'] = ApiClient.convertToType(data['layer'], LayerApiResult);
             }
             if (data.hasOwnProperty('links')) {
                 obj['links'] = ApiClient.convertToType(data['links'], [LinkApiResult]);
@@ -192,6 +196,10 @@ class AutoTestApiResult {
         // ensure the json data is a string
         if (data['externalKey'] && !(typeof data['externalKey'] === 'string' || data['externalKey'] instanceof String)) {
             throw new Error("Expected the field `externalKey` to be a primitive type in the JSON string but got " + data['externalKey']);
+        }
+        // validate the optional field `layer`
+        if (data['layer']) { // data not null
+          LayerApiResult.validateJSON(data['layer']);
         }
         if (data['links']) { // data not null
             // ensure the json data is an array
@@ -295,6 +303,12 @@ AutoTestApiResult.prototype['externalKey'] = undefined;
  * @member {Number} globalId
  */
 AutoTestApiResult.prototype['globalId'] = undefined;
+
+/**
+ * Model of auto test layer for use in responses.
+ * @member {module:model/LayerApiResult} layer
+ */
+AutoTestApiResult.prototype['layer'] = undefined;
 
 /**
  * @member {Array.<module:model/LinkApiResult>} links
