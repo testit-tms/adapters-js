@@ -28,6 +28,9 @@ export function getTagType(tag: string): TagType {
   if (new RegExp(`^@${tags.labels}=.+$`).test(tag)) {
     return TagType.Label;
   }
+  if (new RegExp(`^@${tags.layer}=.+$`).test(tag)) {
+    return TagType.Layer;
+  }
   if (new RegExp(`^@${tags.tags}=.+$`).test(tag)) {
     return TagType.Tag;
   }
@@ -74,6 +77,10 @@ function getLabel(tag: string): string[] {
     .replace(new RegExp(`^@${tags.labels}=`), ""))
     .split(",")
     .map((label) => label.trim());
+}
+
+function getLayer(tag: string): string {
+  return parseSpaceInTag(tag.replace(new RegExp(`^@${tags.layer}=`), ""));
 }
 
 function getTag(tag: string): string[] {
@@ -125,6 +132,10 @@ export function parseTags(tags: readonly Pick<Tag, "name">[]): ParsedTags {
       }
       case TagType.Label: {
         parsedTags.labels?.push(...getLabel(tag.name));
+        continue;
+      }
+      case TagType.Layer: {
+        parsedTags.layer = getLayer(tag.name);
         continue;
       }
       case TagType.Tag: {

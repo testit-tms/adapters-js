@@ -11,6 +11,7 @@ export interface MetadataMessage {
   title?: string;
   description?: string;
   labels?: Label[];
+  layer?: string;
   tags?: string[];
   links?: Link[];
   namespace?: string;
@@ -185,6 +186,12 @@ export class testit {
   static async labels(value: string[]) {
     await this.addMetadataAttachment({
       labels: value.map((label) => ({ name: label })),
+    });
+  }
+
+  static async layer(value: string) {
+    await this.addMetadataAttachment({
+      layer: value,
     });
   }
 

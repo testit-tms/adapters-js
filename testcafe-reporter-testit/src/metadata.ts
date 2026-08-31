@@ -7,6 +7,7 @@ export default class Metadata {
     description: string | undefined;
     links: Link[] | undefined;
     labels: string[] | undefined;
+    layer: string | undefined;
     tags: string[] | undefined;
     workItemIds: string[] | undefined;
     namespace: string | undefined;
@@ -16,7 +17,7 @@ export default class Metadata {
     constructor(meta?: any, path?: string, name?: string) {
         this.otherMeta = new Map();
         if (meta) {
-        const { externalId, displayName, title, description, links, labels, tags, workItemIds, namespace, classname, ...otherMeta } = meta;
+        const { externalId, displayName, title, description, links, labels, layer, tags, workItemIds, namespace, classname, ...otherMeta } = meta;
 
         if (this.isString(externalId)) {
             this.externalId = externalId;
@@ -43,6 +44,9 @@ export default class Metadata {
             this.labels = labels;
         } else if (this.isString(labels)) {
             this.labels = [labels];
+        }
+        if (this.isString(layer)) {
+            this.layer = layer;
         }
         if (Array.isArray(tags)) {
             this.tags = tags;
@@ -87,6 +91,9 @@ export default class Metadata {
         }
         if (!this.labels && metadata.labels) {
             this.labels = metadata.labels;
+        }
+        if (!this.layer && metadata.layer) {
+            this.layer = metadata.layer;
         }
         if (!this.tags && metadata.tags) {
             this.tags = metadata.tags;

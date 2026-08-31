@@ -47,6 +47,8 @@ export interface Metadata {
   workItemsIds?: string[];
   links?: Link[];
   labels?: string[];
+  /** Test pyramid layer declared in test code. */
+  layer?: string;
   classname?: string;
   namespace?: string;
   properties?: {

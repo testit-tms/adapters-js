@@ -142,6 +142,7 @@ Description of methods:
 - `tms.addTitle` - a dynamic method for adding autotest name specified in the autotest card. If not specified, the name from the displayName method is used
 - `tms.addDescription` - a dynamic method for adding autotest description specified in the autotest card
 - `tms.addLabels` - a dynamic method for adding labels listed in the autotest card
+- `tms.addLayer` - test pyramid layer in the autotest card (source **Run**). Use `TestLayers` from `testit-js-commons` for recommended values, or any custom string
 - `tms.addTags` - a dynamic method for adding tags listed in the autotest card
 - `tms.addLinks` - links in the autotest result
 - `tms.addAttachments` - uploading files in the autotest result
@@ -156,6 +157,7 @@ Description of methods:
 #### Simple test
 ```ts
 import { getTestRuntime } from "testit-adapter-cypress/runtime";
+import { TestLayers } from "testit-js-commons";
 
 describe('example to-do app', () => {
   it('displays two todo items by default', () => {
@@ -166,6 +168,7 @@ describe('example to-do app', () => {
     tms.addTitle('test title');
     tms.addDescription('Test description');
     tms.addLabels('label1', 'label2');
+    tms.addLayer(TestLayers.API);
     tms.addTags('tag1', 'tag2');
     tms.addLinks(
       {

@@ -31,6 +31,24 @@ Supported test frameworks :
  6. [TestCafe](https://github.com/testit-tms/adapters-js/tree/main/testcafe-reporter-testit)
  7. [Cypress](https://github.com/testit-tms/adapters-js/tree/main/testit-adapter-cypress)
 
+## Autotest layer (test pyramid)
+
+All adapters support an optional **layer** on the autotest card. Declare it in test code only (not via adapter config). TMS shows the layer with source **Run**.
+
+| Adapter | Syntax |
+|---------|--------|
+| Jest | `testit.layer('API')` |
+| Mocha | `this.layer = 'API'` |
+| Playwright | `await testit.layer('API')` |
+| Cypress | `tms.addLayer('API')` |
+| Codecept | `{ layer: 'API' }` in scenario opts |
+| Cucumber | `@Layer=API` on scenario |
+| TestCafe | `layer: 'API'` in `test.meta({ ... })` |
+
+Recommended constants: `TestLayers` from `testit-js-commons` (`E2E`, `UI`, `API`, `Contract`, `Integration`, `Component`, `Unit`). Any other non-empty string is accepted.
+
+See [docs/tz-autotest-layer.md](docs/tz-autotest-layer.md) for the full contract.
+
 
 ## What's new in 4.0.0?
 

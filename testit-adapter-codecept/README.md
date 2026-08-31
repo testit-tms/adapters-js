@@ -146,6 +146,7 @@ Description of metadata methods:
 - `title` - autotest name specified in the autotest card. If not specified, the name from the displayName method is used
 - `description` - autotest description specified in the autotest card
 - `labels` - labels listed in the autotest card
+- `layer` - test pyramid layer in the autotest card (source **Run**). Use `TestLayers` from `testit-js-commons` for recommended values, or any custom string
 - `tags` - tags listed in the autotest card
 - `link` - links listed in the autotest card
 - `namespace` - directory in the TMS system
@@ -170,6 +171,7 @@ Scenario(
     title: 'Title',
     description: 'Description',
     labels: ['Custom label'],
+    layer: 'API',
     links: [
       {
         title: 'Google about this error',

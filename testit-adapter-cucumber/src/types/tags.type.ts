@@ -9,6 +9,7 @@ export type ParsedTags = {
   description?: string;
   labels: string[];
   tags: string[];
+  layer?: string;
   nameSpace?: string;
   className?: string;
 };
@@ -22,6 +23,7 @@ export enum TagType {
   Name,
   Description,
   Label,
+  Layer,
   Tag,
   NameSpace,
   ClassName,
@@ -36,6 +38,7 @@ export const tags: Record<keyof ParsedTags, string> = {
   workItemIds: "WorkItemIds",
   description: "Description",
   labels: "Labels",
+  layer: "Layer",
   tags: "Tags",
   nameSpace: "NameSpace",
   className: "ClassName",

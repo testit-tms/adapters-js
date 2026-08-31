@@ -115,6 +115,7 @@ export default class TestItEnvironment extends NodeEnvironment {
       displayName: this.setDisplayName.bind(this),
       links: this.setLinks.bind(this),
       labels: this.setLabels.bind(this),
+      layer: this.setLayer.bind(this),
       tags: this.setTags.bind(this),
       workItemIds: this.setWorkItems.bind(this),
       params: this.setParams.bind(this),
@@ -321,6 +322,30 @@ export default class TestItEnvironment extends NodeEnvironment {
     return includeAfterAll ? afterEach.concat(this.afterAllSteps) : afterEach;
   }
 
+  private buildAutotestPost(
+    autotest: AutotestData,
+    setupSteps: Step[],
+    teardownSteps: Step[],
+  ): AutotestPost {
+    return {
+      externalId: autotest.externalId,
+      title: autotest.title,
+      name: autotest.name,
+      description: autotest.description,
+      links: autotest.links,
+      labels: autotest.labels,
+      layer: autotest.layer,
+      tags: autotest.tags,
+      namespace: autotest.namespace ?? Utils.getDir(this.testPath),
+      classname: autotest.classname ?? Utils.getFileName(this.testPath),
+      setup: setupSteps,
+      steps: autotest.testSteps,
+      teardown: teardownSteps,
+      externalKey: autotest.externalKey,
+      workItemIds: autotest.workItemIds,
+    };
+  }
+
   private async sendRealtimePayload(
     autotest: AutotestData,
     result: AutotestResult,
@@ -336,21 +361,7 @@ export default class TestItEnvironment extends NodeEnvironment {
       teardownSteps: teardownSteps.length,
       testSteps: autotest.testSteps.length,
     });
-    const autotestPost: AutotestPost = {
-      externalId: autotest.externalId,
-      title: autotest.title,
-      name: autotest.name,
-      description: autotest.description,
-      links: autotest.links,
-      labels: autotest.labels,
-      tags: autotest.tags,
-      namespace: autotest.namespace ?? Utils.getDir(this.testPath),
-      classname: autotest.classname ?? Utils.getFileName(this.testPath),
-      setup: setupSteps,
-      steps: autotest.testSteps,
-      teardown: teardownSteps,
-      externalKey: autotest.externalKey,
-    };
+    const autotestPost = this.buildAutotestPost(autotest, setupSteps, teardownSteps);
 
     await this.strategy.loadAutotest(autotestPost, result.outcome);
     await this.strategy.loadTestRun([
@@ -392,6 +403,8 @@ export default class TestItEnvironment extends NodeEnvironment {
         if (setupSteps.length === 0 && teardownSteps.length === 0) {
           continue;
         }
+        const autotestPost = this.buildAutotestPost(autotest, setupSteps, teardownSteps);
+        await this.strategy.loadAutotest(autotestPost, result.outcome);
         await this.strategy.updateSetupTeardown([
           {
             autoTestExternalId: autotest.externalId,
@@ -424,21 +437,7 @@ export default class TestItEnvironment extends NodeEnvironment {
       const setupSteps = this.beforeAllSteps.concat(autotest.beforeEach);
       const teardownSteps = autotest.afterEach.concat(this.afterAllSteps);
 
-      const autotestPost: AutotestPost = {
-        externalId: autotest.externalId,
-        title: autotest.title,
-        name: autotest.name,
-        description: autotest.description,
-        links: autotest.links,
-        labels: autotest.labels,
-        tags: autotest.tags,
-        namespace: autotest.namespace ?? Utils.getDir(this.testPath),
-        classname: autotest.classname ?? Utils.getFileName(this.testPath),
-        setup: setupSteps,
-        steps: autotest.testSteps,
-        teardown: teardownSteps,
-        externalKey: autotest.externalKey,
-      };
+      const autotestPost = this.buildAutotestPost(autotest, setupSteps, teardownSteps);
 
       try {
         await this.strategy.loadAutotest(autotestPost, result.outcome);
@@ -541,6 +540,11 @@ export default class TestItEnvironment extends NodeEnvironment {
   setLabels(labels: string[]) {
     log("Setting labels to %s", this.autotestData.name);
     this.autotestData.labels = labels.map((label) => ({ name: label }));
+  }
+
+  setLayer(layer: string) {
+    log("Setting layer to %s for %s", layer, this.autotestData.name);
+    this.autotestData.layer = layer;
   }
 
   setTags(tags: string[]) {

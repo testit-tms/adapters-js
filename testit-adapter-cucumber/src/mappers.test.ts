@@ -74,6 +74,22 @@ describe("cucumber mappers", () => {
     expect(autotest.classname).toBe("CustomClass");
   });
 
+  it("mapPickleToAutotestPost uses @Layer tag when present", () => {
+    const pickle = pickleForScenario({
+      id: "p-layer",
+      uri: "features/AnnotationTests.feature",
+      name: "Layer scenario",
+      scenarioId: "sc-ann",
+      stepId: "step-ann",
+      stepText: "return true",
+      tagNames: ["@Layer=API"],
+    });
+
+    const autotest = mapPickleToAutotestPost(documents, pickle, (s) => s.text);
+
+    expect(autotest.layer).toBe("API");
+  });
+
   it("formatPickleStepTitle restores Gherkin keyword", () => {
     const pickle = pickleForScenario({
       id: "p-ann",

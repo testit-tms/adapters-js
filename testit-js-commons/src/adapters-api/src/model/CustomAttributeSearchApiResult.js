@@ -14,16 +14,19 @@
 import ApiClient from '../ApiClient';
 import CustomAttributeOptionApiResult from './CustomAttributeOptionApiResult';
 import CustomAttributeType from './CustomAttributeType';
+import ProjectShortestApiResult from './ProjectShortestApiResult';
 
 /**
- * The CustomAttributeApiResult model module.
- * @module model/CustomAttributeApiResult
+ * The CustomAttributeSearchApiResult model module.
+ * @module model/CustomAttributeSearchApiResult
  * @version 1.0.0
  */
-class CustomAttributeApiResult {
+class CustomAttributeSearchApiResult {
     /**
-     * Constructs a new <code>CustomAttributeApiResult</code>.
-     * @alias module:model/CustomAttributeApiResult
+     * Constructs a new <code>CustomAttributeSearchApiResult</code>.
+     * @alias module:model/CustomAttributeSearchApiResult
+     * @param workItemUsage {Array.<module:model/ProjectShortestApiResult>} Projects where attribute is used in work items
+     * @param testPlanUsage {Array.<module:model/ProjectShortestApiResult>} Projects where attribute is used in test plans
      * @param id {String} Unique ID of the attribute
      * @param options {Array.<module:model/CustomAttributeOptionApiResult>} Collection of the attribute options   Available for attributes of type `options` and `multiple options` only
      * @param type {module:model/CustomAttributeType} Type of the attribute
@@ -36,9 +39,9 @@ class CustomAttributeApiResult {
      * @param isSystem {Boolean} Indicates if the attribute is system
      * @param targets {Array.<String>} Collection of the attribute targets   Defines where the attribute can be used (e.g., TestCases, AutoTestCases, TestPlans)
      */
-    constructor(id, options, type, isDeleted, name, isEnabled, isRequired, isGlobal, isReadOnly, isSystem, targets) { 
+    constructor(workItemUsage, testPlanUsage, id, options, type, isDeleted, name, isEnabled, isRequired, isGlobal, isReadOnly, isSystem, targets) { 
         
-        CustomAttributeApiResult.initialize(this, id, options, type, isDeleted, name, isEnabled, isRequired, isGlobal, isReadOnly, isSystem, targets);
+        CustomAttributeSearchApiResult.initialize(this, workItemUsage, testPlanUsage, id, options, type, isDeleted, name, isEnabled, isRequired, isGlobal, isReadOnly, isSystem, targets);
     }
 
     /**
@@ -46,7 +49,9 @@ class CustomAttributeApiResult {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, id, options, type, isDeleted, name, isEnabled, isRequired, isGlobal, isReadOnly, isSystem, targets) { 
+    static initialize(obj, workItemUsage, testPlanUsage, id, options, type, isDeleted, name, isEnabled, isRequired, isGlobal, isReadOnly, isSystem, targets) { 
+        obj['workItemUsage'] = workItemUsage;
+        obj['testPlanUsage'] = testPlanUsage;
         obj['id'] = id;
         obj['options'] = options;
         obj['type'] = type;
@@ -61,16 +66,22 @@ class CustomAttributeApiResult {
     }
 
     /**
-     * Constructs a <code>CustomAttributeApiResult</code> from a plain JavaScript object, optionally creating a new instance.
+     * Constructs a <code>CustomAttributeSearchApiResult</code> from a plain JavaScript object, optionally creating a new instance.
      * Copies all relevant properties from <code>data</code> to <code>obj</code> if supplied or a new instance if not.
      * @param {Object} data The plain JavaScript object bearing properties of interest.
-     * @param {module:model/CustomAttributeApiResult} obj Optional instance to populate.
-     * @return {module:model/CustomAttributeApiResult} The populated <code>CustomAttributeApiResult</code> instance.
+     * @param {module:model/CustomAttributeSearchApiResult} obj Optional instance to populate.
+     * @return {module:model/CustomAttributeSearchApiResult} The populated <code>CustomAttributeSearchApiResult</code> instance.
      */
     static constructFromObject(data, obj) {
         if (data) {
-            obj = obj || new CustomAttributeApiResult();
+            obj = obj || new CustomAttributeSearchApiResult();
 
+            if (data.hasOwnProperty('workItemUsage')) {
+                obj['workItemUsage'] = ApiClient.convertToType(data['workItemUsage'], [ProjectShortestApiResult]);
+            }
+            if (data.hasOwnProperty('testPlanUsage')) {
+                obj['testPlanUsage'] = ApiClient.convertToType(data['testPlanUsage'], [ProjectShortestApiResult]);
+            }
             if (data.hasOwnProperty('id')) {
                 obj['id'] = ApiClient.convertToType(data['id'], 'String');
             }
@@ -112,16 +123,36 @@ class CustomAttributeApiResult {
     }
 
     /**
-     * Validates the JSON data with respect to <code>CustomAttributeApiResult</code>.
+     * Validates the JSON data with respect to <code>CustomAttributeSearchApiResult</code>.
      * @param {Object} data The plain JavaScript object bearing properties of interest.
-     * @return {boolean} to indicate whether the JSON data is valid with respect to <code>CustomAttributeApiResult</code>.
+     * @return {boolean} to indicate whether the JSON data is valid with respect to <code>CustomAttributeSearchApiResult</code>.
      */
     static validateJSON(data) {
         // check to make sure all required properties are present in the JSON string
-        for (const property of CustomAttributeApiResult.RequiredProperties) {
+        for (const property of CustomAttributeSearchApiResult.RequiredProperties) {
             if (!data.hasOwnProperty(property)) {
                 throw new Error("The required field `" + property + "` is not found in the JSON data: " + JSON.stringify(data));
             }
+        }
+        if (data['workItemUsage']) { // data not null
+            // ensure the json data is an array
+            if (!Array.isArray(data['workItemUsage'])) {
+                throw new Error("Expected the field `workItemUsage` to be an array in the JSON data but got " + data['workItemUsage']);
+            }
+            // validate the optional field `workItemUsage` (array)
+            for (const item of data['workItemUsage']) {
+                ProjectShortestApiResult.validateJSON(item);
+            };
+        }
+        if (data['testPlanUsage']) { // data not null
+            // ensure the json data is an array
+            if (!Array.isArray(data['testPlanUsage'])) {
+                throw new Error("Expected the field `testPlanUsage` to be an array in the JSON data but got " + data['testPlanUsage']);
+            }
+            // validate the optional field `testPlanUsage` (array)
+            for (const item of data['testPlanUsage']) {
+                ProjectShortestApiResult.validateJSON(item);
+            };
         }
         // ensure the json data is a string
         if (data['id'] && !(typeof data['id'] === 'string' || data['id'] instanceof String)) {
@@ -156,84 +187,96 @@ class CustomAttributeApiResult {
 
 }
 
-CustomAttributeApiResult.RequiredProperties = ["id", "options", "type", "isDeleted", "name", "isEnabled", "isRequired", "isGlobal", "isReadOnly", "isSystem", "targets"];
+CustomAttributeSearchApiResult.RequiredProperties = ["workItemUsage", "testPlanUsage", "id", "options", "type", "isDeleted", "name", "isEnabled", "isRequired", "isGlobal", "isReadOnly", "isSystem", "targets"];
+
+/**
+ * Projects where attribute is used in work items
+ * @member {Array.<module:model/ProjectShortestApiResult>} workItemUsage
+ */
+CustomAttributeSearchApiResult.prototype['workItemUsage'] = undefined;
+
+/**
+ * Projects where attribute is used in test plans
+ * @member {Array.<module:model/ProjectShortestApiResult>} testPlanUsage
+ */
+CustomAttributeSearchApiResult.prototype['testPlanUsage'] = undefined;
 
 /**
  * Unique ID of the attribute
  * @member {String} id
  */
-CustomAttributeApiResult.prototype['id'] = undefined;
+CustomAttributeSearchApiResult.prototype['id'] = undefined;
 
 /**
  * Optional code identifier for the attribute
  * @member {String} code
  */
-CustomAttributeApiResult.prototype['code'] = undefined;
+CustomAttributeSearchApiResult.prototype['code'] = undefined;
 
 /**
  * Collection of the attribute options   Available for attributes of type `options` and `multiple options` only
  * @member {Array.<module:model/CustomAttributeOptionApiResult>} options
  */
-CustomAttributeApiResult.prototype['options'] = undefined;
+CustomAttributeSearchApiResult.prototype['options'] = undefined;
 
 /**
  * Type of the attribute
  * @member {module:model/CustomAttributeType} type
  */
-CustomAttributeApiResult.prototype['type'] = undefined;
+CustomAttributeSearchApiResult.prototype['type'] = undefined;
 
 /**
  * Indicates if the attribute is deleted
  * @member {Boolean} isDeleted
  */
-CustomAttributeApiResult.prototype['isDeleted'] = undefined;
+CustomAttributeSearchApiResult.prototype['isDeleted'] = undefined;
 
 /**
  * Name of the attribute
  * @member {String} name
  */
-CustomAttributeApiResult.prototype['name'] = undefined;
+CustomAttributeSearchApiResult.prototype['name'] = undefined;
 
 /**
  * Indicates if the attribute is enabled
  * @member {Boolean} isEnabled
  */
-CustomAttributeApiResult.prototype['isEnabled'] = undefined;
+CustomAttributeSearchApiResult.prototype['isEnabled'] = undefined;
 
 /**
  * Indicates if the attribute value is mandatory to specify
  * @member {Boolean} isRequired
  */
-CustomAttributeApiResult.prototype['isRequired'] = undefined;
+CustomAttributeSearchApiResult.prototype['isRequired'] = undefined;
 
 /**
  * Indicates if the attribute is available across all projects
  * @member {Boolean} isGlobal
  */
-CustomAttributeApiResult.prototype['isGlobal'] = undefined;
+CustomAttributeSearchApiResult.prototype['isGlobal'] = undefined;
 
 /**
  * Indicates if the attribute is read-only
  * @member {Boolean} isReadOnly
  */
-CustomAttributeApiResult.prototype['isReadOnly'] = undefined;
+CustomAttributeSearchApiResult.prototype['isReadOnly'] = undefined;
 
 /**
  * Indicates if the attribute is system
  * @member {Boolean} isSystem
  */
-CustomAttributeApiResult.prototype['isSystem'] = undefined;
+CustomAttributeSearchApiResult.prototype['isSystem'] = undefined;
 
 /**
  * Collection of the attribute targets   Defines where the attribute can be used (e.g., TestCases, AutoTestCases, TestPlans)
  * @member {Array.<String>} targets
  */
-CustomAttributeApiResult.prototype['targets'] = undefined;
+CustomAttributeSearchApiResult.prototype['targets'] = undefined;
 
 
 
 
 
 
-export default CustomAttributeApiResult;
+export default CustomAttributeSearchApiResult;
 

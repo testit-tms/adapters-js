@@ -146,6 +146,7 @@ Description of metadata properties:
 - `this.title` - autotest name specified in the autotest card. If not specified, the name from the displayName method is used
 - `this.description` - autotest description specified in the autotest card
 - `this.labels` - labels listed in the autotest card
+- `this.layer` - test pyramid layer in the autotest card (source **Run**). Use `TestLayers` from `testit-js-commons` for recommended values (`E2E`, `UI`, `API`, `Contract`, `Integration`, `Component`, `Unit`), or any custom string
 - `this.tags` - tags listed in the autotest card
 - `this.links` - links listed in the autotest card
 - `this.nameSpace` - directory in the TMS system (default - directory's name of test)
@@ -168,6 +169,7 @@ Description of methods:
 
 import assert from "assert";
 import {Context, Link} from "testit-adapter-mocha";
+import { TestLayers } from "testit-js-commons";
 
 const links: Link[] = [
   { url: "https://test01.example", title: "Example01", description: "Example01 description", type: "Issue" },
@@ -188,6 +190,7 @@ it('All annotations and methods', function (this: Context) {
   this.title = 'title';
   this.description = 'description';
   this.labels = ['label1', 'label2'];
+  this.layer = TestLayers.API;
   this.links = links;
 
   this.addMessage('This is a message');

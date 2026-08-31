@@ -430,6 +430,7 @@ export class TmsCypress {
     if (message.type !== "metadata" || !context.currentTestData) return;
     const data = message.data as {
       labels?: Array<string>;
+      layer?: string;
       links?: Array<Link>;
       workItemIds?: string[];
       tags?: string[];
@@ -446,6 +447,9 @@ export class TmsCypress {
 
     if (data.labels?.length) {
       current.labels.push(...data.labels);
+    }
+    if (data.layer) {
+      current.layer = data.layer;
     }
     if (data.tags?.length) {
       current.tags.push(...data.tags);

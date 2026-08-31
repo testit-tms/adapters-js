@@ -104,6 +104,7 @@ Description of metadata properties:
 - `title` - autotest name specified in the autotest card. If not specified, the name from the displayName method is used
 - `description` - autotest description specified in the autotest card
 - `labels` - labels listed in the autotest card
+- `layer` - test pyramid layer in the autotest card (source **Run**). Use `TestLayers` from `testit-js-commons` for recommended values, or any custom string
 - `tags` - tags listed in the autotest card
 - `links` - links listed in the autotest card
 - `nameSpace` - directory in the TMS system (default - directory's name of test)
@@ -124,7 +125,7 @@ Description of methods:
 // annotations.spec.ts
 const adapter = require('testcafe-reporter-testit')();
 import { Selector } from 'testcafe';
-import { Link } from 'testit-js-commons';
+import { Link, TestLayers } from 'testit-js-commons';
 import { join } from "path";
 
 fixture('TestCafé Example Fixture - Documentation').page('http://devexpress.github.io/testcafe/example');
@@ -148,6 +149,7 @@ test.meta({
   classname: 'classname',
   workItemIds: ['123', '321'],
   labels: ['label1', 'label2'],
+  layer: TestLayers.API,
   tags: ['tag1', 'tag2'],
 })('test', async t => {
   adapter.addMessage(t, "Message");

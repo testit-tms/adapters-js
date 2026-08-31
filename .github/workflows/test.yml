@@ -166,6 +166,7 @@ jobs:
         run: |
 
           chmod +x ./scripts/get_sync_storage.sh
+          chmod +x ./scripts/wait_sync_storage_health.sh
 
           export SYNC_STORAGE_VERSION=$(grep -o 'VERSION = "[^"]*"' testit-js-commons/src/services/syncstorage/syncstorage.runner.ts | cut -d'"' -f2)
          
@@ -175,9 +176,10 @@ jobs:
           # start sync storage before all other processes
           ../../scripts/get_sync_storage.sh $SYNC_STORAGE_VERSION
           pkill -f 'syncstorage-linux-amd64.*--port ${{ env.TMS_SYNC_STORAGE_PORT }}' 2>/dev/null || true
+          sleep 1
           nohup .caches/syncstorage-linux-amd64 --testRunId ${{ env.TMS_TEST_RUN_ID }} --port ${{ env.TMS_SYNC_STORAGE_PORT }} \
-          --baseURL ${{ env.TMS_URL }} --privateToken ${{ env.TMS_PRIVATE_TOKEN }}  > service.log 2>&1 &  
-          curl -v http://127.0.0.1:${{ env.TMS_SYNC_STORAGE_PORT }}/health || true
+          --baseURL ${{ env.TMS_URL }} --privateToken ${{ env.TMS_PRIVATE_TOKEN }}  > service.log 2>&1 &
+          ../../scripts/wait_sync_storage_health.sh ${{ env.TMS_SYNC_STORAGE_PORT }} service.log
           
           if [ "${{ matrix.project_name }}" = "testcafe" ]; then
             npx testcafe "chrome:headless --disable-search-engine-choice-screen --no-sandbox" tests/ -r testit --disable-native-automation || true
@@ -213,6 +215,7 @@ jobs:
           export TMS_IMPORT_REALTIME=false
 
           chmod +x ./scripts/get_sync_storage.sh
+          chmod +x ./scripts/wait_sync_storage_health.sh
 
           export SYNC_STORAGE_VERSION=$(grep -o 'VERSION = "[^"]*"' testit-js-commons/src/services/syncstorage/syncstorage.runner.ts | cut -d'"' -f2)
          
@@ -222,9 +225,10 @@ jobs:
           # start sync storage before all other processes
           ../../scripts/get_sync_storage.sh $SYNC_STORAGE_VERSION
           pkill -f 'syncstorage-linux-amd64.*--port ${{ env.TMS_SYNC_STORAGE_PORT }}' 2>/dev/null || true
+          sleep 1
           nohup .caches/syncstorage-linux-amd64 --testRunId ${{ env.TMS_TEST_RUN_ID }} --port ${{ env.TMS_SYNC_STORAGE_PORT }} \
-          --baseURL ${{ env.TMS_URL }} --privateToken ${{ env.TMS_PRIVATE_TOKEN }}  > service2.log 2>&1 &  
-          curl -v http://127.0.0.1:${{ env.TMS_SYNC_STORAGE_PORT }}/health || true
+          --baseURL ${{ env.TMS_URL }} --privateToken ${{ env.TMS_PRIVATE_TOKEN }}  > service2.log 2>&1 &
+          ../../scripts/wait_sync_storage_health.sh ${{ env.TMS_SYNC_STORAGE_PORT }} service2.log
           
           if [ "${{ matrix.project_name }}" = "testcafe" ]; then
             npx testcafe "chrome:headless --disable-search-engine-choice-screen --no-sandbox" tests/ -r testit --disable-native-automation || true
