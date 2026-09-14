@@ -44,6 +44,10 @@ export interface Metadata {
   displayName?: string;
   title?: string;
   description?: string;
+  workItemId?: string;
+  /**
+   * @deprecated Use workItemId with a single globalId instead.
+   */
   workItemsIds?: string[];
   links?: Link[];
   labels?: string[];

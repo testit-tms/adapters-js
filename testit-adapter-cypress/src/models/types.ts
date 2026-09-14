@@ -203,6 +203,7 @@ export type RuntimeMetadataMessage = RuntimeMessageBase<"metadata"> & {
     links?: Link[];
     tags?: string[];
     workItemIds?: string[];
+    workItemId?: string;
     parameters?: Parameter[];
     description?: string;
     displayName?: string;

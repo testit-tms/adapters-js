@@ -140,7 +140,8 @@ $ npx codeceptjs run --grep "$(cat tmp/filter.txt)"
 Methods can be used to specify information about autotest.
 
 Description of metadata methods:
-- `workItemIds` - a method that links autotests with manual tests. Receives the array of manual tests' IDs
+- `workItemId` - a method that links an autotest with a manual test. Receives a single globalId
+- `workItemIds` - deprecated, use `workItemId` instead
 - `displayName` - internal autotest name (used in Test IT)
 - `externalId` - unique internal autotest ID (used in Test IT)
 - `title` - autotest name specified in the autotest card. If not specified, the name from the displayName method is used
@@ -181,7 +182,7 @@ Scenario(
         hasInfo: true
       }
     ],
-    workItemIds: ['1140']
+    workItemId: '1140'
   },
   ({ I }) => {
     I.amOnPage('https://github.com');

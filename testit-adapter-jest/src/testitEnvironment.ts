@@ -117,6 +117,7 @@ export default class TestItEnvironment extends NodeEnvironment {
       labels: this.setLabels.bind(this),
       layer: this.setLayer.bind(this),
       tags: this.setTags.bind(this),
+      workItemId: this.setWorkItemId.bind(this),
       workItemIds: this.setWorkItems.bind(this),
       params: this.setParams.bind(this),
       step: this.startStep.bind(this),
@@ -552,7 +553,16 @@ export default class TestItEnvironment extends NodeEnvironment {
     this.autotestData.tags = tags;
   }
 
+  setWorkItemId(globalId: string) {
+    log("Setting work item id to %s", this.autotestData.name);
+    this.autotestData.workItemIds = [globalId];
+  }
+
+  /**
+   * @deprecated Use workItemId with a single globalId instead.
+   */
   setWorkItems(workItems: string[]) {
+    logger.warn("workItemIds is deprecated. Use workItemId with a single globalId instead.");
     log("Setting work items to %s", this.autotestData.name);
     this.autotestData.workItemIds = workItems;
   }

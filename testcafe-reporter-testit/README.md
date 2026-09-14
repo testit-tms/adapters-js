@@ -98,7 +98,8 @@ Methods and properties can be used to specify information about autotest.
 ### Properties
 
 Description of metadata properties:
-- `workItemIds` - a method that links autotests with manual tests. Receives the array of manual tests' IDs
+- `workItemId` - a method that links an autotest with a manual test. Receives a single globalId
+- `workItemIds` - deprecated, use `workItemId` instead
 - `displayName` - internal autotest name (used in Test IT)
 - `externalId` - unique internal autotest ID (used in Test IT)
 - `title` - autotest name specified in the autotest card. If not specified, the name from the displayName method is used
@@ -147,7 +148,7 @@ test.meta({
   title: 'title',
   namespace: 'namespace',
   classname: 'classname',
-  workItemIds: ['123', '321'],
+  workItemId: '123',
   labels: ['label1', 'label2'],
   layer: TestLayers.API,
   tags: ['tag1', 'tag2'],

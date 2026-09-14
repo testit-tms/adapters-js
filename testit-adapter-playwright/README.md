@@ -137,7 +137,8 @@ first-job:
 Methods can be used to specify information about autotest.
 
 Description of metadata methods:
-- `testit.workItemIds` - linking an autotest to a test case
+- `testit.workItemId` - linking an autotest to a test case. Receives a single globalId
+- `testit.workItemIds` - deprecated, use `testit.workItemId` instead
 - `testit.displayName` - name of the autotest in the Test IT system (can be replaced with documentation strings)
 - `testit.externalId` - ID of the autotest within the project in the Test IT System
 - `testit.title` - title in the autotest card
