@@ -2,6 +2,7 @@
 const AdaptersApi = require("../../adapters-api/dist/index");
 import { AdapterConfig, BaseService } from "../../common";
 import { withHttpRetry } from "../../common/utils";
+import logger from "../../logger";
 import { handleHttpError } from "./testresults.handler";
 import { ITestResultsConverter, TestResultsConverter } from "./testresults.converter";
 import { ITestResultsService } from "./testresults.type";
@@ -18,9 +19,16 @@ export class TestResultsService extends BaseService implements ITestResultsServi
   }
 
   public async getExternalIdsForRun(): Promise<string[]> {
+    const model = this._converter.getTestResultsFilterApiModel();
+    if (!model) {
+      logger.warn("[testresults] skip search: testRunId is empty or not a GUID", {
+        testRunId: this.config.testRunId,
+      });
+      return [];
+    }
+
     var skip = 0;
     var externalIds: string[] = [];
-    const model = this._converter.getTestResultsFilterApiModel();
 
     while (true) {
       const testResults = await this.getTestResults(skip, model);
@@ -42,6 +50,14 @@ export class TestResultsService extends BaseService implements ITestResultsServi
 
   public async findTestResultIdByExternalId(externalId: string): Promise<string | undefined> {
     const model = this._converter.getTestResultsFilterForRun();
+    if (!model) {
+      logger.warn("[testresults] skip search by externalId: testRunId is empty or not a GUID", {
+        externalId,
+        testRunId: this.config.testRunId,
+      });
+      return undefined;
+    }
+
     let skip = 0;
 
     while (true) {

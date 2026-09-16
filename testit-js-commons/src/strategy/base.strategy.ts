@@ -155,6 +155,7 @@ export class BaseStrategy implements IStrategy {
   }
 
   async updateSetupTeardown(autotests: AutotestResult[]): Promise<void> {
+    await this.testRunId;
     await this.client.testRuns.updateSetupTeardown(autotests);
   }
 
