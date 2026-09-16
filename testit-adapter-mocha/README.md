@@ -140,7 +140,8 @@ Methods and properties can be used to specify information about autotest.
 ### Properties
 
 Description of metadata properties:
-- `this.workItemsIds` - a method that links autotests with manual tests. Receives the array of manual tests' IDs
+- `this.workItemId` - a method that links an autotest with a manual test. Receives a single globalId
+- `this.workItemsIds` - deprecated, use `this.workItemId` instead
 - `this.displayName` - internal autotest name (used in Test IT)
 - `this.externalId` - unique internal autotest ID (used in Test IT)
 - `this.title` - autotest name specified in the autotest card. If not specified, the name from the displayName method is used

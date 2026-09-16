@@ -1,4 +1,4 @@
-import { Link, Utils } from 'testit-js-commons';
+import { Link, Utils, logger } from 'testit-js-commons';
 
 export default class Metadata {
     externalId: string | undefined;
@@ -17,7 +17,7 @@ export default class Metadata {
     constructor(meta?: any, path?: string, name?: string) {
         this.otherMeta = new Map();
         if (meta) {
-        const { externalId, displayName, title, description, links, labels, layer, tags, workItemIds, namespace, classname, ...otherMeta } = meta;
+        const { externalId, displayName, title, description, links, labels, layer, tags, workItemId, workItemIds, namespace, classname, ...otherMeta } = meta;
 
         if (this.isString(externalId)) {
             this.externalId = externalId;
@@ -53,9 +53,14 @@ export default class Metadata {
         } else if (this.isString(tags)) {
             this.tags = [tags];
         }
+        if (this.isString(workItemId)) {
+            this.workItemIds = [workItemId];
+        }
         if (Array.isArray(workItemIds)) {
+            logger.warn("workItemIds is deprecated. Use workItemId with a single globalId instead.");
             this.workItemIds = workItemIds;
         } else if (this.isString(workItemIds)) {
+            logger.warn("workItemIds is deprecated. Use workItemId with a single globalId instead.");
             this.workItemIds = [workItemIds];
         }
         if (this.isString(namespace)) {

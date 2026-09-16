@@ -118,7 +118,8 @@ Cucumber tags can be used to specify information about autotest.
 - `@Labels` - labels listed in the autotest card
 - `@Layer` - test pyramid layer in the autotest card (source **Run**), e.g. `@Layer=API` or `@Layer=my-custom-layer`
 - `@Tags` - tags listed in the autotest card
-- `@WorkItemIds` - a method that links autotests with manual tests. Receives the array of manual tests' IDs
+- `@WorkItemId` - a method that links an autotest with a manual test. Receives a single globalId
+- `@WorkItemIds` - deprecated, use `@WorkItemId` instead
 - `@NameSpace` - directory in the TMS system
 - `@ClassName` - subdirectory in the TMS system
 

@@ -1,4 +1,4 @@
-import { Link, Outcome } from "testit-js-commons";
+import { Link, Outcome, logger } from "testit-js-commons";
 import { Tag } from "@cucumber/messages";
 import { ParsedTags, tags, TagType } from "./types";
 
@@ -17,6 +17,9 @@ export function getTagType(tag: string): TagType {
     return TagType.Title;
   }
   if (new RegExp(`^@${tags.workItemIds}=.+$`).test(tag)) {
+    return TagType.WorkItemIds;
+  }
+  if (new RegExp(`^@${tags.workItemId}=.+$`).test(tag)) {
     return TagType.WorkItemId;
   }
   if (new RegExp(`^@${tags.name}=.+$`).test(tag)) {
@@ -59,9 +62,13 @@ function getTitle(tag: string): string {
   return parseSpaceInTag(tag.replace(new RegExp(`^@${tags.title}=`), ""));
 }
 
-function getWorkItemId(tag: string): string[] {
+function getWorkItemIds(tag: string): string[] {
   return parseSpaceInTag(tag.replace(new RegExp(`^@${tags.workItemIds}=`), ""))
     .split(",");
+}
+
+function getWorkItemId(tag: string): string {
+  return parseSpaceInTag(tag.replace(new RegExp(`^@${tags.workItemId}=`), ""));
 }
 
 function getName(tag: string): string {
@@ -118,8 +125,13 @@ export function parseTags(tags: readonly Pick<Tag, "name">[]): ParsedTags {
         parsedTags.title = getTitle(tag.name);
         continue;
       }
+      case TagType.WorkItemIds: {
+        logger.warn("WorkItemIds is deprecated. Use WorkItemId with a single globalId instead.");
+        parsedTags.workItemIds?.push(...getWorkItemIds(tag.name));
+        continue;
+      }
       case TagType.WorkItemId: {
-        parsedTags.workItemIds?.push(...getWorkItemId(tag.name));
+        parsedTags.workItemId = getWorkItemId(tag.name);
         continue;
       }
       case TagType.Name: {
@@ -155,6 +167,9 @@ export function parseTags(tags: readonly Pick<Tag, "name">[]): ParsedTags {
       default:
         throw new Error("Unknown tag type");
     }
+  }
+  if (parsedTags.workItemId) {
+    parsedTags.workItemIds = [parsedTags.workItemId];
   }
   return parsedTags;
 }

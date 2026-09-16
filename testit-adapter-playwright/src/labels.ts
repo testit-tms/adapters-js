@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import test from "@playwright/test";
-import { Link, Label, Attachment, Utils } from "testit-js-commons";
+import { Link, Label, Attachment, Utils, logger } from "testit-js-commons";
 import { patchTestMetadataForRun } from "./metadata-store";
 import { processAttachmentNameExtensions } from "./utils";
 
@@ -153,7 +153,17 @@ export class testit {
     }
   }
 
+  static async workItemId(globalId: string) {
+    await this.addMetadataAttachment({
+      workItemIds: [globalId],
+    });
+  }
+
+  /**
+   * @deprecated Use workItemId with a single globalId instead.
+   */
   static async workItemIds(value: string[]) {
+    logger.warn("workItemIds is deprecated. Use workItemId with a single globalId instead.");
     await this.addMetadataAttachment({
       workItemIds: value,
     });

@@ -433,6 +433,7 @@ export class TmsCypress {
       layer?: string;
       links?: Array<Link>;
       workItemIds?: string[];
+      workItemId?: string;
       tags?: string[];
       parameters?: Array<Parameter>;
       description?: string;
@@ -455,7 +456,11 @@ export class TmsCypress {
       current.tags.push(...data.tags);
     }
     if (data.workItemIds?.length) {
+      console.warn("addWorkItemIds is deprecated. Use addWorkItemId with a single globalId instead.");
       current.workItemIds.push(...data.workItemIds);
+    }
+    if (data.workItemId) {
+      current.workItemIds = [data.workItemId];
     }
     if (data.links?.length) {
       current.links.push(...data.links);

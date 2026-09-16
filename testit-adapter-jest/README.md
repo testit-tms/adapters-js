@@ -123,7 +123,8 @@ $ npx jest -t "$(cat tmp/filter.txt)"
 Methods can be used to specify information about autotest.
 
 Description of metadata methods:
-- `testit.workItemIds` - a method that links autotests with manual tests. Receives the array of manual tests' IDs
+- `testit.workItemId` - a method that links an autotest with a manual test. Receives a single globalId
+- `testit.workItemIds` - deprecated, use `testit.workItemId` instead
 - `testit.displayName` - internal autotest name (used in Test IT)
 - `testit.externalId` - unique internal autotest ID (used in Test IT)
 - `testit.title` - autotest name specified in the autotest card. If not specified, the name from the displayName method is used

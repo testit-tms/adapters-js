@@ -137,7 +137,8 @@ first-job:
 Methods can be used to specify information about autotest.
 
 Description of methods:
-- `tms.addWorkItemIds` - a dynamic method that links autotests with manual tests. Receives the array of manual tests' IDs
+- `tms.addWorkItemId` - a dynamic method that links an autotest with a manual test. Receives a single globalId
+- `tms.addWorkItemIds` - deprecated, use `tms.addWorkItemId` instead
 - `tms.addDisplayName` - a dynamic method for adding internal autotest name (used in Test IT)
 - `tms.addTitle` - a dynamic method for adding autotest name specified in the autotest card. If not specified, the name from the displayName method is used
 - `tms.addDescription` - a dynamic method for adding autotest description specified in the autotest card
@@ -163,7 +164,7 @@ describe('example to-do app', () => {
   it('displays two todo items by default', () => {
     const tms = getTestRuntime();
 
-    tms.addWorkItemIds('123', '321');
+    tms.addWorkItemId('123');
     tms.addDisplayName('display name');
     tms.addTitle('test title');
     tms.addDescription('Test description');

@@ -163,6 +163,7 @@ export class TmsReporter extends Reporter {
     ctx.layer = undefined;
     ctx.tags = [];
     ctx.classname = undefined;
+    ctx.workItemId = undefined;
     ctx.workItemsIds = [];
     ctx.parameters = {};
     ctx.properties = {};
@@ -203,7 +204,7 @@ export class TmsReporter extends Reporter {
       steps: this.currentTest.stepResults,
       setup,
       teardown,
-      workItemIds: test.ctx?.workItemsIds,
+      workItemIds: this.resolveWorkItemIds(test.ctx),
       externalKey: test.title,
     };
 
@@ -319,6 +320,16 @@ export class TmsReporter extends Reporter {
 
   private _getClassName(path?: string): string | undefined {
     return path && Utils.getFileName(path);
+  }
+
+  private resolveWorkItemIds(ctx?: Context): string[] | undefined {
+    if (ctx?.workItemsIds?.length) {
+      logger.warn("workItemsIds is deprecated. Use workItemId with a single globalId instead.");
+    }
+    if (ctx?.workItemId) {
+      return [ctx.workItemId];
+    }
+    return ctx?.workItemsIds;
   }
 
   private _getOutcome(state: string | undefined): Outcome {

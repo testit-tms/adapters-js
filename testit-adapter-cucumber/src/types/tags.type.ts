@@ -5,6 +5,7 @@ export type ParsedTags = {
   links: Link[];
   title?: string;
   workItemIds?: string[];
+  workItemId?: string;
   name?: string;
   description?: string;
   labels: string[];
@@ -20,6 +21,7 @@ export enum TagType {
   Link,
   Title,
   WorkItemId,
+  WorkItemIds,
   Name,
   Description,
   Label,
@@ -36,6 +38,7 @@ export const tags: Record<keyof ParsedTags, string> = {
   title: "Title",
   name: "DisplayName",
   workItemIds: "WorkItemIds",
+  workItemId: "WorkItemId",
   description: "Description",
   labels: "Labels",
   layer: "Layer",

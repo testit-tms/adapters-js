@@ -20,6 +20,10 @@ export interface TestRuntime {
   addLayer(layer: string): PromiseLike<void>;
   addTags(...tags: string[]): PromiseLike<void>;
   addLinks(...links: Link[]): PromiseLike<void>;
+  addWorkItemId(globalId: string): PromiseLike<void>;
+  /**
+   * @deprecated Use addWorkItemId with a single globalId instead.
+   */
   addWorkItemIds(...workItemIds: string[]): PromiseLike<void>;
   addParameter(name: string, value: string): PromiseLike<void>;
   addDescription(markdown: string): PromiseLike<void>;
@@ -40,6 +44,7 @@ export const noopRuntime: TestRuntime = {
   addLayer: () => noop,
   addTags: () => noop,
   addLinks: () => noop,
+  addWorkItemId: () => noop,
   addWorkItemIds: () => noop,
   addParameter: () => noop,
   addDescription: () => noop,
