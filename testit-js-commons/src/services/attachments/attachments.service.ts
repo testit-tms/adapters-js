@@ -4,6 +4,7 @@ import { BaseService, Utils, AdapterConfig, Attachment, withHttpRetry } from "..
 import { IAttachmentsService } from "./attachments.type";
 import { Buffer } from "buffer";
 import * as fs from "fs";
+import { join } from "path";
 import logger from "../../logger";
 
 const UPLOAD_RETRY_OPTIONS = { maxAttempts: 5, delayMs: 500, backoff: true } as const;
@@ -23,13 +24,21 @@ export class AttachmentsService extends BaseService implements IAttachmentsServi
     this._client.apiClient.timeout = Math.max(typeof t === "number" ? t : 60000, UPLOAD_CLIENT_TIMEOUT_MS);
   }
 
+  private safeAttachmentFileName(filename?: string): string {
+    if (!filename) {
+      return Utils.generateFileName();
+    }
+    const lastSegment = filename.replace(/\\/g, "/").split("/").filter(Boolean).pop();
+    return lastSegment || Utils.generateFileName();
+  }
+
   public async uploadTextAttachment(content: string | Buffer, filename?: string): Promise<Attachment[]> {
     const bufferContent = typeof content === "string" ? Buffer.from(content, "utf-8") : content;
-    const fileName = filename ?? Utils.generateFileName();
+    const fileName = this.safeAttachmentFileName(filename);
 
     try {
       const tempDir = Utils.createTempDir();
-      const tempFilePath = `${tempDir}/${fileName}`;
+      const tempFilePath = join(tempDir, fileName);
 
       try {
         fs.writeFileSync(tempFilePath, bufferContent);
