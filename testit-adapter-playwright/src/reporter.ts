@@ -172,13 +172,18 @@ class TmsReporter implements Reporter {
   }
 
   private getDictionariesByTest(test: TestCase): string[] {
-    const location = test.parent.title;
-
-    if (location == undefined) {
+    const file = test.location?.file;
+    if (!file) {
       return [];
     }
 
-    return location.split(path.sep);
+    const rootDir = this.config?.rootDir;
+    const relative = rootDir ? path.relative(rootDir, file) : file;
+    if (!relative || relative.startsWith("..")) {
+      return path.basename(file) ? [path.basename(file)] : [];
+    }
+
+    return relative.split(/[/\\]/).filter(Boolean);
   }
 
   private async getAutotestData(
