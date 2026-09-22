@@ -16,7 +16,8 @@
   },
   "dependencies": {
     "@babel/cli": "^7.18.6",
-    "superagent": "^10.2.2"
+    "superagent": "^10.2.2",
+    "testit-js-commons": "file:../.."
   },
   "devDependencies": {
     "@babel/core": "^7.18.6",

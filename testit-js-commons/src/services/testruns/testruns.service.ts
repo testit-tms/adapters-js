@@ -66,9 +66,23 @@ export class TestRunsService extends BaseService implements ITestRunsService {
   public async getTestRun(testRunId: TestRunId): Promise<TestRunGet> {
     return await withHttpRetry(
       async () => {
-        const response = await this._client.adaptersTestRunsIdGet(testRunId);
-        // @ts-ignore
-        const data = response?.body || response;
+        // Adapters GET /adapters/testRuns/{id} returns empty links/attachments (TMS 5.8).
+        // Public API keeps them; keep PUT on adapters.
+        const apiClient = AdaptersApi.ApiClient.instance;
+        const { data } = await apiClient.callApi(
+          "/api/v2/testRuns/{id}",
+          "GET",
+          { id: testRunId },
+          {},
+          {},
+          {},
+          null,
+          ["PrivateToken"],
+          [],
+          ["application/json"],
+          Object,
+          null
+        );
         return this._converter.toLocalTestRun(data);
       },
       { label: `getTestRun:${testRunId}` }
