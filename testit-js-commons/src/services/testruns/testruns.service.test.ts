@@ -58,12 +58,16 @@ describe("TestRunsService.getTestRun", () => {
     callApi.mockReset();
   });
 
-  it("reads metadata via public API v2 (links/attachments)", async () => {
+  it("reads metadata via public API v2 (links/attachments/description/launchSource)", async () => {
     callApi.mockResolvedValue({
       data: {
         id: "run-1",
         name: "run",
-        stateName: "NotStarted",
+        description: "213123123",
+        launchSource: "Test IT",
+        stateName: "Completed",
+        status: { code: "PASSED", type: "Succeeded" },
+        testResults: [{ id: "ignored" }],
         attachments: [{ id: "att-1" }],
         links: [{ url: "https://example.com/1", title: "one", hasInfo: true }],
         tags: ["a"],
@@ -87,11 +91,15 @@ describe("TestRunsService.getTestRun", () => {
       Object,
       null
     );
+    expect(run.description).toBe("213123123");
+    expect(run.launchSource).toBe("Test IT");
+    expect(run.stateName).toBe("Completed");
     expect(run.links).toEqual([
       expect.objectContaining({ url: "https://example.com/1", title: "one" }),
     ]);
     expect(run.attachments).toEqual([{ id: "att-1" }]);
     expect(run.tags).toEqual(["a"]);
+    expect(run).not.toHaveProperty("testResults");
   });
 });
 
