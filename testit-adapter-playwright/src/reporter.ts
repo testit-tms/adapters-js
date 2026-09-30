@@ -10,7 +10,7 @@ import { ConfigComposer, StrategyFactory, IStrategy, Utils, Additions, Attachmen
 import { Converter } from "./converter";
 import { MetadataMessage } from "./labels";
 import { applyMetadataTo, releaseTestMetadata, resolveTestMetadata } from "./metadata-store";
-import { getTestStatus, processAttachmentExtensions, stepAttachRegexp } from "./utils";
+import { getTestStatus, processAttachmentExtensions, resolveAttachmentParentStep, stepAttachRegexp } from "./utils";
 import { Result, ResultAttachment } from "./models/result";
 import path from "path";
 import { logger } from "testit-js-commons";
@@ -231,8 +231,9 @@ class TmsReporter implements Reporter {
             attachment.body,
             attachment.name.replace(stepAttachRegexp, "")
           );
-          if (step?.parent) {
-            this.attachmentsMap.set(ids[0], step.parent);
+          const parentStep = resolveAttachmentParentStep(step);
+          if (parentStep) {
+            this.attachmentsMap.set(ids[0], parentStep);
             continue;
           }
           autotestData.addAttachments?.push(...ids);
