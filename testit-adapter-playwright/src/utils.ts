@@ -44,6 +44,17 @@ export function isStep(step: TestStep): boolean {
     return step.category === "test.step" && !step.title.match(stepAttachRegexp);
 }
 
+export function resolveAttachmentParentStep(step: TestStep | undefined): TestStep | undefined {
+    let current = step?.parent;
+    while (current) {
+        if (isStep(current)) {
+            return current;
+        }
+        current = current.parent;
+    }
+    return undefined;
+}
+
 export function stripAscii (str: string): string {
     return str.replace(asciiRegex, "");
 };
