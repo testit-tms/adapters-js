@@ -1,4 +1,4 @@
-import { TestCase, TestError, TestStatus, TestStep } from "@playwright/test/reporter";
+import { TestError, TestStep } from "@playwright/test/reporter";
 import { Step } from "testit-js-commons";
 import { ResultAttachment } from "./models/result";
 import { ContentType, Extensions } from "./labels";
@@ -23,21 +23,6 @@ export function getStatusDetails (error: TestError): StatusDetails {
 
 export function isAllStepsWithPassedOutcome(steps: Step[]): boolean {
     return !steps.find((step: Step) => step.info !== undefined);
-}
-
-const statusMap: { [key: string]: TestStatus } = {
-    ["expected"]: "passed",
-    ["unexpected"]: "failed",
-    ["flaky"]: "failed",
-    ["skipped"]: "skipped",
-};
-
-export function getTestStatus(test: TestCase): TestStatus {
-    if (!test.ok()) {
-        return "failed"
-    }
-
-    return statusMap[test.outcome()];
 }
 
 export function isStep(step: TestStep): boolean {

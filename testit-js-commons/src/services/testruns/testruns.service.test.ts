@@ -52,17 +52,16 @@ describe("TestRunsService.loadAutotests", () => {
 
     expect(internal._client.adaptersTestRunsIdTestResultsPost).toHaveBeenCalledTimes(1);
     expect(internal._testResults.updateTestResult).not.toHaveBeenCalled();
-    expect(internal.finalizedExternalIds.has("ext-1")).toBe(true);
   });
 
-  it("skips duplicate POST for already finalized externalId", async () => {
+  it("allows repeated POST for the same externalId (retry attempts)", async () => {
     const service = new TestRunsService(makeConfig());
     const internal = service as any;
-    internal.finalizedExternalIds.add("ext-1");
 
-    await service.loadAutotests("run-1", [makeResult()]);
+    await service.loadAutotests("run-1", [makeResult({ outcome: "Failed" })]);
+    await service.loadAutotests("run-1", [makeResult({ outcome: "Passed" })]);
 
-    expect(internal._client.adaptersTestRunsIdTestResultsPost).not.toHaveBeenCalled();
+    expect(internal._client.adaptersTestRunsIdTestResultsPost).toHaveBeenCalledTimes(2);
   });
 });
 

@@ -12,6 +12,10 @@ export class BaseStrategy implements IStrategy {
   client: IClient;
   testRunId: Promise<TestRunId>;
   private syncStorageRunner?: SyncStorageRunner;
+  /** externalId whose first attempt was posted as InProgress; finals deferred until teardown. */
+  private deferredExternalId?: string;
+  /** All attempts (including retries) for deferredExternalId, in order. */
+  private readonly deferredResults: AutotestResult[] = [];
 
   protected constructor(protected config: AdapterConfig) {
     this.client = new Client(config);
@@ -28,6 +32,7 @@ export class BaseStrategy implements IStrategy {
 
   async teardown(): Promise<void> {
     const testRunId = await this.testRunId;
+    await this.flushDeferredResults(testRunId);
     await this.syncStorageRunner?.setWorkerStatus("completed");
     await this.syncStorageRunner?.completeProcessing();
     // With active sync-storage, run completion is finalized by sync-storage itself.
@@ -37,6 +42,25 @@ export class BaseStrategy implements IStrategy {
     //   return;
     // }
     //await this.client.testRuns.completeTestRun(testRunId);
+  }
+
+  private async flushDeferredResults(testRunId: string): Promise<void> {
+    if (this.deferredResults.length === 0) {
+      return;
+    }
+    const results = this.deferredResults.splice(0, this.deferredResults.length);
+    logTmsLoadTestRun("flush deferred finals", {
+      testRunId,
+      autoTestExternalId: this.deferredExternalId,
+      count: results.length,
+    });
+    await this.client.testRuns.loadAutotests(testRunId, results).catch((err: unknown) => {
+      logger.error("[strategy] FAILED to flush deferred results", {
+        autoTestExternalId: this.deferredExternalId,
+        error: (err as { body?: unknown })?.body ?? err,
+      });
+    });
+    this.deferredExternalId = undefined;
   }
 
   async loadAutotest(autotest: AutotestPost, status: string): Promise<void> {
@@ -89,6 +113,41 @@ export class BaseStrategy implements IStrategy {
     });
   }
 
+  /**
+   * Split batch: attempts for the deferred InProgress autotest go to the queue;
+   * everything else is posted as final immediately.
+   */
+  private partitionByDeferred(autotests: AutotestResult[]): {
+    deferred: AutotestResult[];
+    immediate: AutotestResult[];
+  } {
+    if (!this.deferredExternalId) {
+      return { deferred: [], immediate: autotests };
+    }
+    const deferred: AutotestResult[] = [];
+    const immediate: AutotestResult[] = [];
+    for (const result of autotests) {
+      if (result.autoTestExternalId === this.deferredExternalId) {
+        deferred.push(result);
+      } else {
+        immediate.push(result);
+      }
+    }
+    return { deferred, immediate };
+  }
+
+  private enqueueDeferred(results: AutotestResult[]): void {
+    if (results.length === 0) {
+      return;
+    }
+    this.deferredResults.push(...results);
+    logTmsLoadTestRun("enqueue deferred attempts", {
+      autoTestExternalId: this.deferredExternalId,
+      added: results.length,
+      queued: this.deferredResults.length,
+    });
+  }
+
   async loadTestRun(autotests: AutotestResult[]): Promise<void> {
     const testRunId = await this.testRunId;
     const firstResult = autotests[0];
@@ -96,12 +155,23 @@ export class BaseStrategy implements IStrategy {
       testRunId,
       batchSize: autotests.length,
       firstExternalId: firstResult?.autoTestExternalId,
+      deferredExternalId: this.deferredExternalId,
       syncRunnerActive: Boolean(this.syncStorageRunner?.isActive?.()),
       isMaster: Boolean(this.syncStorageRunner?.isMasterWorker?.()),
     });
 
+    // Already holding an InProgress slot: buffer retries of that autotest, post the rest.
+    if (this.deferredExternalId) {
+      const { deferred, immediate } = this.partitionByDeferred(autotests);
+      this.enqueueDeferred(deferred);
+      if (immediate.length > 0) {
+        await this.client.testRuns.loadAutotests(testRunId, immediate);
+      }
+      return;
+    }
+
     // InProgress is only for the first result (the one used for sync storage cut).
-    // Its final payload is deferred until teardown, so TMS does not immediately flip to final status.
+    // Its final payload (and retries of the same externalId) are deferred until teardown.
     if (firstResult) {
       const isMasterWorker = Boolean(this.syncStorageRunner?.isMasterWorker?.());
       const published = await this.syncStorageRunner?.sendInProgressTestResult(
@@ -142,10 +212,14 @@ export class BaseStrategy implements IStrategy {
         throw err;
       }
 
-      // For published sync-storage InProgress, finalization of the first result is handled by sync-storage.
+      this.deferredExternalId = firstResult.autoTestExternalId;
+      this.enqueueDeferred([firstResult]);
+
       const rest = autotests.slice(1);
-      if (rest.length > 0) {
-        await this.client.testRuns.loadAutotests(testRunId, rest);
+      const { deferred, immediate } = this.partitionByDeferred(rest);
+      this.enqueueDeferred(deferred);
+      if (immediate.length > 0) {
+        await this.client.testRuns.loadAutotests(testRunId, immediate);
       }
       return;
     }

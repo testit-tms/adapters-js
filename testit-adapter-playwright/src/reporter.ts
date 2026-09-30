@@ -6,14 +6,23 @@ import {
   TestResult,
   TestStep,
 } from "@playwright/test/reporter";
-import { ConfigComposer, StrategyFactory, IStrategy, Utils, Additions, Attachment, AdapterConfig, BaseStrategy } from "testit-js-commons";
+import {
+  ConfigComposer,
+  StrategyFactory,
+  IStrategy,
+  Utils,
+  Additions,
+  Attachment,
+  AdapterConfig,
+  AutotestResult,
+  logger,
+} from "testit-js-commons";
 import { Converter } from "./converter";
 import { MetadataMessage } from "./labels";
 import { applyMetadataTo, releaseTestMetadata, resolveTestMetadata } from "./metadata-store";
-import { getTestStatus, processAttachmentExtensions, stepAttachRegexp } from "./utils";
+import { processAttachmentExtensions, stepAttachRegexp } from "./utils";
 import { Result, ResultAttachment } from "./models/result";
 import path from "path";
-import { logger } from "testit-js-commons";
 
 export type ReporterOptions = {
   detail?: boolean;
@@ -38,6 +47,8 @@ class TmsReporter implements Reporter {
   private setupPromise: Promise<void> = Promise.resolve();
   private readonly adapterConfig: ReporterAdapterConfig;
   private bufferedResults: Array<{ test: TestCase; result: Result }> = [];
+  /** Autotests already registered in this reporter run (avoid AlreadyExists on retry PUT). */
+  private readonly registeredExternalIds = new Set<string>();
 
   constructor(options: ReporterOptions) {
     this.options = { suiteTitle: true, detail: true, ...options };
@@ -65,10 +76,15 @@ class TmsReporter implements Reporter {
       duration: result.duration,
       errors: result.errors,
       error: result.error,
+      retry: result.retry,
       steps: result.steps,
     };
     if (this.adapterConfig.importRealtime) {
-      logger.debug("[playwright] onTestEnd realtime", { title: test.title, status: result.status });
+      logger.debug("[playwright] onTestEnd realtime", {
+        title: test.title,
+        status: result.status,
+        retry: result.retry,
+      });
       this.loadTestPromises.push(this.runLoadTest(test, currentResult));
       return;
     }
@@ -120,7 +136,7 @@ class TmsReporter implements Reporter {
       });
       if (!this.adapterConfig.importRealtime) {
         logger.debug("[playwright] onEnd batch flush", { count: this.bufferedResults.length });
-        await Promise.allSettled(this.bufferedResults.map(({ test, result }) => this.runLoadTest(test, result)));
+        await this.flushBufferedByRetryStreams();
       } else {
         logger.debug("[playwright] onEnd await realtime", { pending: this.loadTestPromises.length });
       }
@@ -132,6 +148,62 @@ class TmsReporter implements Reporter {
       await this.strategy.teardown().catch((err: any) => {
         logger.error("TMS Playwright teardown failed:", err?.body ?? err?.error ?? err);
       });
+    }
+  }
+
+  /**
+   * Group buffered attempts by Playwright retry index and POST one testResults batch per stream.
+   * Same externalId never appears twice in one stream; retries of different tests share a stream.
+   */
+  private async flushBufferedByRetryStreams(): Promise<void> {
+    await this.setupPromise.catch(() => undefined);
+
+    const byRetry = new Map<number, Array<{ test: TestCase; result: Result }>>();
+    for (const item of this.bufferedResults) {
+      const retry = item.result.retry ?? 0;
+      const group = byRetry.get(retry) ?? [];
+      group.push(item);
+      byRetry.set(retry, group);
+    }
+
+    const retries = [...byRetry.keys()].sort((a, b) => a - b);
+    const testsToRelease = new Map<string, TestCase>();
+
+    for (const retry of retries) {
+      const group = byRetry.get(retry) ?? [];
+      const autotestResults: AutotestResult[] = [];
+
+      for (const { test, result } of group) {
+        try {
+          const prepared = await this.prepareTestResult(test, result);
+          if (prepared) {
+            autotestResults.push(prepared);
+          }
+          testsToRelease.set(test.id, test);
+        } catch (err: any) {
+          logger.log(
+            "Error preparing test result. \n",
+            test.title,
+            err?.body ?? err?.error ?? err,
+          );
+        }
+      }
+
+      if (autotestResults.length === 0) {
+        continue;
+      }
+
+      logger.debug("[playwright] flush retry stream", {
+        retry,
+        count: autotestResults.length,
+      });
+      await this.strategy.loadTestRun(autotestResults).catch((err: any) => {
+        logger.log("Error loadTestRun for retry stream. \n", retry, err?.body ?? err?.error ?? err);
+      });
+    }
+
+    for (const test of testsToRelease.values()) {
+      releaseTestMetadata(this.metadataContext(test));
     }
   }
 
@@ -147,6 +219,7 @@ class TmsReporter implements Reporter {
           attachments: [],
           duration: 0,
           errors: [],
+          retry: 0,
           steps: [],
         }).catch((err: any) => {
           logger.error(
@@ -299,45 +372,68 @@ class TmsReporter implements Reporter {
     applyMetadataTo(autotestData, merged);
   }
 
-  private async loadTest(test: TestCase, result: Result): Promise<void> {
-    logger.debug("[playwright] loadTest", { title: test.title, status: result.status });
-    try {
-      const autotestData = await this.getAutotestData(test, result);
+  /**
+   * Build AutotestResult for one attempt. Registers autotest in TMS only once per externalId.
+   */
+  private async prepareTestResult(test: TestCase, result: Result): Promise<AutotestResult | undefined> {
+    logger.debug("[playwright] prepareTestResult", {
+      title: test.title,
+      status: result.status,
+      retry: result.retry,
+    });
 
-      const dictionaries = this.getDictionariesByTest(test);
-      const pathNamespace = dictionaries.slice(0, -1).join(path.sep);
-      const pathClassname = dictionaries[dictionaries.length - 1];
-      // Prefer testit.namespace / testit.classname from metadata; file path only when missing.
-      if (pathNamespace.length > 0 && autotestData.namespace == null) {
-        autotestData.namespace = pathNamespace;
-      }
-      if (pathClassname?.length && autotestData.classname == null) {
-        autotestData.classname = pathClassname;
-      }
+    const autotestData = await this.getAutotestData(test, result);
 
-      const autotest = Converter.convertTestCaseToAutotestPost(autotestData);
-      const rawSteps =
-        result.steps?.length
-          ? result.steps
-          : [...this.stepsMap.keys()].filter((step: TestStep) => this.stepsMap.get(step) === test);
-      const stepResults = Converter.convertTestStepsToSteps(rawSteps, this.attachmentsMap);
+    const dictionaries = this.getDictionariesByTest(test);
+    const pathNamespace = dictionaries.slice(0, -1).join(path.sep);
+    const pathClassname = dictionaries[dictionaries.length - 1];
+    // Prefer testit.namespace / testit.classname from metadata; file path only when missing.
+    if (pathNamespace.length > 0 && autotestData.namespace == null) {
+      autotestData.namespace = pathNamespace;
+    }
+    if (pathClassname?.length && autotestData.classname == null) {
+      autotestData.classname = pathClassname;
+    }
 
-      result.status = getTestStatus(test);
+    const externalId = autotestData.externalId!;
+    const autotest = Converter.convertTestCaseToAutotestPost(autotestData);
+    const rawSteps =
+      result.steps?.length
+        ? result.steps
+        : [...this.stepsMap.keys()].filter((step: TestStep) => this.stepsMap.get(step) === test);
+    const stepResults = Converter.convertTestStepsToSteps(rawSteps, this.attachmentsMap);
 
-      autotest.steps = Converter.convertTestStepsToShortSteps(rawSteps);
+    autotest.steps = Converter.convertTestStepsToShortSteps(rawSteps);
 
+    if (!this.registeredExternalIds.has(externalId)) {
       await this.strategy.loadAutotest(
         autotest,
-        Converter.convertStatus(result.status, test.expectedStatus));
+        Converter.convertStatus(result.status, test.expectedStatus),
+      );
+      this.registeredExternalIds.add(externalId);
+    }
 
-      const autotestResult = Converter.convertAutotestPostToAutotestResult(
-        autotestData,
-        test,
-        result);
+    const autotestResult = Converter.convertAutotestPostToAutotestResult(
+      autotestData,
+      test,
+      result,
+    );
 
-      autotestResult.stepResults = stepResults;
+    autotestResult.stepResults = stepResults;
+    return autotestResult;
+  }
 
-      await this.strategy.loadTestRun([autotestResult]);
+  private async loadTest(test: TestCase, result: Result): Promise<void> {
+    logger.debug("[playwright] loadTest", {
+      title: test.title,
+      status: result.status,
+      retry: result.retry,
+    });
+    try {
+      const autotestResult = await this.prepareTestResult(test, result);
+      if (autotestResult) {
+        await this.strategy.loadTestRun([autotestResult]);
+      }
     } finally {
       releaseTestMetadata(this.metadataContext(test));
     }
