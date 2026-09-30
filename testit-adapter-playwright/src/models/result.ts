@@ -7,6 +7,8 @@ export interface Result {
   duration: number;
   error?: TestError;
   errors: Array<TestError>;
+  /** Playwright retry attempt index (0 = first run). */
+  retry: number;
   /** Full Playwright step tree (fixtures, hooks, test.step); preferred over reporter cache. */
   steps?: TestStep[];
 }
