@@ -12,8 +12,6 @@ export class TestRunsService extends BaseService implements ITestRunsService {
   protected _client: any;
   protected _converter: ITestRunConverter;
   private readonly _testResults: TestResultsService;
-  /** Finalized via POST setAutoTestResults in this process (skip duplicate bulk send). */
-  private readonly finalizedExternalIds = new Set<string>();
   /** testResultId by autoTestExternalId within current run (InProgress POST + final POST). */
   private readonly testResultIdsByExternalId = new Map<string, string>();
 
@@ -166,14 +164,6 @@ export class TestRunsService extends BaseService implements ITestRunsService {
     for (const result of results) {
       const externalId = result.autoTestExternalId;
 
-      if (this.finalizedExternalIds.has(externalId)) {
-        logTmsLoadTestRun("Bulk import: skip sendTestResults (already finalized)", {
-          testRunId,
-          autoTestExternalId: externalId,
-        });
-        continue;
-      }
-
       const autotestResult = this._converter.toOriginAutotestResult(result);
       escapeHtmlInObject(autotestResult);
       logTmsLoadTestRun("POST setAutoTestResults (final)", {
@@ -185,7 +175,6 @@ export class TestRunsService extends BaseService implements ITestRunsService {
       });
       await this.sendAutotestResultWithRetry(testRunId, autotestResult)
         .then(() => {
-          this.finalizedExternalIds.add(externalId);
           logTmsLoadTestRun("Finalized test result via sendTestResults", {
             testRunId,
             autoTestExternalId: externalId,
