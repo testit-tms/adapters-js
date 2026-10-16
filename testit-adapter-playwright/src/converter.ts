@@ -11,7 +11,14 @@ import {
     Attachment
 } from "testit-js-commons";
 import { MetadataMessage } from "./labels";
-import { getStatusDetails, isAllStepsWithPassedOutcome, isStep } from "./utils";
+import {
+  getStatusDetails,
+  isAfterHook,
+  isAllStepsWithPassedOutcome,
+  isBeforeHook,
+  isFixtureStep,
+  isStep,
+} from "./utils";
 import { Result } from "./models/result";
 
 
@@ -24,6 +31,15 @@ export enum Status {
 export type StatusDetails = {
   message?: string;
   trace?: string;
+};
+
+export type PlaywrightStepsTree = {
+  setup: ShortStep[];
+  steps: ShortStep[];
+  teardown: ShortStep[];
+  setupResults: Step[];
+  stepResults: Step[];
+  teardownResults: Step[];
 };
 
 export class Converter {
@@ -68,6 +84,98 @@ export class Converter {
       }
 
       return autotestResult;
+    }
+
+    static convertPlaywrightStepsTree(
+      rawSteps: TestStep[],
+      attachmentsMap: Map<Attachment, TestStep>,
+    ): PlaywrightStepsTree {
+      const setupRaw: TestStep[] = [];
+      const bodyRaw: TestStep[] = [];
+      const teardownRaw: TestStep[] = [];
+
+      for (const step of rawSteps) {
+        if (isBeforeHook(step)) {
+          setupRaw.push(...(step.steps ?? []));
+        } else if (isAfterHook(step)) {
+          teardownRaw.push(...(step.steps ?? []));
+        } else if (isStep(step)) {
+          bodyRaw.push(step);
+        } else if (step.steps?.length) {
+          bodyRaw.push(...this.collectTestSteps(step.steps));
+        }
+      }
+
+      return {
+        setup: this.convertPhaseShortSteps(setupRaw),
+        steps: this.convertTestStepsToShortSteps(bodyRaw),
+        teardown: this.convertPhaseShortSteps(teardownRaw),
+        setupResults: this.convertPhaseSteps(setupRaw, attachmentsMap),
+        stepResults: this.convertTestStepsToSteps(bodyRaw, attachmentsMap),
+        teardownResults: this.convertPhaseSteps(teardownRaw, attachmentsMap),
+      };
+    }
+
+    private static collectTestSteps(steps: TestStep[]): TestStep[] {
+      const out: TestStep[] = [];
+      for (const step of steps) {
+        if (isStep(step)) {
+          out.push(step);
+        } else if (step.steps?.length) {
+          out.push(...this.collectTestSteps(step.steps));
+        }
+      }
+      return out;
+    }
+
+    private static convertPhaseSteps(
+      steps: TestStep[],
+      attachmentsMap: Map<Attachment, TestStep>,
+    ): Step[] {
+      const out: Step[] = [];
+      for (const step of steps) {
+        if (isFixtureStep(step)) {
+          const nested = this.convertTestStepsToSteps(step.steps ?? [], attachmentsMap);
+          if (nested.length === 0) {
+            continue;
+          }
+          out.push({
+            title: step.title,
+            outcome: step.error || !isAllStepsWithPassedOutcome(nested) ? Status.FAILED : Status.PASSED,
+            info: JSON.stringify(step.error),
+            steps: nested,
+            attachments: [...attachmentsMap.keys()].filter(
+              (attachmentId: Attachment) => attachmentsMap.get(attachmentId) === step,
+            ),
+          });
+        } else if (isStep(step)) {
+          out.push(this.convertTestStepToStep(step, attachmentsMap));
+        } else if (step.steps?.length) {
+          out.push(...this.convertPhaseSteps(step.steps, attachmentsMap));
+        }
+      }
+      return out;
+    }
+
+    private static convertPhaseShortSteps(steps: TestStep[]): ShortStep[] {
+      const out: ShortStep[] = [];
+      for (const step of steps) {
+        if (isFixtureStep(step)) {
+          const nested = this.convertTestStepsToShortSteps(step.steps ?? []);
+          if (nested.length === 0) {
+            continue;
+          }
+          out.push({
+            title: step.title,
+            steps: nested,
+          });
+        } else if (isStep(step)) {
+          out.push(this.convertTestStepToShortStep(step));
+        } else if (step.steps?.length) {
+          out.push(...this.convertPhaseShortSteps(step.steps));
+        }
+      }
+      return out;
     }
 
     static convertTestStepsToShortSteps(steps: TestStep[]): ShortStep[] {
