@@ -29,6 +29,22 @@ export function isStep(step: TestStep): boolean {
     return step.category === "test.step" && !step.title.match(stepAttachRegexp);
 }
 
+export function isFixtureStep(step: TestStep): boolean {
+    return step.category === "fixture";
+}
+
+export function isHookStep(step: TestStep): boolean {
+    return step.category === "hook";
+}
+
+export function isBeforeHook(step: TestStep): boolean {
+    return isHookStep(step) && /before/i.test(step.title);
+}
+
+export function isAfterHook(step: TestStep): boolean {
+    return isHookStep(step) && /after/i.test(step.title);
+}
+
 export function resolveAttachmentParentStep(step: TestStep | undefined): TestStep | undefined {
     let current = step?.parent;
     while (current) {
