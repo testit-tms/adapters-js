@@ -402,9 +402,11 @@ class TmsReporter implements Reporter {
       result.steps?.length
         ? result.steps
         : [...this.stepsMap.keys()].filter((step: TestStep) => this.stepsMap.get(step) === test);
-    const stepResults = Converter.convertTestStepsToSteps(rawSteps, this.attachmentsMap);
+    const tree = Converter.convertPlaywrightStepsTree(rawSteps, this.attachmentsMap);
 
-    autotest.steps = Converter.convertTestStepsToShortSteps(rawSteps);
+    autotest.setup = tree.setup;
+    autotest.steps = tree.steps;
+    autotest.teardown = tree.teardown;
 
     if (!this.registeredExternalIds.has(externalId)) {
       await this.strategy.loadAutotest(
@@ -420,7 +422,10 @@ class TmsReporter implements Reporter {
       result,
     );
 
-    autotestResult.stepResults = stepResults;
+    autotestResult.setupResults = tree.setupResults;
+    autotestResult.stepResults = tree.stepResults;
+    autotestResult.teardownResults = tree.teardownResults;
+    
     return autotestResult;
   }
 
