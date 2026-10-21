@@ -19,10 +19,12 @@ module.exports = async function (options) {
       helper.metadata = {};
     }
 
+    const state = test.state;
+    const autotest = TestsBuilder.build(test);
+
     uploadChain = uploadChain
       .then(async () => {
-        const autotest = TestsBuilder.build(test);
-        await strategy.loadAutotest(autotest, test.state);
+        await strategy.loadAutotest(autotest, state);
         const result = await new ResultBuilder(config).build(test, metadata);
         await strategy.loadTestRun([result]);
       })
@@ -40,7 +42,7 @@ module.exports = async function (options) {
     await strategy.teardown();
   }
 
-  event.dispatcher.on(event.test.after, (test) => {
+  event.dispatcher.on(event.test.finished, (test) => {
     enqueueTransfer(test);
   });
 

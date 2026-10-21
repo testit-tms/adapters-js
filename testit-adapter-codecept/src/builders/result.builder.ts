@@ -45,29 +45,39 @@ export class ResultBuilder {
       }
     }
 
+    // Snapshot mutable Codecept fields before any await — next tests may overwrite test.steps.
+    const autoTestExternalId = useDefaultHash(test) ?? useCompositeHash(test);
+    const startedOn = new Date(test.startedAt);
+    const duration = test.duration;
+    const completedOn = test.duration ? new Date(test.startedAt + test.duration) : undefined;
+    const outcome = test.state === "passed" ? "Passed" : "Failed";
+    const stepResults = this.buildManySteps(test.steps);
+    const screenshot = test.artifacts?.screenshot;
+
+    const attachments = await this.loadAttachments(metadata, screenshot);
+
     return {
-      autoTestExternalId: useDefaultHash(test) ?? useCompositeHash(test),
+      autoTestExternalId,
       links: metadata?.links,
-      startedOn: new Date(test.startedAt),
-      duration: test.duration,
-      attachments: await this.loadAttachments(test, metadata),
+      startedOn,
+      duration,
+      attachments,
       parameters,
-      traces: traces,
+      traces,
       teardownResults,
       setupResults,
-      completedOn: test.duration ? new Date(test.startedAt + test.duration) : undefined,
-      message: message,
-      outcome: test.state === "passed" ? "Passed" : "Failed",
-      stepResults: this.buildManySteps(test.steps),
+      completedOn,
+      message,
+      outcome,
+      stepResults,
     };
   }
 
   private async loadAttachments(
-    test: Codecept.Test<Origin.TestConfig>,
-    metadata: Origin.TestMetadata
+    metadata: Origin.TestMetadata,
+    screenshot?: string,
   ): Promise<Attachment[]> {
-    const screenshot = test.artifacts?.screenshot;
-    const clientUrls = metadata.attachments ?? [];
+    const clientUrls = [...(metadata.attachments ?? [])];
 
     if (screenshot) {
       clientUrls.push(screenshot);
