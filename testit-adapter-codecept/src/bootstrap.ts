@@ -19,7 +19,8 @@ module.exports = async function (options) {
     await strategy.teardown();
   }
 
-  event.dispatcher.on(event.test.finished, (test) => {
+  event.dispatcher.on(event.test.after, (test) => {
+    recorder.startUnlessRunning();
     recorder.add("transferTestAndRuns", async () => {
       try {
         const autotest = TestsBuilder.build(test);
