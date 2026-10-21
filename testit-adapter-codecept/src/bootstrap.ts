@@ -10,35 +10,38 @@ module.exports = async function (options) {
 
   await strategy.setup();
 
+  let uploadChain: Promise<void> = Promise.resolve();
   let tornDown = false;
+
+  function enqueueTransfer(test) {
+    const metadata = { ...(helper?.metadata ?? {}) };
+    if (helper) {
+      helper.metadata = {};
+    }
+
+    uploadChain = uploadChain
+      .then(async () => {
+        const autotest = TestsBuilder.build(test);
+        await strategy.loadAutotest(autotest, test.state);
+        const result = await new ResultBuilder(config).build(test, metadata);
+        await strategy.loadTestRun([result]);
+      })
+      .catch((err) => {
+        logger.error("Failed to transfer Codecept result to TMS", err);
+      });
+  }
+
   async function safeTeardown() {
     if (tornDown) {
       return;
     }
     tornDown = true;
+    await uploadChain;
     await strategy.teardown();
   }
 
   event.dispatcher.on(event.test.after, (test) => {
-    recorder.startUnlessRunning();
-    recorder.add("transferTestAndRuns", async () => {
-      try {
-        const autotest = TestsBuilder.build(test);
-
-        await strategy.loadAutotest(autotest, test.state);
-
-        const metadata = helper?.metadata ?? {};
-        const result = await new ResultBuilder(config).build(test, metadata);
-
-        await strategy.loadTestRun([result]);
-
-        if (helper) {
-          helper.metadata = {};
-        }
-      } catch (err) {
-        logger.error("Failed to transfer Codecept result to TMS", err);
-      }
-    });
+    enqueueTransfer(test);
   });
 
   event.dispatcher.on(event.workers.after, async () => {
