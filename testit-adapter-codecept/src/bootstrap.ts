@@ -1,7 +1,6 @@
 import { container, event, recorder } from "codeceptjs";
-import { ConfigComposer, StrategyFactory } from "testit-js-commons";
+import { ConfigComposer, StrategyFactory, logger } from "testit-js-commons";
 import { ResultBuilder, TestsBuilder } from "./builders";
-import { isPassed } from "./common/utils";
 
 module.exports = async function (options) {
   const config = new ConfigComposer().compose();
@@ -11,21 +10,44 @@ module.exports = async function (options) {
 
   await strategy.setup();
 
+  let tornDown = false;
+  async function safeTeardown() {
+    if (tornDown) {
+      return;
+    }
+    tornDown = true;
+    await strategy.teardown();
+  }
+
   event.dispatcher.on(event.test.finished, (test) => {
     recorder.add("transferTestAndRuns", async () => {
-      const autotest = TestsBuilder.build(test);
+      try {
+        const autotest = TestsBuilder.build(test);
 
-      await strategy.loadAutotest(autotest, test.state);
+        await strategy.loadAutotest(autotest, test.state);
 
-      const result = await new ResultBuilder(config).build(test, helper.metadata);
+        const metadata = helper?.metadata ?? {};
+        const result = await new ResultBuilder(config).build(test, metadata);
 
-      await strategy.loadTestRun([result]);
+        await strategy.loadTestRun([result]);
 
-      helper.metadata = {};
+        if (helper) {
+          helper.metadata = {};
+        }
+      } catch (err) {
+        logger.error("Failed to transfer Codecept result to TMS", err);
+      }
     });
   });
 
   event.dispatcher.on(event.workers.after, async () => {
-    await strategy.teardown();
+    await safeTeardown().catch((err) => logger.error("Codecept strategy teardown failed", err));
+  });
+
+  event.dispatcher.on(event.all.after, () => {
+    recorder.startUnlessRunning();
+    recorder.add("tmsTeardown", async () => {
+      await safeTeardown().catch((err) => logger.error("Codecept strategy teardown failed", err));
+    });
   });
 };
