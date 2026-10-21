@@ -44,6 +44,13 @@ module.exports = async function (options) {
     enqueueTransfer(test);
   }
 
+  function scheduleEnqueue(test) {
+    recorder.startUnlessRunning();
+    recorder.add("tmsTransfer", () => {
+      tryEnqueue(test);
+    });
+  }
+
   async function safeTeardown() {
     if (tornDown) {
       return;
@@ -55,11 +62,11 @@ module.exports = async function (options) {
 
   event.dispatcher.on(event.test.after, (test) => {
     // Prefer finished (full metadata lifecycle); fall back if finished never fires (empty Scenario).
-    queueMicrotask(() => tryEnqueue(test));
+    queueMicrotask(() => scheduleEnqueue(test));
   });
 
   event.dispatcher.on(event.test.finished, (test) => {
-    tryEnqueue(test);
+    scheduleEnqueue(test);
   });
 
   event.dispatcher.on(event.workers.after, async () => {
