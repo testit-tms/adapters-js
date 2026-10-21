@@ -12,6 +12,7 @@ module.exports = async function (options) {
 
   let uploadChain: Promise<void> = Promise.resolve();
   let tornDown = false;
+  const enqueued = new Set<object>();
 
   function enqueueTransfer(test) {
     const metadata = { ...(helper?.metadata ?? {}) };
@@ -21,16 +22,26 @@ module.exports = async function (options) {
 
     const state = test.state;
     const autotest = TestsBuilder.build(test);
+    // Start build immediately so sync preamble snapshots steps/traces before the next test.
+    const resultPromise = new ResultBuilder(config).build(test, metadata);
 
     uploadChain = uploadChain
       .then(async () => {
         await strategy.loadAutotest(autotest, state);
-        const result = await new ResultBuilder(config).build(test, metadata);
+        const result = await resultPromise;
         await strategy.loadTestRun([result]);
       })
       .catch((err) => {
         logger.error("Failed to transfer Codecept result to TMS", err);
       });
+  }
+
+  function tryEnqueue(test) {
+    if (enqueued.has(test)) {
+      return;
+    }
+    enqueued.add(test);
+    enqueueTransfer(test);
   }
 
   async function safeTeardown() {
@@ -42,8 +53,13 @@ module.exports = async function (options) {
     await strategy.teardown();
   }
 
+  event.dispatcher.on(event.test.after, (test) => {
+    // Prefer finished (full metadata lifecycle); fall back if finished never fires (empty Scenario).
+    queueMicrotask(() => tryEnqueue(test));
+  });
+
   event.dispatcher.on(event.test.finished, (test) => {
-    enqueueTransfer(test);
+    tryEnqueue(test);
   });
 
   event.dispatcher.on(event.workers.after, async () => {
