@@ -293,6 +293,10 @@ export default class TestItEnvironment extends NodeEnvironment {
       } catch (err: any) {
         logger.error("Failed realtime send in Jest environment:", this.formatError(err));
       }
+      // Keep sync-storage LastStatus fresh; otherwise Force Work X fires after ~60s.
+      await Promise.resolve((this.strategy as { touchWorker?: () => Promise<void> }).touchWorker?.()).catch(
+        () => undefined,
+      );
     } else {
       this.autotests.push(autotestSnapshot);
       this.autotestResults.push(result);
@@ -362,25 +366,23 @@ export default class TestItEnvironment extends NodeEnvironment {
       teardownSteps: teardownSteps.length,
       testSteps: autotest.testSteps.length,
     });
+
+    // Mutate the same AutotestResult instance that may be queued as deferred InProgress final.
+    // flushRealtimeTeardown patches teardownResults on this ref before strategy.teardown().
+    result.stepResults = autotest.testSteps;
+    result.setupResults = setupSteps;
+    result.teardownResults = teardownSteps;
+    result.parameters = autotest.parameters !== undefined ? mapParams(autotest.parameters) : undefined;
+
     const autotestPost = this.buildAutotestPost(autotest, setupSteps, teardownSteps);
+    // Avoid writing empty teardown to the Autotest card before afterAll is known —
+    // a full replace with [] would clear a previously uploaded afterAll until flush.
+    if (!includeAfterAll) {
+      autotestPost.teardown = undefined;
+    }
 
     await this.strategy.loadAutotest(autotestPost, result.outcome);
-    await this.strategy.loadTestRun([
-      {
-        autoTestExternalId: autotestPost.externalId,
-        outcome: result.outcome,
-        startedOn: result.startedOn,
-        duration: result.duration,
-        attachments: result.attachments,
-        message: result.message,
-        links: result.links,
-        stepResults: autotest.testSteps,
-        traces: result.traces,
-        setupResults: setupSteps,
-        teardownResults: teardownSteps,
-        parameters: autotest.parameters !== undefined ? mapParams(autotest.parameters) : undefined,
-      },
-    ]);
+    await this.strategy.loadTestRun([result]);
   }
 
   /** afterAll hooks run after all tests; patch teardown when importRealtime is enabled. */
@@ -397,10 +399,17 @@ export default class TestItEnvironment extends NodeEnvironment {
       tests: this.realtimeSent.length,
       afterAllSteps: this.afterAllSteps.length,
     });
+
+    // Patch shared result refs first so deferred final POST (strategy.teardown) includes afterAll.
+    for (const { autotest, result } of this.realtimeSent) {
+      result.setupResults = this.buildSetupSteps(autotest);
+      result.teardownResults = this.buildTeardownSteps(autotest, true);
+    }
+
     for (const { autotest, result } of this.realtimeSent) {
       try {
-        const setupSteps = this.buildSetupSteps(autotest);
-        const teardownSteps = this.buildTeardownSteps(autotest, true);
+        const setupSteps = result.setupResults ?? [];
+        const teardownSteps = result.teardownResults ?? [];
         if (setupSteps.length === 0 && teardownSteps.length === 0) {
           continue;
         }
