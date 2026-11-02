@@ -1,7 +1,13 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const AdaptersApi = require("../../adapters-api/dist/index");
 import { AdapterConfig, BaseService } from "../../common";
-import { escapeHtmlInObject, escapeHtmlInObjectArray, logTmsLoadTestRun, withHttpRetry } from "../../common/utils";
+import {
+  escapeHtmlInObject,
+  escapeHtmlInObjectArray,
+  formatLogError,
+  logTmsLoadTestRun,
+  withHttpRetry,
+} from "../../common/utils";
 import { TestResultsService } from "../testresults";
 import { type ITestRunsService, TestRunId, AutotestResult, TestRunGet } from "./testruns.type";
 import { type ITestRunConverter, TestRunConverter } from "./testruns.converter";
@@ -56,7 +62,7 @@ export class TestRunsService extends BaseService implements ITestRunsService {
         return data.id;
       })
       .catch((err: any) => {
-        logger.error("Error in createTestRun:", err);
+        logger.error("Error in createTestRun:", formatLogError(err));
         throw err;
       });
   }
@@ -182,11 +188,10 @@ export class TestRunsService extends BaseService implements ITestRunsService {
           });
         })
         .catch((err: any) => {
-          const normalized = err?.body ?? err?.error ?? err;
           logger.error("[testit-js-commons:loadTestRun] FAILED to post final result", {
             testRunId,
             autoTestExternalId: autotestResult.autoTestExternalId,
-            error: normalized,
+            error: formatLogError(err),
           });
         });
     }
@@ -224,7 +229,7 @@ export class TestRunsService extends BaseService implements ITestRunsService {
         logger.error("[testit-js-commons:loadTestRun] FAILED to update setup/teardown", {
           autoTestExternalId: result.autoTestExternalId,
           testResultId,
-          error: (err as { body?: unknown })?.body ?? err,
+          error: formatLogError(err),
         });
       });
     }

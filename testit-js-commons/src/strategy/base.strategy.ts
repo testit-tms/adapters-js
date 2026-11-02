@@ -1,6 +1,6 @@
 import { Client, IClient } from "../client";
 import { AdapterConfig, Link } from "../common";
-import { logTmsLoadTestRun } from "../common/utils";
+import { formatLogError, logTmsLoadTestRun } from "../common/utils";
 import { mergeLinkLists, mergeTagLists } from "../helpers/config/test-run-metadata.util";
 import { AutotestPost, AutotestResult, LinkGet, TestRunId } from "../services";
 import { SyncStorageRunner, toTestResultCutModel } from "../services/syncstorage";
@@ -109,7 +109,7 @@ export class BaseStrategy implements IStrategy {
     }
 
     await this.client.autoTests.linkToWorkItems(existingAutotest, workItemIds).catch((err) => {
-      logger.log("Failed link work items. \n", err);
+      logger.log("Failed link work items. \n", formatLogError(err));
     });
   }
 
@@ -304,7 +304,7 @@ export class BaseStrategy implements IStrategy {
           (hasLinks ? ` links=${testRun.links?.length ?? 0}` : "")
       );
     } catch (err) {
-      logger.error(`Failed to apply test run tags/links for "${testRunId}"`, err);
+      logger.error(`Failed to apply test run tags/links for "${testRunId}"`, formatLogError(err));
     }
   }
 

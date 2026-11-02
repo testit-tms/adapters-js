@@ -1,7 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const AdaptersApi = require("../../adapters-api/dist/index");
 
-import { BaseService, AdapterConfig, escapeHtmlInObject, withHttpRetry } from "../../common";
+import { BaseService, AdapterConfig, escapeHtmlInObject, formatLogError, withHttpRetry } from "../../common";
 import { AutotestGet, AutotestPost, type IAutotestService } from "./autotests.type";
 import { AutotestConverter, type IAutotestConverter } from "./autotests.converter";
 import { handleHttpError, isConflictError } from "./autotests.handler";
@@ -127,7 +127,7 @@ export class AutotestsService extends BaseService implements IAutotestService {
         await this._client.adaptersAutoTestsIdWorkItemsPost(internalId, { workItemIdApiModel: { id: workItemId } });
         logger.log(`Link autotest ${internalId} to workitem ${workItemId} is successfully`);
       } catch (e: any) {
-        logger.error(`Cannot link autotest ${internalId} to work item ${workItemId}`, e?.body ?? e?.error ?? e);
+        logger.error(`Cannot link autotest ${internalId} to work item ${workItemId}`, formatLogError(e));
       }
     });
 
