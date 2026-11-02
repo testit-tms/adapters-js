@@ -275,9 +275,9 @@ export default class TestItEnvironment extends NodeEnvironment {
       startedOn: test.startedAt ? new Date(test.startedAt) : undefined,
       duration: test.duration ?? undefined,
       traces: errorTraces,
-      attachments: this.additions.attachments,
+      attachments: [...this.additions.attachments],
       message: this.additions.messages.join("\n").concat(errorMessage ?? ""),
-      links: this.additions.links,
+      links: [...this.additions.links],
     };
 
     if (this.importRealtime) {

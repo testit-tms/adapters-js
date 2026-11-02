@@ -12,6 +12,32 @@ function makeConfig(): AdapterConfig {
   };
 }
 
+describe("TestRunConverter.toOriginAutotestResultInProgress", () => {
+  it("omits links/steps/attachments so final POST does not duplicate them", () => {
+    const converter = new TestRunConverter(makeConfig());
+    const model = converter.toOriginAutotestResultInProgress({
+      autoTestExternalId: "ext-1",
+      outcome: "Passed",
+      links: [
+        { url: "https://a.example", title: "A" },
+        { url: "https://b.example", title: "B" },
+      ],
+      stepResults: [{ title: "step" }],
+      attachments: [{ id: "att-1" }],
+      message: "msg",
+      startedOn: new Date("2026-01-01T00:00:00.000Z"),
+    } as AutotestResult);
+
+    expect(model.statusType).toBe("InProgress");
+    expect(model.autoTestExternalId).toBe("ext-1");
+    expect(model.links).toBeUndefined();
+    expect(model.stepResults).toBeUndefined();
+    expect(model.attachments).toBeUndefined();
+    expect(model.message).toBeUndefined();
+    expect(model.startedOn).toEqual(new Date("2026-01-01T00:00:00.000Z"));
+  });
+});
+
 describe("TestRunConverter.toOriginSetupTeardownUpdate", () => {
   it("includes only setupResults and teardownResults", () => {
     const converter = new TestRunConverter(makeConfig());

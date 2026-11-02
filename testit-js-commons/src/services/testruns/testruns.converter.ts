@@ -45,11 +45,27 @@ export class TestRunConverter extends BaseConverter implements ITestRunConverter
     return statusMap[status];
   }
 
+  /**
+   * Minimal InProgress stub. Must not include links/steps/attachments/message:
+   * TMS appends those on a later final POST for the same result slot (e.g. Jest
+   * first test in file → 2 links in stub + 2 in final = 4).
+   */
   toOriginAutotestResultInProgress(autotest: AutotestResult): any {
-    return {
-      ...this.toOriginAutotestResult(autotest),
+    const model: any = {
+      configurationId: this.config.configurationId,
+      autoTestExternalId: autotest.autoTestExternalId,
       statusType: "InProgress",
+      statusCode: null,
+      outcome: undefined,
+      failureReasonNames: undefined,
     };
+    if (autotest.startedOn !== undefined) {
+      model.startedOn = autotest.startedOn;
+    }
+    if (autotest.parameters !== undefined) {
+      model.parameters = autotest.parameters;
+    }
+    return model;
   }
 
   toOriginAutotestResult(autotest: AutotestResult): any {

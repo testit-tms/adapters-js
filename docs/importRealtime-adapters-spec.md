@@ -104,7 +104,7 @@ API `testit.*` из `labels.ts` пишет поля в attachment `tms-metadata.
 
 | Этап | API |
 |------|-----|
-| InProgress stub (`postInProgressAutotestResult`) | POST `setAutoTestResults` — **без изменений** |
+| InProgress stub (`postInProgressAutotestResult`) | POST `setAutoTestResults` — **минимальный** payload (`externalId`, `statusType: InProgress`, `startedOn`/`parameters`). Без `links` / `steps` / `attachments` / `message`: TMS их дописывает при финальном POST того же слота (иначе, например, 2 links → 4). |
 | Финал (`loadAutotests`) | **Всегда** POST `setAutoTestResults` (в т.ч. если в прогоне уже есть InProgress от test plan / stub). Повторный POST для того же `externalId` разрешён (Playwright retries — отдельные запросы/`потоки` по номеру attempt). |
 | Fixture setup/teardown (`updateSetupTeardown`, `importRealtime` session end) | **Только** PUT `apiV2/testResults/{id}` с полями `setupResults` / `teardownResults` — без `stepResults`, без смены статуса |
 
