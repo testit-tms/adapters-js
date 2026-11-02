@@ -44,6 +44,13 @@ export class BaseStrategy implements IStrategy {
     //await this.client.testRuns.completeTestRun(testRunId);
   }
 
+  async touchWorker(): Promise<void> {
+    if (!this.syncStorageRunner?.isActive()) {
+      return;
+    }
+    await this.syncStorageRunner.setWorkerStatus("in_progress");
+  }
+
   private async flushDeferredResults(testRunId: string): Promise<void> {
     if (this.deferredResults.length === 0) {
       return;
