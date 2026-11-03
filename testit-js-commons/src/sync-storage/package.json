@@ -14,7 +14,14 @@
   },
   "dependencies": {
     "@babel/cli": "^7.0.0",
-    "superagent": "^5.3.0"
+    "superagent": "^10.4.1"
+  },
+  "overrides": {
+    "form-data": "^4.0.6",
+    "qs": "^6.17.1",
+    "nanoid": "^3.3.18",
+    "serialize-javascript": "^7.1.4",
+    "js-yaml": "^4.3.2"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0",
@@ -38,7 +45,7 @@
     "@babel/preset-env": "^7.0.0",
     "@babel/register": "^7.0.0",
     "expect.js": "^0.3.1",
-    "mocha": "^8.0.1",
+    "mocha": "^11.7.5",
     "sinon": "^7.2.0"
   },
   "files": [

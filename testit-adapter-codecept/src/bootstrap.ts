@@ -8,7 +8,9 @@ module.exports = async function () {
   const strategy = StrategyFactory.create(config);
   const helper = container.helpers("TestITHelper");
 
-  await strategy.setup();
+  // Register listeners before setup: early tests finish during TMS/sync-storage init
+  // and would otherwise be lost (flaky 30/33). Handlers await this promise first.
+  const setupPromise = strategy.setup();
 
   let finalized = false;
   const finalize = async () => {
@@ -16,11 +18,14 @@ module.exports = async function () {
       return;
     }
     finalized = true;
+    await setupPromise;
     await strategy.teardown();
   };
 
   event.dispatcher.on(event.test.finished, (test) => {
     recorder.add("transferTestAndRuns", async () => {
+      await setupPromise;
+
       // Keep sync-storage LastStatus fresh; otherwise Force Work X fires after ~60s of in_progress.
       await strategy.touchWorker();
 
@@ -53,4 +58,6 @@ module.exports = async function () {
   event.dispatcher.on(event.workers.after, async () => {
     await finalize();
   });
+
+  await setupPromise;
 };

@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - "testit-js-commons/**"
-      #- "testit-adapter-codecept/**"
+      - "testit-adapter-codecept/**"
       - "testit-adapter-cucumber/**"
       - "testit-adapter-jest/**"
       - "testit-adapter-mocha/**"

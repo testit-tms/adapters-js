@@ -1,6 +1,6 @@
 {
   "name": "testit-adapter-cypress",
-  "version": "5.1.0",
+  "version": "5.1.1",
   "description": "Cypress adapter for Test IT",
   "license": "Apache-2.0",
   "author": {
@@ -42,7 +42,19 @@
     "@types/node": "^20.14.2"
   },
   "dependencies": {
-    "testit-js-commons": "5.1.0"
+    "testit-js-commons": "5.1.1"
+  },
+  "overrides": {
+    "form-data": "^4.0.6",
+    "qs": "^6.17.1",
+    "flatted": "^3.4.2",
+    "js-yaml": "^4.3.2",
+    "lodash": "^4.18.1",
+    "picomatch": "^2.3.2",
+    "tmp": "^0.2.6",
+    "brace-expansion@1": "1.1.21",
+    "brace-expansion@2": "2.1.7",
+    "browserslist": "^4.29.5"
   },
   "files": [
     "dist"
