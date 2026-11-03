@@ -14,6 +14,7 @@
 import ApiClient from '../ApiClient';
 import AutoTestStepApiModel from './AutoTestStepApiModel';
 import LabelApiModel from './LabelApiModel';
+import LayerApiModel from './LayerApiModel';
 import LinkUpdateApiModel from './LinkUpdateApiModel';
 
 /**
@@ -86,6 +87,12 @@ class AutoTestUpdateApiModel {
             if (data.hasOwnProperty('isFlaky')) {
                 obj['isFlaky'] = ApiClient.convertToType(data['isFlaky'], 'Boolean');
             }
+            if (data.hasOwnProperty('layer')) {
+                obj['layer'] = ApiClient.convertToType(data['layer'], LayerApiModel);
+            }
+            if (data.hasOwnProperty('resetLayer')) {
+                obj['resetLayer'] = ApiClient.convertToType(data['resetLayer'], 'Boolean');
+            }
             if (data.hasOwnProperty('steps')) {
                 obj['steps'] = ApiClient.convertToType(data['steps'], [AutoTestStepApiModel]);
             }
@@ -155,6 +162,10 @@ class AutoTestUpdateApiModel {
         // ensure the json data is a string
         if (data['description'] && !(typeof data['description'] === 'string' || data['description'] instanceof String)) {
             throw new Error("Expected the field `description` to be a primitive type in the JSON string but got " + data['description']);
+        }
+        // validate the optional field `layer`
+        if (data['layer']) { // data not null
+          LayerApiModel.validateJSON(data['layer']);
         }
         if (data['steps']) { // data not null
             // ensure the json data is an array
@@ -278,6 +289,18 @@ AutoTestUpdateApiModel.prototype['description'] = undefined;
  * @member {Boolean} isFlaky
  */
 AutoTestUpdateApiModel.prototype['isFlaky'] = undefined;
+
+/**
+ * Layer of the autotest. Assigns layer by rules if omitted.
+ * @member {module:model/LayerApiModel} layer
+ */
+AutoTestUpdateApiModel.prototype['layer'] = undefined;
+
+/**
+ * Indicates if the autotest layer should be reset.
+ * @member {Boolean} resetLayer
+ */
+AutoTestUpdateApiModel.prototype['resetLayer'] = undefined;
 
 /**
  * Collection of the autotest steps

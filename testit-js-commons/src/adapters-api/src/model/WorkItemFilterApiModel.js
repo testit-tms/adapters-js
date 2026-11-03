@@ -13,6 +13,7 @@
 
 import ApiClient from '../ApiClient';
 import Int32RangeSelectorModel from './Int32RangeSelectorModel';
+import LayerSource from './LayerSource';
 import WorkItemPriorityModel from './WorkItemPriorityModel';
 import WorkItemSourceTypeModel from './WorkItemSourceTypeModel';
 import WorkItemStates from './WorkItemStates';
@@ -109,6 +110,15 @@ class WorkItemFilterApiModel {
             if (data.hasOwnProperty('autoTestIds')) {
                 obj['autoTestIds'] = ApiClient.convertToType(data['autoTestIds'], ['String']);
             }
+            if (data.hasOwnProperty('layers')) {
+                obj['layers'] = ApiClient.convertToType(data['layers'], ['String']);
+            }
+            if (data.hasOwnProperty('layerSources')) {
+                obj['layerSources'] = ApiClient.convertToType(data['layerSources'], [LayerSource]);
+            }
+            if (data.hasOwnProperty('externalId')) {
+                obj['externalId'] = ApiClient.convertToType(data['externalId'], 'String');
+            }
         }
         return obj;
     }
@@ -182,6 +192,18 @@ class WorkItemFilterApiModel {
         // ensure the json data is an array
         if (!Array.isArray(data['autoTestIds'])) {
             throw new Error("Expected the field `autoTestIds` to be an array in the JSON data but got " + data['autoTestIds']);
+        }
+        // ensure the json data is an array
+        if (!Array.isArray(data['layers'])) {
+            throw new Error("Expected the field `layers` to be an array in the JSON data but got " + data['layers']);
+        }
+        // ensure the json data is an array
+        if (!Array.isArray(data['layerSources'])) {
+            throw new Error("Expected the field `layerSources` to be an array in the JSON data but got " + data['layerSources']);
+        }
+        // ensure the json data is a string
+        if (data['externalId'] && !(typeof data['externalId'] === 'string' || data['externalId'] instanceof String)) {
+            throw new Error("Expected the field `externalId` to be a primitive type in the JSON string but got " + data['externalId']);
         }
 
         return true;
@@ -305,6 +327,24 @@ WorkItemFilterApiModel.prototype['excludeTags'] = undefined;
  * @member {Array.<String>} autoTestIds
  */
 WorkItemFilterApiModel.prototype['autoTestIds'] = undefined;
+
+/**
+ * Specifies auto test case layers to search for
+ * @member {Array.<String>} layers
+ */
+WorkItemFilterApiModel.prototype['layers'] = undefined;
+
+/**
+ * Specifies list of auto test case layer sources to search for
+ * @member {Array.<module:model/LayerSource>} layerSources
+ */
+WorkItemFilterApiModel.prototype['layerSources'] = undefined;
+
+/**
+ * External identifier of the work item
+ * @member {String} externalId
+ */
+WorkItemFilterApiModel.prototype['externalId'] = undefined;
 
 
 

@@ -40,6 +40,13 @@ export default class WorkItemEntityTypeApiModel {
         "SharedSteps" = "SharedSteps";
 
     
+        /**
+         * value: "AutoTestCases"
+         * @const
+         */
+        "AutoTestCases" = "AutoTestCases";
+
+    
 
     /**
     * Returns a <code>WorkItemEntityTypeApiModel</code> enum value from a Javascript object name.

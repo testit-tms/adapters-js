@@ -12,6 +12,7 @@
  */
 
 import ApiClient from '../ApiClient';
+import FailureCategoryModel from './FailureCategoryModel';
 import Int64RangeSelectorModel from './Int64RangeSelectorModel';
 import TestResultOutcome from './TestResultOutcome';
 import TestStatusApiType from './TestStatusApiType';
@@ -62,6 +63,9 @@ class TestResultsFilterApiModel {
             if (data.hasOwnProperty('statusTypes')) {
                 obj['statusTypes'] = ApiClient.convertToType(data['statusTypes'], [TestStatusApiType]);
             }
+            if (data.hasOwnProperty('failureCategories')) {
+                obj['failureCategories'] = ApiClient.convertToType(data['failureCategories'], [FailureCategoryModel]);
+            }
             if (data.hasOwnProperty('namespace')) {
                 obj['namespace'] = ApiClient.convertToType(data['namespace'], 'String');
             }
@@ -111,6 +115,10 @@ class TestResultsFilterApiModel {
         // ensure the json data is an array
         if (!Array.isArray(data['statusTypes'])) {
             throw new Error("Expected the field `statusTypes` to be an array in the JSON data but got " + data['statusTypes']);
+        }
+        // ensure the json data is an array
+        if (!Array.isArray(data['failureCategories'])) {
+            throw new Error("Expected the field `failureCategories` to be an array in the JSON data but got " + data['failureCategories']);
         }
         // ensure the json data is a string
         if (data['namespace'] && !(typeof data['namespace'] === 'string' || data['namespace'] instanceof String)) {
@@ -176,6 +184,12 @@ TestResultsFilterApiModel.prototype['statusCodes'] = undefined;
  * @member {Array.<module:model/TestStatusApiType>} statusTypes
  */
 TestResultsFilterApiModel.prototype['statusTypes'] = undefined;
+
+/**
+ * Specifies a test result failure categories to search for
+ * @member {Array.<module:model/FailureCategoryModel>} failureCategories
+ */
+TestResultsFilterApiModel.prototype['failureCategories'] = undefined;
 
 /**
  * Specifies a test result namespace to search for

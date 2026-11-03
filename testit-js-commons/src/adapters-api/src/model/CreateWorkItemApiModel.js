@@ -13,6 +13,7 @@
 
 import ApiClient from '../ApiClient';
 import AssignAttachmentApiModel from './AssignAttachmentApiModel';
+import AssignAutoTestCaseIdApiModel from './AssignAutoTestCaseIdApiModel';
 import AssignIterationApiModel from './AssignIterationApiModel';
 import AutoTestIdModel from './AutoTestIdModel';
 import CreateLinkApiModel from './CreateLinkApiModel';
@@ -114,6 +115,9 @@ class CreateWorkItemApiModel {
             if (data.hasOwnProperty('autoTests')) {
                 obj['autoTests'] = ApiClient.convertToType(data['autoTests'], [AutoTestIdModel]);
             }
+            if (data.hasOwnProperty('autoTestCases')) {
+                obj['autoTestCases'] = ApiClient.convertToType(data['autoTestCases'], [AssignAutoTestCaseIdApiModel]);
+            }
             if (data.hasOwnProperty('attachments')) {
                 obj['attachments'] = ApiClient.convertToType(data['attachments'], [AssignAttachmentApiModel]);
             }
@@ -213,6 +217,16 @@ class CreateWorkItemApiModel {
             // validate the optional field `autoTests` (array)
             for (const item of data['autoTests']) {
                 AutoTestIdModel.validateJSON(item);
+            };
+        }
+        if (data['autoTestCases']) { // data not null
+            // ensure the json data is an array
+            if (!Array.isArray(data['autoTestCases'])) {
+                throw new Error("Expected the field `autoTestCases` to be an array in the JSON data but got " + data['autoTestCases']);
+            }
+            // validate the optional field `autoTestCases` (array)
+            for (const item of data['autoTestCases']) {
+                AssignAutoTestCaseIdApiModel.validateJSON(item);
             };
         }
         if (data['attachments']) { // data not null
@@ -343,6 +357,12 @@ CreateWorkItemApiModel.prototype['iterations'] = undefined;
  * @member {Array.<module:model/AutoTestIdModel>} autoTests
  */
 CreateWorkItemApiModel.prototype['autoTests'] = undefined;
+
+/**
+ * Set of automated test cases linked to the work item
+ * @member {Array.<module:model/AssignAutoTestCaseIdApiModel>} autoTestCases
+ */
+CreateWorkItemApiModel.prototype['autoTestCases'] = undefined;
 
 /**
  * Set of files attached to the work item

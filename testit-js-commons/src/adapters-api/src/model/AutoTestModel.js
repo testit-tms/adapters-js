@@ -12,6 +12,7 @@
  */
 
 import ApiClient from '../ApiClient';
+import AutoTestCaseModel from './AutoTestCaseModel';
 import AutoTestStepModel from './AutoTestStepModel';
 import ConfigurationShortModel from './ConfigurationShortModel';
 import LabelShortModel from './LabelShortModel';
@@ -115,6 +116,9 @@ class AutoTestModel {
             if (data.hasOwnProperty('stabilityPercentage')) {
                 obj['stabilityPercentage'] = ApiClient.convertToType(data['stabilityPercentage'], 'Number');
             }
+            if (data.hasOwnProperty('autoTestCase')) {
+                obj['autoTestCase'] = ApiClient.convertToType(data['autoTestCase'], AutoTestCaseModel);
+            }
             if (data.hasOwnProperty('externalId')) {
                 obj['externalId'] = ApiClient.convertToType(data['externalId'], 'String');
             }
@@ -208,6 +212,10 @@ class AutoTestModel {
         // validate the optional field `lastTestResultStatus`
         if (data['lastTestResultStatus']) { // data not null
           TestStatusModel.validateJSON(data['lastTestResultStatus']);
+        }
+        // validate the optional field `autoTestCase`
+        if (data['autoTestCase']) { // data not null
+          AutoTestCaseModel.validateJSON(data['autoTestCase']);
         }
         // ensure the json data is a string
         if (data['externalId'] && !(typeof data['externalId'] === 'string' || data['externalId'] instanceof String)) {
@@ -389,6 +397,12 @@ AutoTestModel.prototype['lastTestResultStatus'] = undefined;
  * @member {Number} stabilityPercentage
  */
 AutoTestModel.prototype['stabilityPercentage'] = undefined;
+
+/**
+ * Auto test case linked with the autotest
+ * @member {module:model/AutoTestCaseModel} autoTestCase
+ */
+AutoTestModel.prototype['autoTestCase'] = undefined;
 
 /**
  * External ID of the autotest

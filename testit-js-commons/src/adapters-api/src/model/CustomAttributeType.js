@@ -61,6 +61,13 @@ export default class CustomAttributeType {
         "checkbox" = "checkbox";
 
     
+        /**
+         * value: "numeric"
+         * @const
+         */
+        "numeric" = "numeric";
+
+    
 
     /**
     * Returns a <code>CustomAttributeType</code> enum value from a Javascript object name.

@@ -40,6 +40,13 @@ export default class WorkItemTypeModel {
         "SharedSteps" = "SharedSteps";
 
     
+        /**
+         * value: "AutoTestCases"
+         * @const
+         */
+        "AutoTestCases" = "AutoTestCases";
+
+    
 
     /**
     * Returns a <code>WorkItemTypeModel</code> enum value from a Javascript object name.

@@ -13,6 +13,7 @@
 
 import ApiClient from '../ApiClient';
 import AttachmentModel from './AttachmentModel';
+import AutoTestCaseApiModel from './AutoTestCaseApiModel';
 import AutoTestModel from './AutoTestModel';
 import IterationModel from './IterationModel';
 import LinkModel from './LinkModel';
@@ -51,14 +52,15 @@ class WorkItemApiResult {
      * @param postconditionSteps {Array.<module:model/StepModel>} Set of postcondition steps that are executed after completing the main steps
      * @param iterations {Array.<module:model/IterationModel>} Associated iterations linked to the work item
      * @param autoTests {Array.<module:model/AutoTestModel>} Automated tests associated with the work item
+     * @param autoTestCases {Array.<module:model/AutoTestCaseApiModel>} Set of automated test cases linked to the work item
      * @param attachments {Array.<module:model/AttachmentModel>} Files attached to the work item
      * @param links {Array.<module:model/LinkModel>} Set of links related to the work item
      * @param parameters {Array.<module:model/WorkItemParameterKeyApiResult>} Set of parameters related to the work item
      * @param isDeleted {Boolean} Indicates whether the work item is marked as deleted
      */
-    constructor(id, globalId, projectId, sectionId, name, entityTypeName, duration, state, priority, isAutomated, attributes, tags, sectionPreconditionSteps, sectionPostconditionSteps, preconditionSteps, steps, postconditionSteps, iterations, autoTests, attachments, links, parameters, isDeleted) { 
+    constructor(id, globalId, projectId, sectionId, name, entityTypeName, duration, state, priority, isAutomated, attributes, tags, sectionPreconditionSteps, sectionPostconditionSteps, preconditionSteps, steps, postconditionSteps, iterations, autoTests, autoTestCases, attachments, links, parameters, isDeleted) { 
         
-        WorkItemApiResult.initialize(this, id, globalId, projectId, sectionId, name, entityTypeName, duration, state, priority, isAutomated, attributes, tags, sectionPreconditionSteps, sectionPostconditionSteps, preconditionSteps, steps, postconditionSteps, iterations, autoTests, attachments, links, parameters, isDeleted);
+        WorkItemApiResult.initialize(this, id, globalId, projectId, sectionId, name, entityTypeName, duration, state, priority, isAutomated, attributes, tags, sectionPreconditionSteps, sectionPostconditionSteps, preconditionSteps, steps, postconditionSteps, iterations, autoTests, autoTestCases, attachments, links, parameters, isDeleted);
     }
 
     /**
@@ -66,7 +68,7 @@ class WorkItemApiResult {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, id, globalId, projectId, sectionId, name, entityTypeName, duration, state, priority, isAutomated, attributes, tags, sectionPreconditionSteps, sectionPostconditionSteps, preconditionSteps, steps, postconditionSteps, iterations, autoTests, attachments, links, parameters, isDeleted) { 
+    static initialize(obj, id, globalId, projectId, sectionId, name, entityTypeName, duration, state, priority, isAutomated, attributes, tags, sectionPreconditionSteps, sectionPostconditionSteps, preconditionSteps, steps, postconditionSteps, iterations, autoTests, autoTestCases, attachments, links, parameters, isDeleted) { 
         obj['id'] = id;
         obj['globalId'] = globalId;
         obj['projectId'] = projectId;
@@ -86,6 +88,7 @@ class WorkItemApiResult {
         obj['postconditionSteps'] = postconditionSteps;
         obj['iterations'] = iterations;
         obj['autoTests'] = autoTests;
+        obj['autoTestCases'] = autoTestCases;
         obj['attachments'] = attachments;
         obj['links'] = links;
         obj['parameters'] = parameters;
@@ -162,6 +165,9 @@ class WorkItemApiResult {
             }
             if (data.hasOwnProperty('autoTests')) {
                 obj['autoTests'] = ApiClient.convertToType(data['autoTests'], [AutoTestModel]);
+            }
+            if (data.hasOwnProperty('autoTestCases')) {
+                obj['autoTestCases'] = ApiClient.convertToType(data['autoTestCases'], [AutoTestCaseApiModel]);
             }
             if (data.hasOwnProperty('attachments')) {
                 obj['attachments'] = ApiClient.convertToType(data['attachments'], [AttachmentModel]);
@@ -291,6 +297,16 @@ class WorkItemApiResult {
                 AutoTestModel.validateJSON(item);
             };
         }
+        if (data['autoTestCases']) { // data not null
+            // ensure the json data is an array
+            if (!Array.isArray(data['autoTestCases'])) {
+                throw new Error("Expected the field `autoTestCases` to be an array in the JSON data but got " + data['autoTestCases']);
+            }
+            // validate the optional field `autoTestCases` (array)
+            for (const item of data['autoTestCases']) {
+                AutoTestCaseApiModel.validateJSON(item);
+            };
+        }
         if (data['attachments']) { // data not null
             // ensure the json data is an array
             if (!Array.isArray(data['attachments'])) {
@@ -328,7 +344,7 @@ class WorkItemApiResult {
 
 }
 
-WorkItemApiResult.RequiredProperties = ["id", "globalId", "projectId", "sectionId", "name", "entityTypeName", "duration", "state", "priority", "isAutomated", "attributes", "tags", "sectionPreconditionSteps", "sectionPostconditionSteps", "preconditionSteps", "steps", "postconditionSteps", "iterations", "autoTests", "attachments", "links", "parameters", "isDeleted"];
+WorkItemApiResult.RequiredProperties = ["id", "globalId", "projectId", "sectionId", "name", "entityTypeName", "duration", "state", "priority", "isAutomated", "attributes", "tags", "sectionPreconditionSteps", "sectionPostconditionSteps", "preconditionSteps", "steps", "postconditionSteps", "iterations", "autoTests", "autoTestCases", "attachments", "links", "parameters", "isDeleted"];
 
 /**
  * Unique identifier of the work item
@@ -448,6 +464,12 @@ WorkItemApiResult.prototype['iterations'] = undefined;
  * @member {Array.<module:model/AutoTestModel>} autoTests
  */
 WorkItemApiResult.prototype['autoTests'] = undefined;
+
+/**
+ * Set of automated test cases linked to the work item
+ * @member {Array.<module:model/AutoTestCaseApiModel>} autoTestCases
+ */
+WorkItemApiResult.prototype['autoTestCases'] = undefined;
 
 /**
  * Files attached to the work item

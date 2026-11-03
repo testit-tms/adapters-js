@@ -12,6 +12,7 @@
  */
 
 import ApiClient from '../ApiClient';
+import LayerSource from './LayerSource';
 
 /**
  * The AutoTestFilterApiModel model module.
@@ -80,6 +81,12 @@ class AutoTestFilterApiModel {
             if (data.hasOwnProperty('excludeTags')) {
                 obj['excludeTags'] = ApiClient.convertToType(data['excludeTags'], ['String']);
             }
+            if (data.hasOwnProperty('layers')) {
+                obj['layers'] = ApiClient.convertToType(data['layers'], ['String']);
+            }
+            if (data.hasOwnProperty('layerSources')) {
+                obj['layerSources'] = ApiClient.convertToType(data['layerSources'], [LayerSource]);
+            }
         }
         return obj;
     }
@@ -125,6 +132,14 @@ class AutoTestFilterApiModel {
         // ensure the json data is an array
         if (!Array.isArray(data['excludeTags'])) {
             throw new Error("Expected the field `excludeTags` to be an array in the JSON data but got " + data['excludeTags']);
+        }
+        // ensure the json data is an array
+        if (!Array.isArray(data['layers'])) {
+            throw new Error("Expected the field `layers` to be an array in the JSON data but got " + data['layers']);
+        }
+        // ensure the json data is an array
+        if (!Array.isArray(data['layerSources'])) {
+            throw new Error("Expected the field `layerSources` to be an array in the JSON data but got " + data['layerSources']);
         }
 
         return true;
@@ -200,6 +215,18 @@ AutoTestFilterApiModel.prototype['tags'] = undefined;
  * @member {Array.<String>} excludeTags
  */
 AutoTestFilterApiModel.prototype['excludeTags'] = undefined;
+
+/**
+ * Specifies auto test layers to search for
+ * @member {Array.<String>} layers
+ */
+AutoTestFilterApiModel.prototype['layers'] = undefined;
+
+/**
+ * Specifies list of auto test layer sources to search for
+ * @member {Array.<module:model/LayerSource>} layerSources
+ */
+AutoTestFilterApiModel.prototype['layerSources'] = undefined;
 
 
 

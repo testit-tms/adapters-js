@@ -28,6 +28,7 @@ class TestResultShortResponse {
      * @alias module:model/TestResultShortResponse
      * @param id {String} Unique ID of the test result
      * @param name {String} Name of autotest represented by the test result
+     * @param autotestGlobalId {Number} Global ID of autotest represented by the test result
      * @param autoTestTags {Array.<String>} Tags of the autotest represented by the test result
      * @param testRunId {String} Unique ID of test run where the test result is located
      * @param configurationId {String} Unique ID of configuration which the test result uses
@@ -38,9 +39,9 @@ class TestResultShortResponse {
      * @param attachments {Array.<module:model/AttachmentApiResult>} Collection of files attached to the test result
      * @param rerunCompletedCount {Number} Run count
      */
-    constructor(id, name, autoTestTags, testRunId, configurationId, configurationName, status, resultReasons, links, attachments, rerunCompletedCount) { 
+    constructor(id, name, autotestGlobalId, autoTestTags, testRunId, configurationId, configurationName, status, resultReasons, links, attachments, rerunCompletedCount) { 
         
-        TestResultShortResponse.initialize(this, id, name, autoTestTags, testRunId, configurationId, configurationName, status, resultReasons, links, attachments, rerunCompletedCount);
+        TestResultShortResponse.initialize(this, id, name, autotestGlobalId, autoTestTags, testRunId, configurationId, configurationName, status, resultReasons, links, attachments, rerunCompletedCount);
     }
 
     /**
@@ -48,9 +49,10 @@ class TestResultShortResponse {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, id, name, autoTestTags, testRunId, configurationId, configurationName, status, resultReasons, links, attachments, rerunCompletedCount) { 
+    static initialize(obj, id, name, autotestGlobalId, autoTestTags, testRunId, configurationId, configurationName, status, resultReasons, links, attachments, rerunCompletedCount) { 
         obj['id'] = id;
         obj['name'] = name;
+        obj['autotestGlobalId'] = autotestGlobalId;
         obj['autoTestTags'] = autoTestTags;
         obj['testRunId'] = testRunId;
         obj['configurationId'] = configurationId;
@@ -78,6 +80,9 @@ class TestResultShortResponse {
             }
             if (data.hasOwnProperty('name')) {
                 obj['name'] = ApiClient.convertToType(data['name'], 'String');
+            }
+            if (data.hasOwnProperty('autotestGlobalId')) {
+                obj['autotestGlobalId'] = ApiClient.convertToType(data['autotestGlobalId'], 'Number');
             }
             if (data.hasOwnProperty('autotestExternalId')) {
                 obj['autotestExternalId'] = ApiClient.convertToType(data['autotestExternalId'], 'String');
@@ -211,7 +216,7 @@ class TestResultShortResponse {
 
 }
 
-TestResultShortResponse.RequiredProperties = ["id", "name", "autoTestTags", "testRunId", "configurationId", "configurationName", "status", "resultReasons", "links", "attachments", "rerunCompletedCount"];
+TestResultShortResponse.RequiredProperties = ["id", "name", "autotestGlobalId", "autoTestTags", "testRunId", "configurationId", "configurationName", "status", "resultReasons", "links", "attachments", "rerunCompletedCount"];
 
 /**
  * Unique ID of the test result
@@ -224,6 +229,12 @@ TestResultShortResponse.prototype['id'] = undefined;
  * @member {String} name
  */
 TestResultShortResponse.prototype['name'] = undefined;
+
+/**
+ * Global ID of autotest represented by the test result
+ * @member {Number} autotestGlobalId
+ */
+TestResultShortResponse.prototype['autotestGlobalId'] = undefined;
 
 /**
  * External ID of autotest represented by the test result

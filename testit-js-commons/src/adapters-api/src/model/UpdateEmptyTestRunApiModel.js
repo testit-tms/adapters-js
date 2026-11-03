@@ -158,7 +158,7 @@ UpdateEmptyTestRunApiModel.prototype['name'] = undefined;
 UpdateEmptyTestRunApiModel.prototype['description'] = undefined;
 
 /**
- * Test run launch source                Once launch source is specified it cannot be updated
+ * Test run launch source              Once launch source is specified it cannot be updated
  * @member {String} launchSource
  */
 UpdateEmptyTestRunApiModel.prototype['launchSource'] = undefined;

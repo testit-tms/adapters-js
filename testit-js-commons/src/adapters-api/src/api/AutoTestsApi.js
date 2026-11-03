@@ -15,7 +15,6 @@
 import ApiClient from "../ApiClient";
 import AutoTestApiResult from '../model/AutoTestApiResult';
 import AutoTestCreateApiModel from '../model/AutoTestCreateApiModel';
-import AutoTestModel from '../model/AutoTestModel';
 import AutoTestSearchApiModel from '../model/AutoTestSearchApiModel';
 import AutoTestUpdateApiModel from '../model/AutoTestUpdateApiModel';
 import AutoTestWorkItemIdentifierApiResult from '../model/AutoTestWorkItemIdentifierApiResult';
@@ -126,124 +125,6 @@ export default class AutoTestsApi {
      */
     adaptersAutoTestsBulkPut(opts) {
       return this.adaptersAutoTestsBulkPutWithHttpInfo(opts)
-        .then(function(response_and_data) {
-          return response_and_data.data;
-        });
-    }
-
-
-    /**
-     * @param {Object} opts Optional parameters
-     * @param {String} [projectId] Project internal ID
-     * @param {String} [externalId] Autotest external ID
-     * @param {Number} [globalId] Autotest global ID
-     * @param {String} [namespace] Namespace in which autotest is located
-     * @param {Boolean} [isNamespaceNull] OBSOLETE: Use `includeEmptyNamespaces` instead
-     * @param {Boolean} [includeEmptyNamespaces] If result must contain autotests without namespace
-     * @param {String} [className] Name of class in which autotest is located
-     * @param {Boolean} [isClassnameNull] OBSOLETE: Use `includeEmptyClassNames` instead
-     * @param {Boolean} [includeEmptyClassNames] If result must contain autotests without class
-     * @param {Boolean} [isDeleted] OBSOLETE: Use `deleted` instead
-     * @param {Boolean} [deleted] Is autotest deleted
-     * @param {Array.<String>} [labels] Include only autotests with provided labels
-     * @param {Number} [stabilityMinimal] OBSOLETE: Use `minStability` instead
-     * @param {Number} [minStability] Minimum stability value of autotest
-     * @param {Number} [stabilityMaximal] OBSOLETE: Use `maxStability` instead
-     * @param {Number} [maxStability] Maximum stability value of autotest
-     * @param {Boolean} [isFlaky] OBSOLETE: Use `flaky` instead
-     * @param {Boolean} [flaky] Is autotest marked as \"Flaky\"
-     * @param {Boolean} [includeSteps] If result must also include autotest steps
-     * @param {Boolean} [includeLabels] If result must also include autotest labels
-     * @param {String} [externalKey] External key of autotest
-     * @param {Number} [skip] Amount of items to be skipped (offset)
-     * @param {Number} [take] Amount of items to be taken (limit)
-     * @param {String} [orderBy] SQL-like  ORDER BY statement (column1 ASC|DESC , column2 ASC|DESC)
-     * @param {String} [searchField] Property name for searching
-     * @param {String} [searchValue] Value for searching
-     * @return {Promise} a {@link https://www.promisejs.org/|Promise}, with an object containing data of type {@link Array.<module:model/AutoTestModel>} and HTTP response
-     */
-    adaptersAutoTestsGetWithHttpInfo(opts) {
-      opts = opts || {};
-      let postBody = null;
-
-      let pathParams = {
-      };
-      let queryParams = {
-        'projectId': opts['projectId'],
-        'externalId': opts['externalId'],
-        'globalId': opts['globalId'],
-        'namespace': opts['namespace'],
-        'isNamespaceNull': opts['isNamespaceNull'],
-        'includeEmptyNamespaces': opts['includeEmptyNamespaces'],
-        'className': opts['className'],
-        'isClassnameNull': opts['isClassnameNull'],
-        'includeEmptyClassNames': opts['includeEmptyClassNames'],
-        'isDeleted': opts['isDeleted'],
-        'deleted': opts['deleted'],
-        'labels': this.apiClient.buildCollectionParam(opts['labels'], 'multi'),
-        'stabilityMinimal': opts['stabilityMinimal'],
-        'minStability': opts['minStability'],
-        'stabilityMaximal': opts['stabilityMaximal'],
-        'maxStability': opts['maxStability'],
-        'isFlaky': opts['isFlaky'],
-        'flaky': opts['flaky'],
-        'includeSteps': opts['includeSteps'],
-        'includeLabels': opts['includeLabels'],
-        'externalKey': opts['externalKey'],
-        'Skip': opts['skip'],
-        'Take': opts['take'],
-        'OrderBy': opts['orderBy'],
-        'SearchField': opts['searchField'],
-        'SearchValue': opts['searchValue']
-      };
-      let headerParams = {
-      };
-      let formParams = {
-      };
-
-      let authNames = ['PrivateToken', 'Cookies'];
-      let contentTypes = [];
-      let accepts = ['application/json'];
-      let returnType = [AutoTestModel];
-      return this.apiClient.callApi(
-        '/adapters/autoTests', 'GET',
-        pathParams, queryParams, headerParams, formParams, postBody,
-        authNames, contentTypes, accepts, returnType, null
-      );
-    }
-
-    /**
-     * @param {Object} opts Optional parameters
-     * @param {String} opts.projectId Project internal ID
-     * @param {String} opts.externalId Autotest external ID
-     * @param {Number} opts.globalId Autotest global ID
-     * @param {String} opts.namespace Namespace in which autotest is located
-     * @param {Boolean} opts.isNamespaceNull OBSOLETE: Use `includeEmptyNamespaces` instead
-     * @param {Boolean} opts.includeEmptyNamespaces If result must contain autotests without namespace
-     * @param {String} opts.className Name of class in which autotest is located
-     * @param {Boolean} opts.isClassnameNull OBSOLETE: Use `includeEmptyClassNames` instead
-     * @param {Boolean} opts.includeEmptyClassNames If result must contain autotests without class
-     * @param {Boolean} opts.isDeleted OBSOLETE: Use `deleted` instead
-     * @param {Boolean} opts.deleted Is autotest deleted
-     * @param {Array.<String>} opts.labels Include only autotests with provided labels
-     * @param {Number} opts.stabilityMinimal OBSOLETE: Use `minStability` instead
-     * @param {Number} opts.minStability Minimum stability value of autotest
-     * @param {Number} opts.stabilityMaximal OBSOLETE: Use `maxStability` instead
-     * @param {Number} opts.maxStability Maximum stability value of autotest
-     * @param {Boolean} opts.isFlaky OBSOLETE: Use `flaky` instead
-     * @param {Boolean} opts.flaky Is autotest marked as \"Flaky\"
-     * @param {Boolean} opts.includeSteps If result must also include autotest steps
-     * @param {Boolean} opts.includeLabels If result must also include autotest labels
-     * @param {String} opts.externalKey External key of autotest
-     * @param {Number} opts.skip Amount of items to be skipped (offset)
-     * @param {Number} opts.take Amount of items to be taken (limit)
-     * @param {String} opts.orderBy SQL-like  ORDER BY statement (column1 ASC|DESC , column2 ASC|DESC)
-     * @param {String} opts.searchField Property name for searching
-     * @param {String} opts.searchValue Value for searching
-     * @return {Promise} a {@link https://www.promisejs.org/|Promise}, with data of type {@link Array.<module:model/AutoTestModel>}
-     */
-    adaptersAutoTestsGet(opts) {
-      return this.adaptersAutoTestsGetWithHttpInfo(opts)
         .then(function(response_and_data) {
           return response_and_data.data;
         });

@@ -14,8 +14,13 @@ export class BaseService {
 
     const defaultClient = AdaptersApi.ApiClient.instance;
     defaultClient.basePath = config.url;
-    // @ts-ignore
+    // @ts-ignore — generated ApiClient must keep scheme name "PrivateToken" (regen often renames it)
     const auth = defaultClient.authentications["PrivateToken"];
+    if (!auth) {
+      throw new Error(
+        `adapters-api auth must expose "PrivateToken", got: [${Object.keys(defaultClient.authentications).join(", ")}]`
+      );
+    }
     auth.apiKeyPrefix = "PrivateToken";
     auth.apiKey = config.privateToken;
 

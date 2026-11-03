@@ -137,7 +137,7 @@ CustomAttributePutModel.RequiredProperties = ["id", "type", "isDeleted", "name",
 CustomAttributePutModel.prototype['id'] = undefined;
 
 /**
- * Collection of the attribute options      Available for attributes of type `options` and `multiple options` only
+ * Collection of the attribute options   Available for attributes of type `options` and `multiple options` only
  * @member {Array.<module:model/CustomAttributeOptionModel>} options
  */
 CustomAttributePutModel.prototype['options'] = undefined;

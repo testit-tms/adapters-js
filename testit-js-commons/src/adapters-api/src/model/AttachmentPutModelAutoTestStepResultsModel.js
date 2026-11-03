@@ -179,7 +179,7 @@ AttachmentPutModelAutoTestStepResultsModel.prototype['outcome'] = undefined;
 AttachmentPutModelAutoTestStepResultsModel.prototype['stepResults'] = undefined;
 
 /**
- * /// <summary>  Specifies an attachment GUID. Multiple values can be sent.  </summary>
+ * /// <summary> Specifies an attachment GUID. Multiple values can be sent. </summary>
  * @member {Array.<module:model/AttachmentPutModel>} attachments
  */
 AttachmentPutModelAutoTestStepResultsModel.prototype['attachments'] = undefined;

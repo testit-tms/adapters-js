@@ -33,11 +33,12 @@ class TestResultResponse {
      * @param id {String} 
      * @param failureClassIds {Array.<String>} 
      * @param configurationId {String} 
+     * @param testPointId {String} 
      * @param testRunId {String} 
      */
-    constructor(id, failureClassIds, configurationId, testRunId) { 
+    constructor(id, failureClassIds, configurationId, testPointId, testRunId) { 
         
-        TestResultResponse.initialize(this, id, failureClassIds, configurationId, testRunId);
+        TestResultResponse.initialize(this, id, failureClassIds, configurationId, testPointId, testRunId);
     }
 
     /**
@@ -45,10 +46,11 @@ class TestResultResponse {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, id, failureClassIds, configurationId, testRunId) { 
+    static initialize(obj, id, failureClassIds, configurationId, testPointId, testRunId) { 
         obj['id'] = id;
         obj['failureClassIds'] = failureClassIds;
         obj['configurationId'] = configurationId;
+        obj['testPointId'] = testPointId;
         obj['testRunId'] = testRunId;
     }
 
@@ -95,6 +97,9 @@ class TestResultResponse {
             }
             if (data.hasOwnProperty('configurationId')) {
                 obj['configurationId'] = ApiClient.convertToType(data['configurationId'], 'String');
+            }
+            if (data.hasOwnProperty('testPointId')) {
+                obj['testPointId'] = ApiClient.convertToType(data['testPointId'], 'String');
             }
             if (data.hasOwnProperty('durationInMs')) {
                 obj['durationInMs'] = ApiClient.convertToType(data['durationInMs'], 'Number');
@@ -210,6 +215,10 @@ class TestResultResponse {
             throw new Error("Expected the field `configurationId` to be a primitive type in the JSON string but got " + data['configurationId']);
         }
         // ensure the json data is a string
+        if (data['testPointId'] && !(typeof data['testPointId'] === 'string' || data['testPointId'] instanceof String)) {
+            throw new Error("Expected the field `testPointId` to be a primitive type in the JSON string but got " + data['testPointId']);
+        }
+        // ensure the json data is a string
         if (data['traces'] && !(typeof data['traces'] === 'string' || data['traces'] instanceof String)) {
             throw new Error("Expected the field `traces` to be a primitive type in the JSON string but got " + data['traces']);
         }
@@ -266,7 +275,7 @@ class TestResultResponse {
 
 }
 
-TestResultResponse.RequiredProperties = ["id", "failureClassIds", "configurationId", "testRunId"];
+TestResultResponse.RequiredProperties = ["id", "failureClassIds", "configurationId", "testPointId", "testRunId"];
 
 /**
  * @member {String} id
@@ -322,6 +331,11 @@ TestResultResponse.prototype['autoTestId'] = undefined;
  * @member {String} configurationId
  */
 TestResultResponse.prototype['configurationId'] = undefined;
+
+/**
+ * @member {String} testPointId
+ */
+TestResultResponse.prototype['testPointId'] = undefined;
 
 /**
  * @member {Number} durationInMs

@@ -24,6 +24,7 @@ import AttachmentUpdateRequest from './model/AttachmentUpdateRequest';
 import AutoTest from './model/AutoTest';
 import AutoTestApiResult from './model/AutoTestApiResult';
 import AutoTestCaseApiModel from './model/AutoTestCaseApiModel';
+import AutoTestCaseModel from './model/AutoTestCaseModel';
 import AutoTestCreateApiModel from './model/AutoTestCreateApiModel';
 import AutoTestFilterApiModel from './model/AutoTestFilterApiModel';
 import AutoTestIdModel from './model/AutoTestIdModel';
@@ -51,16 +52,22 @@ import CreateProjectApiModel from './model/CreateProjectApiModel';
 import CreateStepApiModel from './model/CreateStepApiModel';
 import CreateWorkItemApiModel from './model/CreateWorkItemApiModel';
 import CustomAttributeApiResult from './model/CustomAttributeApiResult';
-import CustomAttributeGetModel from './model/CustomAttributeGetModel';
+import CustomAttributeModel from './model/CustomAttributeModel';
 import CustomAttributeOptionApiResult from './model/CustomAttributeOptionApiResult';
 import CustomAttributeOptionModel from './model/CustomAttributeOptionModel';
+import CustomAttributeOptionPostApiModel from './model/CustomAttributeOptionPostApiModel';
+import CustomAttributeOptionUpdateApiModel from './model/CustomAttributeOptionUpdateApiModel';
 import CustomAttributePutModel from './model/CustomAttributePutModel';
+import CustomAttributeSearchApiModel from './model/CustomAttributeSearchApiModel';
+import CustomAttributeSearchApiResult from './model/CustomAttributeSearchApiResult';
 import CustomAttributeType from './model/CustomAttributeType';
 import CustomAttributeTypesEnum from './model/CustomAttributeTypesEnum';
 import DateTimeRangeSelectorModel from './model/DateTimeRangeSelectorModel';
 import DeletionState from './model/DeletionState';
 import DetailedProjectApiResult from './model/DetailedProjectApiResult';
 import FailureCategoryModel from './model/FailureCategoryModel';
+import GlobalCustomAttributePostApiModel from './model/GlobalCustomAttributePostApiModel';
+import GlobalCustomAttributeUpdateApiModel from './model/GlobalCustomAttributeUpdateApiModel';
 import GuidExtractionModel from './model/GuidExtractionModel';
 import ImageResizeType from './model/ImageResizeType';
 import Int32RangeSelectorModel from './model/Int32RangeSelectorModel';
@@ -70,6 +77,9 @@ import IterationModel from './model/IterationModel';
 import LabelApiModel from './model/LabelApiModel';
 import LabelApiResult from './model/LabelApiResult';
 import LabelShortModel from './model/LabelShortModel';
+import LayerApiModel from './model/LayerApiModel';
+import LayerApiResult from './model/LayerApiResult';
+import LayerSource from './model/LayerSource';
 import LinkApiResult from './model/LinkApiResult';
 import LinkCreateApiModel from './model/LinkCreateApiModel';
 import LinkModel from './model/LinkModel';
@@ -90,6 +100,7 @@ import ParametersFilterApiModel from './model/ParametersFilterApiModel';
 import ProblemDetails from './model/ProblemDetails';
 import ProjectApiResult from './model/ProjectApiResult';
 import ProjectAttributesFilterModel from './model/ProjectAttributesFilterModel';
+import ProjectShortestApiResult from './model/ProjectShortestApiResult';
 import ProjectTypeModel from './model/ProjectTypeModel';
 import ProjectsFilterModel from './model/ProjectsFilterModel';
 import SectionModel from './model/SectionModel';
@@ -137,6 +148,7 @@ import WorkflowStatusApiResult from './model/WorkflowStatusApiResult';
 import AttachmentsApi from './api/AttachmentsApi';
 import AutoTestsApi from './api/AutoTestsApi';
 import ConfigurationsApi from './api/ConfigurationsApi';
+import CustomAttributesApi from './api/CustomAttributesApi';
 import ParametersApi from './api/ParametersApi';
 import ProjectAttributesApi from './api/ProjectAttributesApi';
 import ProjectSectionsApi from './api/ProjectSectionsApi';
@@ -252,6 +264,12 @@ export {
      * @property {module:model/AutoTestCaseApiModel}
      */
     AutoTestCaseApiModel,
+
+    /**
+     * The AutoTestCaseModel model constructor.
+     * @property {module:model/AutoTestCaseModel}
+     */
+    AutoTestCaseModel,
 
     /**
      * The AutoTestCreateApiModel model constructor.
@@ -416,10 +434,10 @@ export {
     CustomAttributeApiResult,
 
     /**
-     * The CustomAttributeGetModel model constructor.
-     * @property {module:model/CustomAttributeGetModel}
+     * The CustomAttributeModel model constructor.
+     * @property {module:model/CustomAttributeModel}
      */
-    CustomAttributeGetModel,
+    CustomAttributeModel,
 
     /**
      * The CustomAttributeOptionApiResult model constructor.
@@ -434,10 +452,34 @@ export {
     CustomAttributeOptionModel,
 
     /**
+     * The CustomAttributeOptionPostApiModel model constructor.
+     * @property {module:model/CustomAttributeOptionPostApiModel}
+     */
+    CustomAttributeOptionPostApiModel,
+
+    /**
+     * The CustomAttributeOptionUpdateApiModel model constructor.
+     * @property {module:model/CustomAttributeOptionUpdateApiModel}
+     */
+    CustomAttributeOptionUpdateApiModel,
+
+    /**
      * The CustomAttributePutModel model constructor.
      * @property {module:model/CustomAttributePutModel}
      */
     CustomAttributePutModel,
+
+    /**
+     * The CustomAttributeSearchApiModel model constructor.
+     * @property {module:model/CustomAttributeSearchApiModel}
+     */
+    CustomAttributeSearchApiModel,
+
+    /**
+     * The CustomAttributeSearchApiResult model constructor.
+     * @property {module:model/CustomAttributeSearchApiResult}
+     */
+    CustomAttributeSearchApiResult,
 
     /**
      * The CustomAttributeType model constructor.
@@ -474,6 +516,18 @@ export {
      * @property {module:model/FailureCategoryModel}
      */
     FailureCategoryModel,
+
+    /**
+     * The GlobalCustomAttributePostApiModel model constructor.
+     * @property {module:model/GlobalCustomAttributePostApiModel}
+     */
+    GlobalCustomAttributePostApiModel,
+
+    /**
+     * The GlobalCustomAttributeUpdateApiModel model constructor.
+     * @property {module:model/GlobalCustomAttributeUpdateApiModel}
+     */
+    GlobalCustomAttributeUpdateApiModel,
 
     /**
      * The GuidExtractionModel model constructor.
@@ -528,6 +582,24 @@ export {
      * @property {module:model/LabelShortModel}
      */
     LabelShortModel,
+
+    /**
+     * The LayerApiModel model constructor.
+     * @property {module:model/LayerApiModel}
+     */
+    LayerApiModel,
+
+    /**
+     * The LayerApiResult model constructor.
+     * @property {module:model/LayerApiResult}
+     */
+    LayerApiResult,
+
+    /**
+     * The LayerSource model constructor.
+     * @property {module:model/LayerSource}
+     */
+    LayerSource,
 
     /**
      * The LinkApiResult model constructor.
@@ -648,6 +720,12 @@ export {
      * @property {module:model/ProjectAttributesFilterModel}
      */
     ProjectAttributesFilterModel,
+
+    /**
+     * The ProjectShortestApiResult model constructor.
+     * @property {module:model/ProjectShortestApiResult}
+     */
+    ProjectShortestApiResult,
 
     /**
      * The ProjectTypeModel model constructor.
@@ -930,6 +1008,12 @@ export {
     * @property {module:api/ConfigurationsApi}
     */
     ConfigurationsApi,
+
+    /**
+    * The CustomAttributesApi service constructor.
+    * @property {module:api/CustomAttributesApi}
+    */
+    CustomAttributesApi,
 
     /**
     * The ParametersApi service constructor.

@@ -4,6 +4,13 @@ on:
   pull_request
 
 jobs:
+  adapters-api-auth:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Assert PrivateToken auth scheme
+        run: node scripts/check-adapters-api-auth.js
+
   build:
     # needs: [lint, test]
     runs-on: ${{ matrix.os }}

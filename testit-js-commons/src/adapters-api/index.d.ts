@@ -145,95 +145,6 @@ declare module 'adapters-api/api/AutoTestsApi' {
        */
       adaptersAutoTestsBulkPut(opts: Object): Promise<any>;
       /**
-       * @param {Object} opts Optional parameters
-       * @param {String} [projectId] Project internal ID
-       * @param {String} [externalId] Autotest external ID
-       * @param {Number} [globalId] Autotest global ID
-       * @param {String} [namespace] Namespace in which autotest is located
-       * @param {Boolean} [isNamespaceNull] OBSOLETE: Use `includeEmptyNamespaces` instead
-       * @param {Boolean} [includeEmptyNamespaces] If result must contain autotests without namespace
-       * @param {String} [className] Name of class in which autotest is located
-       * @param {Boolean} [isClassnameNull] OBSOLETE: Use `includeEmptyClassNames` instead
-       * @param {Boolean} [includeEmptyClassNames] If result must contain autotests without class
-       * @param {Boolean} [isDeleted] OBSOLETE: Use `deleted` instead
-       * @param {Boolean} [deleted] Is autotest deleted
-       * @param {Array.<String>} [labels] Include only autotests with provided labels
-       * @param {Number} [stabilityMinimal] OBSOLETE: Use `minStability` instead
-       * @param {Number} [minStability] Minimum stability value of autotest
-       * @param {Number} [stabilityMaximal] OBSOLETE: Use `maxStability` instead
-       * @param {Number} [maxStability] Maximum stability value of autotest
-       * @param {Boolean} [isFlaky] OBSOLETE: Use `flaky` instead
-       * @param {Boolean} [flaky] Is autotest marked as \"Flaky\"
-       * @param {Boolean} [includeSteps] If result must also include autotest steps
-       * @param {Boolean} [includeLabels] If result must also include autotest labels
-       * @param {String} [externalKey] External key of autotest
-       * @param {Number} [skip] Amount of items to be skipped (offset)
-       * @param {Number} [take] Amount of items to be taken (limit)
-       * @param {String} [orderBy] SQL-like  ORDER BY statement (column1 ASC|DESC , column2 ASC|DESC)
-       * @param {String} [searchField] Property name for searching
-       * @param {String} [searchValue] Value for searching
-       * @return {Promise} a {@link https://www.promisejs.org/|Promise}, with an object containing data of type {@link Array.<module:model/AutoTestModel>} and HTTP response
-       */
-      adaptersAutoTestsGetWithHttpInfo(opts: Object): Promise<any>;
-      /**
-       * @param {Object} opts Optional parameters
-       * @param {String} opts.projectId Project internal ID
-       * @param {String} opts.externalId Autotest external ID
-       * @param {Number} opts.globalId Autotest global ID
-       * @param {String} opts.namespace Namespace in which autotest is located
-       * @param {Boolean} opts.isNamespaceNull OBSOLETE: Use `includeEmptyNamespaces` instead
-       * @param {Boolean} opts.includeEmptyNamespaces If result must contain autotests without namespace
-       * @param {String} opts.className Name of class in which autotest is located
-       * @param {Boolean} opts.isClassnameNull OBSOLETE: Use `includeEmptyClassNames` instead
-       * @param {Boolean} opts.includeEmptyClassNames If result must contain autotests without class
-       * @param {Boolean} opts.isDeleted OBSOLETE: Use `deleted` instead
-       * @param {Boolean} opts.deleted Is autotest deleted
-       * @param {Array.<String>} opts.labels Include only autotests with provided labels
-       * @param {Number} opts.stabilityMinimal OBSOLETE: Use `minStability` instead
-       * @param {Number} opts.minStability Minimum stability value of autotest
-       * @param {Number} opts.stabilityMaximal OBSOLETE: Use `maxStability` instead
-       * @param {Number} opts.maxStability Maximum stability value of autotest
-       * @param {Boolean} opts.isFlaky OBSOLETE: Use `flaky` instead
-       * @param {Boolean} opts.flaky Is autotest marked as \"Flaky\"
-       * @param {Boolean} opts.includeSteps If result must also include autotest steps
-       * @param {Boolean} opts.includeLabels If result must also include autotest labels
-       * @param {String} opts.externalKey External key of autotest
-       * @param {Number} opts.skip Amount of items to be skipped (offset)
-       * @param {Number} opts.take Amount of items to be taken (limit)
-       * @param {String} opts.orderBy SQL-like  ORDER BY statement (column1 ASC|DESC , column2 ASC|DESC)
-       * @param {String} opts.searchField Property name for searching
-       * @param {String} opts.searchValue Value for searching
-       * @return {Promise} a {@link https://www.promisejs.org/|Promise}, with data of type {@link Array.<module:model/AutoTestModel>}
-       */
-      adaptersAutoTestsGet(opts: {
-          projectId: string;
-          externalId: string;
-          globalId: number;
-          namespace: string;
-          isNamespaceNull: boolean;
-          includeEmptyNamespaces: boolean;
-          className: string;
-          isClassnameNull: boolean;
-          includeEmptyClassNames: boolean;
-          isDeleted: boolean;
-          deleted: boolean;
-          labels: Array<string>;
-          stabilityMinimal: number;
-          minStability: number;
-          stabilityMaximal: number;
-          maxStability: number;
-          isFlaky: boolean;
-          flaky: boolean;
-          includeSteps: boolean;
-          includeLabels: boolean;
-          externalKey: string;
-          skip: number;
-          take: number;
-          orderBy: string;
-          searchField: string;
-          searchValue: string;
-      }): Promise<any>;
-      /**
        * Get autotest by internal or global ID
        * @param {String} id Internal (UUID) or global (integer) identifier
        * @return {Promise} a {@link https://www.promisejs.org/|Promise}, with an object containing data of type {@link module:model/AutoTestApiResult} and HTTP response
@@ -440,6 +351,109 @@ declare module 'adapters-api/api/ConfigurationsApi' {
   }
 
 }
+declare module 'adapters-api/api/CustomAttributesApi' {
+  /**
+   * API
+   * No description provided (generated by Openapi Generator https://github.com/openapitools/openapi-generator)
+   *
+   * The version of the OpenAPI document: adapters
+   *
+   *
+   * NOTE: This class is auto generated by OpenAPI Generator (https://openapi-generator.tech).
+   * https://openapi-generator.tech
+   * Do not edit the class manually.
+   *
+   */
+  /**
+  * CustomAttributes service.
+  * @module api/CustomAttributesApi
+  * @version 1.0.0
+  */
+  export default class CustomAttributesApi {
+      apiClient: any;
+      /**
+      * Constructs a new CustomAttributesApi.
+      * @alias module:api/CustomAttributesApi
+      * @class
+      * @param {module:ApiClient} [apiClient] Optional API client implementation to use,
+      * default to {@link module:ApiClient#instance} if unspecified.
+      */
+      constructor(apiClient: module);
+      /**
+       * Update global attribute
+       * @param {String} id Unique ID of attribute
+       * @param {Object} opts Optional parameters
+       * @param {module:model/GlobalCustomAttributeUpdateApiModel} [globalCustomAttributeUpdateApiModel]
+       * @return {Promise} a {@link https://www.promisejs.org/|Promise}, with an object containing data of type {@link module:model/CustomAttributeApiResult} and HTTP response
+       */
+      adaptersCustomAttributesGlobalIdPutWithHttpInfo(id: string, opts: Object): Promise<any>;
+      /**
+       * Update global attribute
+       * @param {String} id Unique ID of attribute
+       * @param {Object} opts Optional parameters
+       * @param {module:model/GlobalCustomAttributeUpdateApiModel} opts.globalCustomAttributeUpdateApiModel
+       * @return {Promise} a {@link https://www.promisejs.org/|Promise}, with data of type {@link module:model/CustomAttributeApiResult}
+       */
+      adaptersCustomAttributesGlobalIdPut(id: string, opts: Object): Promise<any>;
+      /**
+       * Create global attribute
+       * @param {Object} opts Optional parameters
+       * @param {module:model/GlobalCustomAttributePostApiModel} [globalCustomAttributePostApiModel]
+       * @return {Promise} a {@link https://www.promisejs.org/|Promise}, with an object containing data of type {@link module:model/CustomAttributeApiResult} and HTTP response
+       */
+      adaptersCustomAttributesGlobalPostWithHttpInfo(opts: Object): Promise<any>;
+      /**
+       * Create global attribute
+       * @param {Object} opts Optional parameters
+       * @param {module:model/GlobalCustomAttributePostApiModel} opts.globalCustomAttributePostApiModel
+       * @return {Promise} a {@link https://www.promisejs.org/|Promise}, with data of type {@link module:model/CustomAttributeApiResult}
+       */
+      adaptersCustomAttributesGlobalPost(opts: Object): Promise<any>;
+      /**
+       * Get attribute by ID
+       * @param {String} id Unique ID of attribute
+       * @return {Promise} a {@link https://www.promisejs.org/|Promise}, with an object containing data of type {@link module:model/CustomAttributeApiResult} and HTTP response
+       */
+      adaptersCustomAttributesIdGetWithHttpInfo(id: string): Promise<any>;
+      /**
+       * Get attribute by ID
+       * @param {String} id Unique ID of attribute
+       * @return {Promise} a {@link https://www.promisejs.org/|Promise}, with data of type {@link module:model/CustomAttributeApiResult}
+       */
+      adaptersCustomAttributesIdGet(id: string): Promise<any>;
+      /**
+       * Search for attributes
+       * @param {Object} opts Optional parameters
+       * @param {Number} [skip] Amount of items to be skipped (offset)
+       * @param {Number} [take] Amount of items to be taken (limit)
+       * @param {String} [orderBy] SQL-like  ORDER BY statement (column1 ASC|DESC , column2 ASC|DESC)
+       * @param {String} [searchField] Property name for searching
+       * @param {String} [searchValue] Value for searching
+       * @param {module:model/CustomAttributeSearchApiModel} [customAttributeSearchApiModel]
+       * @return {Promise} a {@link https://www.promisejs.org/|Promise}, with an object containing data of type {@link Array.<module:model/CustomAttributeSearchApiResult>} and HTTP response
+       */
+      adaptersCustomAttributesSearchPostWithHttpInfo(opts: Object): Promise<any>;
+      /**
+       * Search for attributes
+       * @param {Object} opts Optional parameters
+       * @param {Number} opts.skip Amount of items to be skipped (offset)
+       * @param {Number} opts.take Amount of items to be taken (limit)
+       * @param {String} opts.orderBy SQL-like  ORDER BY statement (column1 ASC|DESC , column2 ASC|DESC)
+       * @param {String} opts.searchField Property name for searching
+       * @param {String} opts.searchValue Value for searching
+       * @param {module:model/CustomAttributeSearchApiModel} opts.customAttributeSearchApiModel
+       * @return {Promise} a {@link https://www.promisejs.org/|Promise}, with data of type {@link Array.<module:model/CustomAttributeSearchApiResult>}
+       */
+      adaptersCustomAttributesSearchPost(opts: {
+          skip: number;
+          take: number;
+          orderBy: string;
+          searchField: string;
+          searchValue: string;
+      }): Promise<any>;
+  }
+
+}
 declare module 'adapters-api/api/ParametersApi' {
   /**
    * API
@@ -581,7 +595,7 @@ declare module 'adapters-api/api/ProjectAttributesApi' {
        * @param {String} [searchField] Property name for searching
        * @param {String} [searchValue] Value for searching
        * @param {module:model/ProjectAttributesFilterModel} [projectAttributesFilterModel]
-       * @return {Promise} a {@link https://www.promisejs.org/|Promise}, with an object containing data of type {@link Array.<module:model/CustomAttributeGetModel>} and HTTP response
+       * @return {Promise} a {@link https://www.promisejs.org/|Promise}, with an object containing data of type {@link Array.<module:model/CustomAttributeModel>} and HTTP response
        */
       adaptersProjectsProjectIdAttributesSearchPostWithHttpInfo(projectId: string, opts: Object): Promise<any>;
       /**
@@ -594,7 +608,7 @@ declare module 'adapters-api/api/ProjectAttributesApi' {
        * @param {String} opts.searchField Property name for searching
        * @param {String} opts.searchValue Value for searching
        * @param {module:model/ProjectAttributesFilterModel} opts.projectAttributesFilterModel
-       * @return {Promise} a {@link https://www.promisejs.org/|Promise}, with data of type {@link Array.<module:model/CustomAttributeGetModel>}
+       * @return {Promise} a {@link https://www.promisejs.org/|Promise}, with data of type {@link Array.<module:model/CustomAttributeModel>}
        */
       adaptersProjectsProjectIdAttributesSearchPost(projectId: string, opts: {
           skip: number;
@@ -1525,6 +1539,7 @@ declare module 'adapters-api/index' {
   import AutoTest from 'adapters-api/model/AutoTest';
   import AutoTestApiResult from 'adapters-api/model/AutoTestApiResult';
   import AutoTestCaseApiModel from 'adapters-api/model/AutoTestCaseApiModel';
+  import AutoTestCaseModel from 'adapters-api/model/AutoTestCaseModel';
   import AutoTestCreateApiModel from 'adapters-api/model/AutoTestCreateApiModel';
   import AutoTestFilterApiModel from 'adapters-api/model/AutoTestFilterApiModel';
   import AutoTestIdModel from 'adapters-api/model/AutoTestIdModel';
@@ -1552,16 +1567,22 @@ declare module 'adapters-api/index' {
   import CreateStepApiModel from 'adapters-api/model/CreateStepApiModel';
   import CreateWorkItemApiModel from 'adapters-api/model/CreateWorkItemApiModel';
   import CustomAttributeApiResult from 'adapters-api/model/CustomAttributeApiResult';
-  import CustomAttributeGetModel from 'adapters-api/model/CustomAttributeGetModel';
+  import CustomAttributeModel from 'adapters-api/model/CustomAttributeModel';
   import CustomAttributeOptionApiResult from 'adapters-api/model/CustomAttributeOptionApiResult';
   import CustomAttributeOptionModel from 'adapters-api/model/CustomAttributeOptionModel';
+  import CustomAttributeOptionPostApiModel from 'adapters-api/model/CustomAttributeOptionPostApiModel';
+  import CustomAttributeOptionUpdateApiModel from 'adapters-api/model/CustomAttributeOptionUpdateApiModel';
   import CustomAttributePutModel from 'adapters-api/model/CustomAttributePutModel';
+  import CustomAttributeSearchApiModel from 'adapters-api/model/CustomAttributeSearchApiModel';
+  import CustomAttributeSearchApiResult from 'adapters-api/model/CustomAttributeSearchApiResult';
   import CustomAttributeType from 'adapters-api/model/CustomAttributeType';
   import CustomAttributeTypesEnum from 'adapters-api/model/CustomAttributeTypesEnum';
   import DateTimeRangeSelectorModel from 'adapters-api/model/DateTimeRangeSelectorModel';
   import DeletionState from 'adapters-api/model/DeletionState';
   import DetailedProjectApiResult from 'adapters-api/model/DetailedProjectApiResult';
   import FailureCategoryModel from 'adapters-api/model/FailureCategoryModel';
+  import GlobalCustomAttributePostApiModel from 'adapters-api/model/GlobalCustomAttributePostApiModel';
+  import GlobalCustomAttributeUpdateApiModel from 'adapters-api/model/GlobalCustomAttributeUpdateApiModel';
   import GuidExtractionModel from 'adapters-api/model/GuidExtractionModel';
   import ImageResizeType from 'adapters-api/model/ImageResizeType';
   import Int32RangeSelectorModel from 'adapters-api/model/Int32RangeSelectorModel';
@@ -1571,6 +1592,9 @@ declare module 'adapters-api/index' {
   import LabelApiModel from 'adapters-api/model/LabelApiModel';
   import LabelApiResult from 'adapters-api/model/LabelApiResult';
   import LabelShortModel from 'adapters-api/model/LabelShortModel';
+  import LayerApiModel from 'adapters-api/model/LayerApiModel';
+  import LayerApiResult from 'adapters-api/model/LayerApiResult';
+  import LayerSource from 'adapters-api/model/LayerSource';
   import LinkApiResult from 'adapters-api/model/LinkApiResult';
   import LinkCreateApiModel from 'adapters-api/model/LinkCreateApiModel';
   import LinkModel from 'adapters-api/model/LinkModel';
@@ -1591,6 +1615,7 @@ declare module 'adapters-api/index' {
   import ProblemDetails from 'adapters-api/model/ProblemDetails';
   import ProjectApiResult from 'adapters-api/model/ProjectApiResult';
   import ProjectAttributesFilterModel from 'adapters-api/model/ProjectAttributesFilterModel';
+  import ProjectShortestApiResult from 'adapters-api/model/ProjectShortestApiResult';
   import ProjectTypeModel from 'adapters-api/model/ProjectTypeModel';
   import ProjectsFilterModel from 'adapters-api/model/ProjectsFilterModel';
   import SectionModel from 'adapters-api/model/SectionModel';
@@ -1638,6 +1663,7 @@ declare module 'adapters-api/index' {
   import AttachmentsApi from 'adapters-api/api/AttachmentsApi';
   import AutoTestsApi from 'adapters-api/api/AutoTestsApi';
   import ConfigurationsApi from 'adapters-api/api/ConfigurationsApi';
+  import CustomAttributesApi from 'adapters-api/api/CustomAttributesApi';
   import ParametersApi from 'adapters-api/api/ParametersApi';
   import ProjectAttributesApi from 'adapters-api/api/ProjectAttributesApi';
   import ProjectSectionsApi from 'adapters-api/api/ProjectSectionsApi';
@@ -1740,6 +1766,11 @@ declare module 'adapters-api/index' {
    * @property {module:model/AutoTestCaseApiModel}
    */
   AutoTestCaseApiModel, 
+  /**
+   * The AutoTestCaseModel model constructor.
+   * @property {module:model/AutoTestCaseModel}
+   */
+  AutoTestCaseModel, 
   /**
    * The AutoTestCreateApiModel model constructor.
    * @property {module:model/AutoTestCreateApiModel}
@@ -1876,10 +1907,10 @@ declare module 'adapters-api/index' {
    */
   CustomAttributeApiResult, 
   /**
-   * The CustomAttributeGetModel model constructor.
-   * @property {module:model/CustomAttributeGetModel}
+   * The CustomAttributeModel model constructor.
+   * @property {module:model/CustomAttributeModel}
    */
-  CustomAttributeGetModel, 
+  CustomAttributeModel, 
   /**
    * The CustomAttributeOptionApiResult model constructor.
    * @property {module:model/CustomAttributeOptionApiResult}
@@ -1891,10 +1922,30 @@ declare module 'adapters-api/index' {
    */
   CustomAttributeOptionModel, 
   /**
+   * The CustomAttributeOptionPostApiModel model constructor.
+   * @property {module:model/CustomAttributeOptionPostApiModel}
+   */
+  CustomAttributeOptionPostApiModel, 
+  /**
+   * The CustomAttributeOptionUpdateApiModel model constructor.
+   * @property {module:model/CustomAttributeOptionUpdateApiModel}
+   */
+  CustomAttributeOptionUpdateApiModel, 
+  /**
    * The CustomAttributePutModel model constructor.
    * @property {module:model/CustomAttributePutModel}
    */
   CustomAttributePutModel, 
+  /**
+   * The CustomAttributeSearchApiModel model constructor.
+   * @property {module:model/CustomAttributeSearchApiModel}
+   */
+  CustomAttributeSearchApiModel, 
+  /**
+   * The CustomAttributeSearchApiResult model constructor.
+   * @property {module:model/CustomAttributeSearchApiResult}
+   */
+  CustomAttributeSearchApiResult, 
   /**
    * The CustomAttributeType model constructor.
    * @property {module:model/CustomAttributeType}
@@ -1925,6 +1976,16 @@ declare module 'adapters-api/index' {
    * @property {module:model/FailureCategoryModel}
    */
   FailureCategoryModel, 
+  /**
+   * The GlobalCustomAttributePostApiModel model constructor.
+   * @property {module:model/GlobalCustomAttributePostApiModel}
+   */
+  GlobalCustomAttributePostApiModel, 
+  /**
+   * The GlobalCustomAttributeUpdateApiModel model constructor.
+   * @property {module:model/GlobalCustomAttributeUpdateApiModel}
+   */
+  GlobalCustomAttributeUpdateApiModel, 
   /**
    * The GuidExtractionModel model constructor.
    * @property {module:model/GuidExtractionModel}
@@ -1970,6 +2031,21 @@ declare module 'adapters-api/index' {
    * @property {module:model/LabelShortModel}
    */
   LabelShortModel, 
+  /**
+   * The LayerApiModel model constructor.
+   * @property {module:model/LayerApiModel}
+   */
+  LayerApiModel, 
+  /**
+   * The LayerApiResult model constructor.
+   * @property {module:model/LayerApiResult}
+   */
+  LayerApiResult, 
+  /**
+   * The LayerSource model constructor.
+   * @property {module:model/LayerSource}
+   */
+  LayerSource, 
   /**
    * The LinkApiResult model constructor.
    * @property {module:model/LinkApiResult}
@@ -2070,6 +2146,11 @@ declare module 'adapters-api/index' {
    * @property {module:model/ProjectAttributesFilterModel}
    */
   ProjectAttributesFilterModel, 
+  /**
+   * The ProjectShortestApiResult model constructor.
+   * @property {module:model/ProjectShortestApiResult}
+   */
+  ProjectShortestApiResult, 
   /**
    * The ProjectTypeModel model constructor.
    * @property {module:model/ProjectTypeModel}
@@ -2305,6 +2386,11 @@ declare module 'adapters-api/index' {
   * @property {module:api/ConfigurationsApi}
   */
   ConfigurationsApi, 
+  /**
+  * The CustomAttributesApi service constructor.
+  * @property {module:api/CustomAttributesApi}
+  */
+  CustomAttributesApi, 
   /**
   * The ParametersApi service constructor.
   * @property {module:api/ParametersApi}
@@ -2543,11 +2629,6 @@ declare module 'adapters-api/model/AttachmentApiResult' {
        * @param name {String} Name of the attachment file
        */
       constructor(id: string, fileId: string, type: string, size: number, name: string);
-      id: string;
-      fileId?: string;
-      type?: string;
-      size?: number;
-      name?: string;
       /**
        * Initializes the fields of this object.
        * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
@@ -2658,7 +2739,6 @@ declare module 'adapters-api/model/AttachmentPutModel' {
        * @param id {String} Unique ID of the attachment
        */
       constructor(id: string);
-      id: string;
       /**
        * Initializes the fields of this object.
        * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
@@ -2710,16 +2790,6 @@ declare module 'adapters-api/model/AttachmentPutModelAutoTestStepResultsModel' {
        * @alias module:model/AttachmentPutModelAutoTestStepResultsModel
        */
       constructor();
-      title?: string;
-      description?: string | null;
-      info?: string | null;
-      startedOn?: Date;
-      completedOn?: Date;
-      duration?: number;
-      outcome?: string;
-      stepResults?: AttachmentPutModelAutoTestStepResultsModel[];
-      attachments?: Array<{ id: string }>;
-      parameters?: { [key: string]: string };
       /**
        * Initializes the fields of this object.
        * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
@@ -2881,23 +2951,6 @@ declare module 'adapters-api/model/AutoTestApiResult' {
        * @param globalId {Number}
        */
       constructor(id: string, projectId: string, name: string, isFlaky: boolean, globalId: number);
-      id: string;
-      projectId?: string;
-      externalId?: string | null;
-      name?: string | null;
-      namespace?: string | null;
-      classname?: string | null;
-      steps?: any[];
-      setup?: any[];
-      teardown?: any[];
-      title?: string | null;
-      description?: string | null;
-      isFlaky?: boolean;
-      externalKey?: string | null;
-      globalId?: number;
-      links?: any[];
-      labels?: any[];
-      tags?: string[];
       /**
        * Initializes the fields of this object.
        * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
@@ -2977,6 +3030,58 @@ declare module 'adapters-api/model/AutoTestCaseApiModel' {
   export default AutoTestCaseApiModel;
 
 }
+declare module 'adapters-api/model/AutoTestCaseModel' {
+  /**
+   * API
+   * No description provided (generated by Openapi Generator https://github.com/openapitools/openapi-generator)
+   *
+   * The version of the OpenAPI document: adapters
+   *
+   *
+   * NOTE: This class is auto generated by OpenAPI Generator (https://openapi-generator.tech).
+   * https://openapi-generator.tech
+   * Do not edit the class manually.
+   *
+   */
+  /**
+   * The AutoTestCaseModel model module.
+   * @module model/AutoTestCaseModel
+   * @version 1.0.0
+   */
+  class AutoTestCaseModel {
+      /**
+       * Constructs a new <code>AutoTestCaseModel</code>.
+       * @alias module:model/AutoTestCaseModel
+       * @param globalId {Number} Global ID of the auto test case
+       */
+      constructor(globalId: number);
+      /**
+       * Initializes the fields of this object.
+       * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
+       * Only for internal use.
+       */
+      static initialize(obj: any, globalId: any): void;
+      /**
+       * Constructs a <code>AutoTestCaseModel</code> from a plain JavaScript object, optionally creating a new instance.
+       * Copies all relevant properties from <code>data</code> to <code>obj</code> if supplied or a new instance if not.
+       * @param {Object} data The plain JavaScript object bearing properties of interest.
+       * @param {module:model/AutoTestCaseModel} obj Optional instance to populate.
+       * @return {module:model/AutoTestCaseModel} The populated <code>AutoTestCaseModel</code> instance.
+       */
+      static constructFromObject(data: Object, obj: module): module;
+      /**
+       * Validates the JSON data with respect to <code>AutoTestCaseModel</code>.
+       * @param {Object} data The plain JavaScript object bearing properties of interest.
+       * @return {boolean} to indicate whether the JSON data is valid with respect to <code>AutoTestCaseModel</code>.
+       */
+      static validateJSON(data: Object): boolean;
+  }
+  namespace AutoTestCaseModel {
+      var RequiredProperties: string[];
+  }
+  export default AutoTestCaseModel;
+
+}
 declare module 'adapters-api/model/AutoTestCreateApiModel' {
   /**
    * API
@@ -3004,22 +3109,6 @@ declare module 'adapters-api/model/AutoTestCreateApiModel' {
        * @param name {String} Name of the autotest
        */
       constructor(projectId: string, externalId: string, name: string);
-      projectId: string;
-      externalId: string;
-      externalKey?: string;
-      name: string;
-      namespace?: string;
-      classname?: string;
-      title?: string;
-      description?: string;
-      isFlaky?: boolean;
-      steps?: unknown;
-      setup?: unknown;
-      teardown?: unknown;
-      shouldCreateWorkItem?: boolean;
-      labels?: unknown;
-      links?: any[];
-      tags?: unknown;
       /**
        * Initializes the fields of this object.
        * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
@@ -3071,17 +3160,6 @@ declare module 'adapters-api/model/AutoTestFilterApiModel' {
        * @alias module:model/AutoTestFilterApiModel
        */
       constructor();
-      projectIds?: string[];
-      externalIds?: string[];
-      globalIds?: number[];
-      name?: string;
-      isFlaky?: boolean;
-      isDeleted?: boolean;
-      namespace?: string;
-      className?: string;
-      externalKey?: string;
-      tags?: string[];
-      excludeTags?: string[];
       /**
        * Initializes the fields of this object.
        * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
@@ -3297,24 +3375,6 @@ declare module 'adapters-api/model/AutoTestResultsForTestRunModel' {
        * @param autoTestExternalId {String} Specifies the external ID of the autotest, which was specified when the test run was created.
        */
       constructor(configurationId: string, autoTestExternalId: string);
-      configurationId: string;
-      autoTestExternalId: string;
-      links?: any[];
-      failureReasonNames?: unknown;
-      outcome?: unknown;
-      statusCode?: string | null;
-      statusType?: string | null;
-      message?: string | null;
-      traces?: string | null;
-      startedOn?: Date;
-      completedOn?: Date;
-      duration?: number;
-      attachments?: Array<{ id: string }>;
-      parameters?: { [key: string]: string };
-      properties?: { [key: string]: string };
-      stepResults?: any[];
-      setupResults?: any[];
-      teardownResults?: any[];
       /**
        * Initializes the fields of this object.
        * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
@@ -3366,8 +3426,6 @@ declare module 'adapters-api/model/AutoTestSearchApiModel' {
        * @alias module:model/AutoTestSearchApiModel
        */
       constructor();
-      filter?: any;
-      includes?: any;
       /**
        * Initializes the fields of this object.
        * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
@@ -3416,9 +3474,6 @@ declare module 'adapters-api/model/AutoTestSearchIncludeApiModel' {
        * @alias module:model/AutoTestSearchIncludeApiModel
        */
       constructor();
-      includeSteps?: boolean;
-      includeLinks?: boolean;
-      includeLabels?: boolean;
       /**
        * Initializes the fields of this object.
        * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
@@ -3624,9 +3679,6 @@ declare module 'adapters-api/model/AutoTestStepModel' {
        * @param title {String} Step name.
        */
       constructor(title: string);
-      title: string;
-      description?: string | null;
-      steps?: AutoTestStepModel[];
       /**
        * Initializes the fields of this object.
        * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
@@ -4091,7 +4143,7 @@ declare module 'adapters-api/model/CreateEmptyTestRunApiModel' {
       /**
        * Constructs a new <code>CreateEmptyTestRunApiModel</code>.
        * @alias module:model/CreateEmptyTestRunApiModel
-       * @param projectId {String} Project unique identifier                This property is to link test run with a project
+       * @param projectId {String} Project unique identifier              This property is to link test run with a project
        */
       constructor(projectId: string);
       /**
@@ -4407,21 +4459,24 @@ declare module 'adapters-api/model/CustomAttributeApiResult' {
        * Constructs a new <code>CustomAttributeApiResult</code>.
        * @alias module:model/CustomAttributeApiResult
        * @param id {String} Unique ID of the attribute
-       * @param options {Array.<module:model/CustomAttributeOptionApiResult>} Collection of the attribute options      Available for attributes of type `options` and `multiple options` only
+       * @param options {Array.<module:model/CustomAttributeOptionApiResult>} Collection of the attribute options   Available for attributes of type `options` and `multiple options` only
        * @param type {module:model/CustomAttributeType} Type of the attribute
        * @param isDeleted {Boolean} Indicates if the attribute is deleted
        * @param name {String} Name of the attribute
        * @param isEnabled {Boolean} Indicates if the attribute is enabled
        * @param isRequired {Boolean} Indicates if the attribute value is mandatory to specify
        * @param isGlobal {Boolean} Indicates if the attribute is available across all projects
+       * @param isReadOnly {Boolean} Indicates if the attribute is read-only
+       * @param isSystem {Boolean} Indicates if the attribute is system
+       * @param targets {Array.<String>} Collection of the attribute targets   Defines where the attribute can be used (e.g., TestCases, AutoTestCases, TestPlans)
        */
-      constructor(id: string, options: Array<any>, type: module, isDeleted: boolean, name: string, isEnabled: boolean, isRequired: boolean, isGlobal: boolean);
+      constructor(id: string, options: Array<any>, type: module, isDeleted: boolean, name: string, isEnabled: boolean, isRequired: boolean, isGlobal: boolean, isReadOnly: boolean, isSystem: boolean, targets: Array<string>);
       /**
        * Initializes the fields of this object.
        * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
        * Only for internal use.
        */
-      static initialize(obj: any, id: any, options: any, type: any, isDeleted: any, name: any, isEnabled: any, isRequired: any, isGlobal: any): void;
+      static initialize(obj: any, id: any, options: any, type: any, isDeleted: any, name: any, isEnabled: any, isRequired: any, isGlobal: any, isReadOnly: any, isSystem: any, targets: any): void;
       /**
        * Constructs a <code>CustomAttributeApiResult</code> from a plain JavaScript object, optionally creating a new instance.
        * Copies all relevant properties from <code>data</code> to <code>obj</code> if supplied or a new instance if not.
@@ -4443,7 +4498,7 @@ declare module 'adapters-api/model/CustomAttributeApiResult' {
   export default CustomAttributeApiResult;
 
 }
-declare module 'adapters-api/model/CustomAttributeGetModel' {
+declare module 'adapters-api/model/CustomAttributeModel' {
   /**
    * API
    * No description provided (generated by Openapi Generator https://github.com/openapitools/openapi-generator)
@@ -4457,49 +4512,52 @@ declare module 'adapters-api/model/CustomAttributeGetModel' {
    *
    */
   /**
-   * The CustomAttributeGetModel model module.
-   * @module model/CustomAttributeGetModel
+   * The CustomAttributeModel model module.
+   * @module model/CustomAttributeModel
    * @version 1.0.0
    */
-  class CustomAttributeGetModel {
+  class CustomAttributeModel {
       /**
-       * Constructs a new <code>CustomAttributeGetModel</code>.
-       * @alias module:model/CustomAttributeGetModel
-       * @param id {String} Unique ID of the attribute
-       * @param options {Array.<module:model/CustomAttributeOptionModel>} Collection of the attribute options
-       * @param type {module:model/CustomAttributeTypesEnum} Type of the attribute
-       * @param isDeleted {Boolean} Indicates if the attribute is deleted
+       * Constructs a new <code>CustomAttributeModel</code>.
+       * @alias module:model/CustomAttributeModel
+       * @param id {String} Unique ID of the attribute.
+       * @param type {module:model/CustomAttributeTypesEnum} Type of the attribute.
+       * @param options {Array.<module:model/CustomAttributeOptionModel>} Collection of the attribute options.
+       * @param targets {Array.<String>} Collection of the attribute targets.   Defines where the attribute can be used (e.g., TestCases, AutoTestCases, TestPlans).
+       * @param isReadOnly {Boolean} Indicates if the attribute is read-only.
+       * @param isDeleted {Boolean} Indicates if the attribute is deleted.
+       * @param isSystem {Boolean} Indicates if the attribute is system.
        * @param name {String} Name of the attribute
        * @param isEnabled {Boolean} Indicates if the attribute is enabled
-       * @param isRequired {Boolean} Indicates if the attribute is mandatory to specify
+       * @param isRequired {Boolean} Indicates if the attribute value is mandatory to specify
        * @param isGlobal {Boolean} Indicates if the attribute is available across all projects
        */
-      constructor(id: string, options: Array<any>, type: module, isDeleted: boolean, name: string, isEnabled: boolean, isRequired: boolean, isGlobal: boolean);
+      constructor(id: string, type: module, options: Array<any>, targets: Array<string>, isReadOnly: boolean, isDeleted: boolean, isSystem: boolean, name: string, isEnabled: boolean, isRequired: boolean, isGlobal: boolean);
       /**
        * Initializes the fields of this object.
        * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
        * Only for internal use.
        */
-      static initialize(obj: any, id: any, options: any, type: any, isDeleted: any, name: any, isEnabled: any, isRequired: any, isGlobal: any): void;
+      static initialize(obj: any, id: any, type: any, options: any, targets: any, isReadOnly: any, isDeleted: any, isSystem: any, name: any, isEnabled: any, isRequired: any, isGlobal: any): void;
       /**
-       * Constructs a <code>CustomAttributeGetModel</code> from a plain JavaScript object, optionally creating a new instance.
+       * Constructs a <code>CustomAttributeModel</code> from a plain JavaScript object, optionally creating a new instance.
        * Copies all relevant properties from <code>data</code> to <code>obj</code> if supplied or a new instance if not.
        * @param {Object} data The plain JavaScript object bearing properties of interest.
-       * @param {module:model/CustomAttributeGetModel} obj Optional instance to populate.
-       * @return {module:model/CustomAttributeGetModel} The populated <code>CustomAttributeGetModel</code> instance.
+       * @param {module:model/CustomAttributeModel} obj Optional instance to populate.
+       * @return {module:model/CustomAttributeModel} The populated <code>CustomAttributeModel</code> instance.
        */
       static constructFromObject(data: Object, obj: module): module;
       /**
-       * Validates the JSON data with respect to <code>CustomAttributeGetModel</code>.
+       * Validates the JSON data with respect to <code>CustomAttributeModel</code>.
        * @param {Object} data The plain JavaScript object bearing properties of interest.
-       * @return {boolean} to indicate whether the JSON data is valid with respect to <code>CustomAttributeGetModel</code>.
+       * @return {boolean} to indicate whether the JSON data is valid with respect to <code>CustomAttributeModel</code>.
        */
       static validateJSON(data: Object): boolean;
   }
-  namespace CustomAttributeGetModel {
+  namespace CustomAttributeModel {
       var RequiredProperties: string[];
   }
-  export default CustomAttributeGetModel;
+  export default CustomAttributeModel;
 
 }
 declare module 'adapters-api/model/CustomAttributeOptionApiResult' {
@@ -4610,6 +4668,112 @@ declare module 'adapters-api/model/CustomAttributeOptionModel' {
   export default CustomAttributeOptionModel;
 
 }
+declare module 'adapters-api/model/CustomAttributeOptionPostApiModel' {
+  /**
+   * API
+   * No description provided (generated by Openapi Generator https://github.com/openapitools/openapi-generator)
+   *
+   * The version of the OpenAPI document: adapters
+   *
+   *
+   * NOTE: This class is auto generated by OpenAPI Generator (https://openapi-generator.tech).
+   * https://openapi-generator.tech
+   * Do not edit the class manually.
+   *
+   */
+  /**
+   * The CustomAttributeOptionPostApiModel model module.
+   * @module model/CustomAttributeOptionPostApiModel
+   * @version 1.0.0
+   */
+  class CustomAttributeOptionPostApiModel {
+      /**
+       * Constructs a new <code>CustomAttributeOptionPostApiModel</code>.
+       * @alias module:model/CustomAttributeOptionPostApiModel
+       * @param isDefault {Boolean} Indicates if the attribute option is used by default
+       */
+      constructor(isDefault: boolean);
+      /**
+       * Initializes the fields of this object.
+       * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
+       * Only for internal use.
+       */
+      static initialize(obj: any, isDefault: any): void;
+      /**
+       * Constructs a <code>CustomAttributeOptionPostApiModel</code> from a plain JavaScript object, optionally creating a new instance.
+       * Copies all relevant properties from <code>data</code> to <code>obj</code> if supplied or a new instance if not.
+       * @param {Object} data The plain JavaScript object bearing properties of interest.
+       * @param {module:model/CustomAttributeOptionPostApiModel} obj Optional instance to populate.
+       * @return {module:model/CustomAttributeOptionPostApiModel} The populated <code>CustomAttributeOptionPostApiModel</code> instance.
+       */
+      static constructFromObject(data: Object, obj: module): module;
+      /**
+       * Validates the JSON data with respect to <code>CustomAttributeOptionPostApiModel</code>.
+       * @param {Object} data The plain JavaScript object bearing properties of interest.
+       * @return {boolean} to indicate whether the JSON data is valid with respect to <code>CustomAttributeOptionPostApiModel</code>.
+       */
+      static validateJSON(data: Object): boolean;
+  }
+  namespace CustomAttributeOptionPostApiModel {
+      var RequiredProperties: string[];
+  }
+  export default CustomAttributeOptionPostApiModel;
+
+}
+declare module 'adapters-api/model/CustomAttributeOptionUpdateApiModel' {
+  /**
+   * API
+   * No description provided (generated by Openapi Generator https://github.com/openapitools/openapi-generator)
+   *
+   * The version of the OpenAPI document: adapters
+   *
+   *
+   * NOTE: This class is auto generated by OpenAPI Generator (https://openapi-generator.tech).
+   * https://openapi-generator.tech
+   * Do not edit the class manually.
+   *
+   */
+  /**
+   * The CustomAttributeOptionUpdateApiModel model module.
+   * @module model/CustomAttributeOptionUpdateApiModel
+   * @version 1.0.0
+   */
+  class CustomAttributeOptionUpdateApiModel {
+      /**
+       * Constructs a new <code>CustomAttributeOptionUpdateApiModel</code>.
+       * @alias module:model/CustomAttributeOptionUpdateApiModel
+       * @param id {String} Unique ID of the attribute option
+       * @param isDefault {Boolean} Indicates if the attribute option is used by default
+       * @param isDeleted {Boolean} Indicates if the attributes option is deleted
+       */
+      constructor(id: string, isDefault: boolean, isDeleted: boolean);
+      /**
+       * Initializes the fields of this object.
+       * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
+       * Only for internal use.
+       */
+      static initialize(obj: any, id: any, isDefault: any, isDeleted: any): void;
+      /**
+       * Constructs a <code>CustomAttributeOptionUpdateApiModel</code> from a plain JavaScript object, optionally creating a new instance.
+       * Copies all relevant properties from <code>data</code> to <code>obj</code> if supplied or a new instance if not.
+       * @param {Object} data The plain JavaScript object bearing properties of interest.
+       * @param {module:model/CustomAttributeOptionUpdateApiModel} obj Optional instance to populate.
+       * @return {module:model/CustomAttributeOptionUpdateApiModel} The populated <code>CustomAttributeOptionUpdateApiModel</code> instance.
+       */
+      static constructFromObject(data: Object, obj: module): module;
+      /**
+       * Validates the JSON data with respect to <code>CustomAttributeOptionUpdateApiModel</code>.
+       * @param {Object} data The plain JavaScript object bearing properties of interest.
+       * @return {boolean} to indicate whether the JSON data is valid with respect to <code>CustomAttributeOptionUpdateApiModel</code>.
+       */
+      static validateJSON(data: Object): boolean;
+  }
+  namespace CustomAttributeOptionUpdateApiModel {
+      var RequiredProperties: string[];
+  }
+  export default CustomAttributeOptionUpdateApiModel;
+
+}
 declare module 'adapters-api/model/CustomAttributePutModel' {
   /**
    * API
@@ -4668,6 +4832,118 @@ declare module 'adapters-api/model/CustomAttributePutModel' {
   export default CustomAttributePutModel;
 
 }
+declare module 'adapters-api/model/CustomAttributeSearchApiModel' {
+  /**
+   * API
+   * No description provided (generated by Openapi Generator https://github.com/openapitools/openapi-generator)
+   *
+   * The version of the OpenAPI document: adapters
+   *
+   *
+   * NOTE: This class is auto generated by OpenAPI Generator (https://openapi-generator.tech).
+   * https://openapi-generator.tech
+   * Do not edit the class manually.
+   *
+   */
+  /**
+   * The CustomAttributeSearchApiModel model module.
+   * @module model/CustomAttributeSearchApiModel
+   * @version 1.0.0
+   */
+  class CustomAttributeSearchApiModel {
+      /**
+       * Constructs a new <code>CustomAttributeSearchApiModel</code>.
+       * @alias module:model/CustomAttributeSearchApiModel
+       */
+      constructor();
+      /**
+       * Initializes the fields of this object.
+       * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
+       * Only for internal use.
+       */
+      static initialize(obj: any): void;
+      /**
+       * Constructs a <code>CustomAttributeSearchApiModel</code> from a plain JavaScript object, optionally creating a new instance.
+       * Copies all relevant properties from <code>data</code> to <code>obj</code> if supplied or a new instance if not.
+       * @param {Object} data The plain JavaScript object bearing properties of interest.
+       * @param {module:model/CustomAttributeSearchApiModel} obj Optional instance to populate.
+       * @return {module:model/CustomAttributeSearchApiModel} The populated <code>CustomAttributeSearchApiModel</code> instance.
+       */
+      static constructFromObject(data: Object, obj: module): module;
+      /**
+       * Validates the JSON data with respect to <code>CustomAttributeSearchApiModel</code>.
+       * @param {Object} data The plain JavaScript object bearing properties of interest.
+       * @return {boolean} to indicate whether the JSON data is valid with respect to <code>CustomAttributeSearchApiModel</code>.
+       */
+      static validateJSON(data: Object): boolean;
+  }
+  export default CustomAttributeSearchApiModel;
+
+}
+declare module 'adapters-api/model/CustomAttributeSearchApiResult' {
+  /**
+   * API
+   * No description provided (generated by Openapi Generator https://github.com/openapitools/openapi-generator)
+   *
+   * The version of the OpenAPI document: adapters
+   *
+   *
+   * NOTE: This class is auto generated by OpenAPI Generator (https://openapi-generator.tech).
+   * https://openapi-generator.tech
+   * Do not edit the class manually.
+   *
+   */
+  /**
+   * The CustomAttributeSearchApiResult model module.
+   * @module model/CustomAttributeSearchApiResult
+   * @version 1.0.0
+   */
+  class CustomAttributeSearchApiResult {
+      /**
+       * Constructs a new <code>CustomAttributeSearchApiResult</code>.
+       * @alias module:model/CustomAttributeSearchApiResult
+       * @param workItemUsage {Array.<module:model/ProjectShortestApiResult>} Projects where attribute is used in work items
+       * @param testPlanUsage {Array.<module:model/ProjectShortestApiResult>} Projects where attribute is used in test plans
+       * @param id {String} Unique ID of the attribute
+       * @param options {Array.<module:model/CustomAttributeOptionApiResult>} Collection of the attribute options   Available for attributes of type `options` and `multiple options` only
+       * @param type {module:model/CustomAttributeType} Type of the attribute
+       * @param isDeleted {Boolean} Indicates if the attribute is deleted
+       * @param name {String} Name of the attribute
+       * @param isEnabled {Boolean} Indicates if the attribute is enabled
+       * @param isRequired {Boolean} Indicates if the attribute value is mandatory to specify
+       * @param isGlobal {Boolean} Indicates if the attribute is available across all projects
+       * @param isReadOnly {Boolean} Indicates if the attribute is read-only
+       * @param isSystem {Boolean} Indicates if the attribute is system
+       * @param targets {Array.<String>} Collection of the attribute targets   Defines where the attribute can be used (e.g., TestCases, AutoTestCases, TestPlans)
+       */
+      constructor(workItemUsage: Array<any>, testPlanUsage: Array<any>, id: string, options: Array<any>, type: module, isDeleted: boolean, name: string, isEnabled: boolean, isRequired: boolean, isGlobal: boolean, isReadOnly: boolean, isSystem: boolean, targets: Array<string>);
+      /**
+       * Initializes the fields of this object.
+       * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
+       * Only for internal use.
+       */
+      static initialize(obj: any, workItemUsage: any, testPlanUsage: any, id: any, options: any, type: any, isDeleted: any, name: any, isEnabled: any, isRequired: any, isGlobal: any, isReadOnly: any, isSystem: any, targets: any): void;
+      /**
+       * Constructs a <code>CustomAttributeSearchApiResult</code> from a plain JavaScript object, optionally creating a new instance.
+       * Copies all relevant properties from <code>data</code> to <code>obj</code> if supplied or a new instance if not.
+       * @param {Object} data The plain JavaScript object bearing properties of interest.
+       * @param {module:model/CustomAttributeSearchApiResult} obj Optional instance to populate.
+       * @return {module:model/CustomAttributeSearchApiResult} The populated <code>CustomAttributeSearchApiResult</code> instance.
+       */
+      static constructFromObject(data: Object, obj: module): module;
+      /**
+       * Validates the JSON data with respect to <code>CustomAttributeSearchApiResult</code>.
+       * @param {Object} data The plain JavaScript object bearing properties of interest.
+       * @return {boolean} to indicate whether the JSON data is valid with respect to <code>CustomAttributeSearchApiResult</code>.
+       */
+      static validateJSON(data: Object): boolean;
+  }
+  namespace CustomAttributeSearchApiResult {
+      var RequiredProperties: string[];
+  }
+  export default CustomAttributeSearchApiResult;
+
+}
 declare module 'adapters-api/model/CustomAttributeType' {
   /**
    * API
@@ -4717,6 +4993,11 @@ declare module 'adapters-api/model/CustomAttributeType' {
        * @const
        */
       "checkbox": string;
+      /**
+       * value: "numeric"
+       * @const
+       */
+      "numeric": string;
       /**
       * Returns a <code>CustomAttributeType</code> enum value from a Javascript object name.
       * @param {Object} data The plain JavaScript object containing the name of the enum value.
@@ -4775,6 +5056,11 @@ declare module 'adapters-api/model/CustomAttributeTypesEnum' {
        * @const
        */
       "checkbox": string;
+      /**
+       * value: "numeric"
+       * @const
+       */
+      "numeric": string;
       /**
       * Returns a <code>CustomAttributeTypesEnum</code> enum value from a Javascript object name.
       * @param {Object} data The plain JavaScript object containing the name of the enum value.
@@ -4984,6 +5270,111 @@ declare module 'adapters-api/model/FailureCategoryModel' {
       */
       static constructFromObject(object: any): module;
   }
+
+}
+declare module 'adapters-api/model/GlobalCustomAttributePostApiModel' {
+  /**
+   * API
+   * No description provided (generated by Openapi Generator https://github.com/openapitools/openapi-generator)
+   *
+   * The version of the OpenAPI document: adapters
+   *
+   *
+   * NOTE: This class is auto generated by OpenAPI Generator (https://openapi-generator.tech).
+   * https://openapi-generator.tech
+   * Do not edit the class manually.
+   *
+   */
+  /**
+   * The GlobalCustomAttributePostApiModel model module.
+   * @module model/GlobalCustomAttributePostApiModel
+   * @version 1.0.0
+   */
+  class GlobalCustomAttributePostApiModel {
+      /**
+       * Constructs a new <code>GlobalCustomAttributePostApiModel</code>.
+       * @alias module:model/GlobalCustomAttributePostApiModel
+       * @param name {String} Name of attribute
+       * @param type {module:model/CustomAttributeType} Type of attribute
+       */
+      constructor(name: string, type: module);
+      /**
+       * Initializes the fields of this object.
+       * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
+       * Only for internal use.
+       */
+      static initialize(obj: any, name: any, type: any): void;
+      /**
+       * Constructs a <code>GlobalCustomAttributePostApiModel</code> from a plain JavaScript object, optionally creating a new instance.
+       * Copies all relevant properties from <code>data</code> to <code>obj</code> if supplied or a new instance if not.
+       * @param {Object} data The plain JavaScript object bearing properties of interest.
+       * @param {module:model/GlobalCustomAttributePostApiModel} obj Optional instance to populate.
+       * @return {module:model/GlobalCustomAttributePostApiModel} The populated <code>GlobalCustomAttributePostApiModel</code> instance.
+       */
+      static constructFromObject(data: Object, obj: module): module;
+      /**
+       * Validates the JSON data with respect to <code>GlobalCustomAttributePostApiModel</code>.
+       * @param {Object} data The plain JavaScript object bearing properties of interest.
+       * @return {boolean} to indicate whether the JSON data is valid with respect to <code>GlobalCustomAttributePostApiModel</code>.
+       */
+      static validateJSON(data: Object): boolean;
+  }
+  namespace GlobalCustomAttributePostApiModel {
+      var RequiredProperties: string[];
+  }
+  export default GlobalCustomAttributePostApiModel;
+
+}
+declare module 'adapters-api/model/GlobalCustomAttributeUpdateApiModel' {
+  /**
+   * API
+   * No description provided (generated by Openapi Generator https://github.com/openapitools/openapi-generator)
+   *
+   * The version of the OpenAPI document: adapters
+   *
+   *
+   * NOTE: This class is auto generated by OpenAPI Generator (https://openapi-generator.tech).
+   * https://openapi-generator.tech
+   * Do not edit the class manually.
+   *
+   */
+  /**
+   * The GlobalCustomAttributeUpdateApiModel model module.
+   * @module model/GlobalCustomAttributeUpdateApiModel
+   * @version 1.0.0
+   */
+  class GlobalCustomAttributeUpdateApiModel {
+      /**
+       * Constructs a new <code>GlobalCustomAttributeUpdateApiModel</code>.
+       * @alias module:model/GlobalCustomAttributeUpdateApiModel
+       * @param name {String} Name of attribute
+       */
+      constructor(name: string);
+      /**
+       * Initializes the fields of this object.
+       * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
+       * Only for internal use.
+       */
+      static initialize(obj: any, name: any): void;
+      /**
+       * Constructs a <code>GlobalCustomAttributeUpdateApiModel</code> from a plain JavaScript object, optionally creating a new instance.
+       * Copies all relevant properties from <code>data</code> to <code>obj</code> if supplied or a new instance if not.
+       * @param {Object} data The plain JavaScript object bearing properties of interest.
+       * @param {module:model/GlobalCustomAttributeUpdateApiModel} obj Optional instance to populate.
+       * @return {module:model/GlobalCustomAttributeUpdateApiModel} The populated <code>GlobalCustomAttributeUpdateApiModel</code> instance.
+       */
+      static constructFromObject(data: Object, obj: module): module;
+      /**
+       * Validates the JSON data with respect to <code>GlobalCustomAttributeUpdateApiModel</code>.
+       * @param {Object} data The plain JavaScript object bearing properties of interest.
+       * @return {boolean} to indicate whether the JSON data is valid with respect to <code>GlobalCustomAttributeUpdateApiModel</code>.
+       */
+      static validateJSON(data: Object): boolean;
+  }
+  namespace GlobalCustomAttributeUpdateApiModel {
+      var RequiredProperties: string[];
+  }
+  export default GlobalCustomAttributeUpdateApiModel;
 
 }
 declare module 'adapters-api/model/GuidExtractionModel' {
@@ -5295,15 +5686,14 @@ declare module 'adapters-api/model/LabelApiModel' {
        * Constructs a new <code>LabelApiModel</code>.
        * @alias module:model/LabelApiModel
        * @param name {String} Name of the label
-       * @param globalId {Number} Global ID of the label
        */
-      constructor(name: string, globalId: number);
+      constructor(name: string);
       /**
        * Initializes the fields of this object.
        * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
        * Only for internal use.
        */
-      static initialize(obj: any, name: any, globalId: any): void;
+      static initialize(obj: any, name: any): void;
       /**
        * Constructs a <code>LabelApiModel</code> from a plain JavaScript object, optionally creating a new instance.
        * Copies all relevant properties from <code>data</code> to <code>obj</code> if supplied or a new instance if not.
@@ -5351,8 +5741,6 @@ declare module 'adapters-api/model/LabelApiResult' {
        * @param globalId {Number} Global ID of the label
        */
       constructor(name: string, globalId: number);
-      name: string;
-      globalId?: number;
       /**
        * Initializes the fields of this object.
        * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
@@ -5433,6 +5821,162 @@ declare module 'adapters-api/model/LabelShortModel' {
   export default LabelShortModel;
 
 }
+declare module 'adapters-api/model/LayerApiModel' {
+  /**
+   * API
+   * No description provided (generated by Openapi Generator https://github.com/openapitools/openapi-generator)
+   *
+   * The version of the OpenAPI document: adapters
+   *
+   *
+   * NOTE: This class is auto generated by OpenAPI Generator (https://openapi-generator.tech).
+   * https://openapi-generator.tech
+   * Do not edit the class manually.
+   *
+   */
+  /**
+   * The LayerApiModel model module.
+   * @module model/LayerApiModel
+   * @version 1.0.0
+   */
+  class LayerApiModel {
+      /**
+       * Constructs a new <code>LayerApiModel</code>.
+       * Model of auto test layer for use in requests.
+       * @alias module:model/LayerApiModel
+       * @param name {String} Name of the test pyramid layer.              Available layers:              * Unit * Component * API * UI * E2E * Contract
+       * @param source {module:model/LayerSource} Source of the test pyramid layer.
+       */
+      constructor(name: string, source: module);
+      /**
+       * Initializes the fields of this object.
+       * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
+       * Only for internal use.
+       */
+      static initialize(obj: any, name: any, source: any): void;
+      /**
+       * Constructs a <code>LayerApiModel</code> from a plain JavaScript object, optionally creating a new instance.
+       * Copies all relevant properties from <code>data</code> to <code>obj</code> if supplied or a new instance if not.
+       * @param {Object} data The plain JavaScript object bearing properties of interest.
+       * @param {module:model/LayerApiModel} obj Optional instance to populate.
+       * @return {module:model/LayerApiModel} The populated <code>LayerApiModel</code> instance.
+       */
+      static constructFromObject(data: Object, obj: module): module;
+      /**
+       * Validates the JSON data with respect to <code>LayerApiModel</code>.
+       * @param {Object} data The plain JavaScript object bearing properties of interest.
+       * @return {boolean} to indicate whether the JSON data is valid with respect to <code>LayerApiModel</code>.
+       */
+      static validateJSON(data: Object): boolean;
+  }
+  namespace LayerApiModel {
+      var RequiredProperties: string[];
+  }
+  export default LayerApiModel;
+
+}
+declare module 'adapters-api/model/LayerApiResult' {
+  /**
+   * API
+   * No description provided (generated by Openapi Generator https://github.com/openapitools/openapi-generator)
+   *
+   * The version of the OpenAPI document: adapters
+   *
+   *
+   * NOTE: This class is auto generated by OpenAPI Generator (https://openapi-generator.tech).
+   * https://openapi-generator.tech
+   * Do not edit the class manually.
+   *
+   */
+  /**
+   * The LayerApiResult model module.
+   * @module model/LayerApiResult
+   * @version 1.0.0
+   */
+  class LayerApiResult {
+      /**
+       * Constructs a new <code>LayerApiResult</code>.
+       * Model of auto test layer for use in responses.
+       * @alias module:model/LayerApiResult
+       * @param name {String} Name of the test pyramid layer.
+       * @param source {module:model/LayerSource} Source of the test pyramid layer.
+       */
+      constructor(name: string, source: module);
+      /**
+       * Initializes the fields of this object.
+       * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
+       * Only for internal use.
+       */
+      static initialize(obj: any, name: any, source: any): void;
+      /**
+       * Constructs a <code>LayerApiResult</code> from a plain JavaScript object, optionally creating a new instance.
+       * Copies all relevant properties from <code>data</code> to <code>obj</code> if supplied or a new instance if not.
+       * @param {Object} data The plain JavaScript object bearing properties of interest.
+       * @param {module:model/LayerApiResult} obj Optional instance to populate.
+       * @return {module:model/LayerApiResult} The populated <code>LayerApiResult</code> instance.
+       */
+      static constructFromObject(data: Object, obj: module): module;
+      /**
+       * Validates the JSON data with respect to <code>LayerApiResult</code>.
+       * @param {Object} data The plain JavaScript object bearing properties of interest.
+       * @return {boolean} to indicate whether the JSON data is valid with respect to <code>LayerApiResult</code>.
+       */
+      static validateJSON(data: Object): boolean;
+  }
+  namespace LayerApiResult {
+      var RequiredProperties: string[];
+  }
+  export default LayerApiResult;
+
+}
+declare module 'adapters-api/model/LayerSource' {
+  /**
+   * API
+   * No description provided (generated by Openapi Generator https://github.com/openapitools/openapi-generator)
+   *
+   * The version of the OpenAPI document: adapters
+   *
+   *
+   * NOTE: This class is auto generated by OpenAPI Generator (https://openapi-generator.tech).
+   * https://openapi-generator.tech
+   * Do not edit the class manually.
+   *
+   */
+  /**
+  * Enum class LayerSource.
+  * @enum {}
+  * @readonly
+  */
+  export default class LayerSource {
+      /**
+       * value: "Manual"
+       * @const
+       */
+      "Manual": string;
+      /**
+       * value: "Report"
+       * @const
+       */
+      "Report": string;
+      /**
+       * value: "Run"
+       * @const
+       */
+      "Run": string;
+      /**
+       * value: "Rule"
+       * @const
+       */
+      "Rule": string;
+      /**
+      * Returns a <code>LayerSource</code> enum value from a Javascript object name.
+      * @param {Object} data The plain JavaScript object containing the name of the enum value.
+      * @return {module:model/LayerSource} The enum <code>LayerSource</code> value.
+      */
+      static constructFromObject(object: any): module;
+  }
+
+}
 declare module 'adapters-api/model/LinkApiResult' {
   /**
    * API
@@ -5459,12 +6003,6 @@ declare module 'adapters-api/model/LinkApiResult' {
        * @param type {module:model/LinkType} Specifies the type of the link.
        */
       constructor(url: string, type: module);
-      id?: string | null;
-      title?: string | null;
-      url: string;
-      description?: string | null;
-      type?: string | null;
-      hasInfo?: boolean;
       /**
        * Initializes the fields of this object.
        * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
@@ -5626,11 +6164,6 @@ declare module 'adapters-api/model/LinkPostModel' {
        * @param hasInfo {Boolean}
        */
       constructor(url: string, type: module, hasInfo: boolean);
-      title?: string | null;
-      url: string;
-      description?: string | null;
-      type?: string | null;
-      hasInfo?: boolean;
       /**
        * Initializes the fields of this object.
        * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
@@ -5685,12 +6218,6 @@ declare module 'adapters-api/model/LinkPutModel' {
        * @param hasInfo {Boolean}
        */
       constructor(url: string, type: module, hasInfo: boolean);
-      id?: string | null;
-      title?: string | null;
-      url: string;
-      description?: string | null;
-      type?: string | null;
-      hasInfo?: boolean;
       /**
        * Initializes the fields of this object.
        * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
@@ -6553,6 +7080,62 @@ declare module 'adapters-api/model/ProjectsFilterModel' {
   export default ProjectsFilterModel;
 
 }
+declare module 'adapters-api/model/ProjectShortestApiResult' {
+  /**
+   * API
+   * No description provided (generated by Openapi Generator https://github.com/openapitools/openapi-generator)
+   *
+   * The version of the OpenAPI document: adapters
+   *
+   *
+   * NOTE: This class is auto generated by OpenAPI Generator (https://openapi-generator.tech).
+   * https://openapi-generator.tech
+   * Do not edit the class manually.
+   *
+   */
+  /**
+   * The ProjectShortestApiResult model module.
+   * @module model/ProjectShortestApiResult
+   * @version 1.0.0
+   */
+  class ProjectShortestApiResult {
+      /**
+       * Constructs a new <code>ProjectShortestApiResult</code>.
+       * @alias module:model/ProjectShortestApiResult
+       * @param id {String} Unique ID of project
+       * @param isDeleted {Boolean} Indicates whether the project is deleted
+       * @param globalId {Number} Global ID of project
+       * @param name {String} Name of project
+       * @param type {module:model/ProjectTypeModel} Type of the project
+       */
+      constructor(id: string, isDeleted: boolean, globalId: number, name: string, type: module);
+      /**
+       * Initializes the fields of this object.
+       * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
+       * Only for internal use.
+       */
+      static initialize(obj: any, id: any, isDeleted: any, globalId: any, name: any, type: any): void;
+      /**
+       * Constructs a <code>ProjectShortestApiResult</code> from a plain JavaScript object, optionally creating a new instance.
+       * Copies all relevant properties from <code>data</code> to <code>obj</code> if supplied or a new instance if not.
+       * @param {Object} data The plain JavaScript object bearing properties of interest.
+       * @param {module:model/ProjectShortestApiResult} obj Optional instance to populate.
+       * @return {module:model/ProjectShortestApiResult} The populated <code>ProjectShortestApiResult</code> instance.
+       */
+      static constructFromObject(data: Object, obj: module): module;
+      /**
+       * Validates the JSON data with respect to <code>ProjectShortestApiResult</code>.
+       * @param {Object} data The plain JavaScript object bearing properties of interest.
+       * @return {boolean} to indicate whether the JSON data is valid with respect to <code>ProjectShortestApiResult</code>.
+       */
+      static validateJSON(data: Object): boolean;
+  }
+  namespace ProjectShortestApiResult {
+      var RequiredProperties: string[];
+  }
+  export default ProjectShortestApiResult;
+
+}
 declare module 'adapters-api/model/ProjectTypeModel' {
   /**
    * API
@@ -7259,15 +7842,16 @@ declare module 'adapters-api/model/TestResultResponse' {
        * @param id {String}
        * @param failureClassIds {Array.<String>}
        * @param configurationId {String}
+       * @param testPointId {String}
        * @param testRunId {String}
        */
-      constructor(id: string, failureClassIds: Array<string>, configurationId: string, testRunId: string);
+      constructor(id: string, failureClassIds: Array<string>, configurationId: string, testPointId: string, testRunId: string);
       /**
        * Initializes the fields of this object.
        * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
        * Only for internal use.
        */
-      static initialize(obj: any, id: any, failureClassIds: any, configurationId: any, testRunId: any): void;
+      static initialize(obj: any, id: any, failureClassIds: any, configurationId: any, testPointId: any, testRunId: any): void;
       /**
        * Constructs a <code>TestResultResponse</code> from a plain JavaScript object, optionally creating a new instance.
        * Copies all relevant properties from <code>data</code> to <code>obj</code> if supplied or a new instance if not.
@@ -7313,18 +7897,6 @@ declare module 'adapters-api/model/TestResultsFilterApiModel' {
        * @alias module:model/TestResultsFilterApiModel
        */
       constructor();
-      configurationIds?: string[];
-      outcomes?: unknown;
-      statusCodes?: string[];
-      statusTypes?: string[];
-      namespace?: string;
-      className?: string;
-      autoTestGlobalIds?: number[];
-      autoTestTags?: string[];
-      excludeAutoTestTags?: string[];
-      name?: string;
-      duration?: unknown;
-      testRunIds?: string[];
       /**
        * Initializes the fields of this object.
        * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
@@ -7373,6 +7945,7 @@ declare module 'adapters-api/model/TestResultShortResponse' {
        * @alias module:model/TestResultShortResponse
        * @param id {String} Unique ID of the test result
        * @param name {String} Name of autotest represented by the test result
+       * @param autotestGlobalId {Number} Global ID of autotest represented by the test result
        * @param autoTestTags {Array.<String>} Tags of the autotest represented by the test result
        * @param testRunId {String} Unique ID of test run where the test result is located
        * @param configurationId {String} Unique ID of configuration which the test result uses
@@ -7383,29 +7956,13 @@ declare module 'adapters-api/model/TestResultShortResponse' {
        * @param attachments {Array.<module:model/AttachmentApiResult>} Collection of files attached to the test result
        * @param rerunCompletedCount {Number} Run count
        */
-      constructor(id: string, name: string, autoTestTags: Array<string>, testRunId: string, configurationId: string, configurationName: string, status: module, resultReasons: Array<any>, links: Array<any>, attachments: Array<any>, rerunCompletedCount: number);
-      id?: string;
-      name?: string;
-      autotestExternalId?: string;
-      autoTestTags?: string[];
-      testRunId?: string;
-      configurationId?: string;
-      configurationName?: string;
-      outcome?: unknown;
-      status?: unknown;
-      resultReasons?: unknown;
-      comment?: string | null;
-      duration?: number;
-      links?: unknown;
-      attachments?: unknown;
-      rerunCompletedCount?: number;
-      autoTest?: { externalId?: string | null };
+      constructor(id: string, name: string, autotestGlobalId: number, autoTestTags: Array<string>, testRunId: string, configurationId: string, configurationName: string, status: module, resultReasons: Array<any>, links: Array<any>, attachments: Array<any>, rerunCompletedCount: number);
       /**
        * Initializes the fields of this object.
        * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
        * Only for internal use.
        */
-      static initialize(obj: any, id: any, name: any, autoTestTags: any, testRunId: any, configurationId: any, configurationName: any, status: any, resultReasons: any, links: any, attachments: any, rerunCompletedCount: any): void;
+      static initialize(obj: any, id: any, name: any, autotestGlobalId: any, autoTestTags: any, testRunId: any, configurationId: any, configurationName: any, status: any, resultReasons: any, links: any, attachments: any, rerunCompletedCount: any): void;
       /**
        * Constructs a <code>TestResultShortResponse</code> from a plain JavaScript object, optionally creating a new instance.
        * Copies all relevant properties from <code>data</code> to <code>obj</code> if supplied or a new instance if not.
@@ -7506,21 +8063,6 @@ declare module 'adapters-api/model/TestResultUpdateRequest' {
        * @alias module:model/TestResultUpdateRequest
        */
       constructor();
-      failureClassIds?: string[];
-      outcome?: string;
-      statusCode?: string | null;
-      statusType?: string | null;
-      comment?: string | null;
-      links?: any[];
-      stepResults?: any[];
-      attachments?: Array<{ id: string }>;
-      durationInMs?: number;
-      duration?: number;
-      stepComments?: unknown;
-      setupResults?: any[];
-      teardownResults?: any[];
-      message?: string | null;
-      trace?: string | null;
       /**
        * Initializes the fields of this object.
        * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
@@ -7569,30 +8111,20 @@ declare module 'adapters-api/model/TestRunApiResult' {
        * @alias module:model/TestRunApiResult
        * @param id {String} Test run unique identifier
        * @param name {String} Test run name
+       * @param projectId {String} Project unique identifier              This property is used to link test run with project.
        * @param stateName {module:model/TestRunState} Test run state
        * @param status {module:model/TestStatusApiResult} Test run status
        * @param attachments {Array.<module:model/AttachmentApiResult>} Collection of attachments related to the test run
        * @param links {Array.<module:model/LinkApiResult>} Collection of links related to the test run
        * @param tags {Array.<String>} Collection of tags associated with the test run
        */
-      constructor(id: string, name: string, stateName: module, status: module, attachments: Array<any>, links: Array<any>, tags: Array<string>);
-      id: string;
-      name: string;
-      stateName: string;
-      status?: unknown;
-      attachments?: any[];
-      links?: any[];
-      tags?: string[];
-      startedOn?: Date;
-      completedOn?: Date;
-      description?: string | null;
-      launchSource?: string | null;
+      constructor(id: string, name: string, projectId: string, stateName: module, status: module, attachments: Array<any>, links: Array<any>, tags: Array<string>);
       /**
        * Initializes the fields of this object.
        * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
        * Only for internal use.
        */
-      static initialize(obj: any, id: any, name: any, stateName: any, status: any, attachments: any, links: any, tags: any): void;
+      static initialize(obj: any, id: any, name: any, projectId: any, stateName: any, status: any, attachments: any, links: any, tags: any): void;
       /**
        * Constructs a <code>TestRunApiResult</code> from a plain JavaScript object, optionally creating a new instance.
        * Copies all relevant properties from <code>data</code> to <code>obj</code> if supplied or a new instance if not.
@@ -8185,18 +8717,19 @@ declare module 'adapters-api/model/WorkItemApiResult' {
        * @param postconditionSteps {Array.<module:model/StepModel>} Set of postcondition steps that are executed after completing the main steps
        * @param iterations {Array.<module:model/IterationModel>} Associated iterations linked to the work item
        * @param autoTests {Array.<module:model/AutoTestModel>} Automated tests associated with the work item
+       * @param autoTestCases {Array.<module:model/AutoTestCaseApiModel>} Set of automated test cases linked to the work item
        * @param attachments {Array.<module:model/AttachmentModel>} Files attached to the work item
        * @param links {Array.<module:model/LinkModel>} Set of links related to the work item
        * @param parameters {Array.<module:model/WorkItemParameterKeyApiResult>} Set of parameters related to the work item
        * @param isDeleted {Boolean} Indicates whether the work item is marked as deleted
        */
-      constructor(id: string, globalId: number, projectId: string, sectionId: string, name: string, entityTypeName: module, duration: number, state: module, priority: module, isAutomated: boolean, attributes: Record<string, Object>, tags: Array<any>, sectionPreconditionSteps: Array<any>, sectionPostconditionSteps: Array<any>, preconditionSteps: Array<any>, steps: Array<any>, postconditionSteps: Array<any>, iterations: Array<any>, autoTests: Array<any>, attachments: Array<any>, links: Array<any>, parameters: Array<any>, isDeleted: boolean);
+      constructor(id: string, globalId: number, projectId: string, sectionId: string, name: string, entityTypeName: module, duration: number, state: module, priority: module, isAutomated: boolean, attributes: Record<string, Object>, tags: Array<any>, sectionPreconditionSteps: Array<any>, sectionPostconditionSteps: Array<any>, preconditionSteps: Array<any>, steps: Array<any>, postconditionSteps: Array<any>, iterations: Array<any>, autoTests: Array<any>, autoTestCases: Array<any>, attachments: Array<any>, links: Array<any>, parameters: Array<any>, isDeleted: boolean);
       /**
        * Initializes the fields of this object.
        * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
        * Only for internal use.
        */
-      static initialize(obj: any, id: any, globalId: any, projectId: any, sectionId: any, name: any, entityTypeName: any, duration: any, state: any, priority: any, isAutomated: any, attributes: any, tags: any, sectionPreconditionSteps: any, sectionPostconditionSteps: any, preconditionSteps: any, steps: any, postconditionSteps: any, iterations: any, autoTests: any, attachments: any, links: any, parameters: any, isDeleted: any): void;
+      static initialize(obj: any, id: any, globalId: any, projectId: any, sectionId: any, name: any, entityTypeName: any, duration: any, state: any, priority: any, isAutomated: any, attributes: any, tags: any, sectionPreconditionSteps: any, sectionPostconditionSteps: any, preconditionSteps: any, steps: any, postconditionSteps: any, iterations: any, autoTests: any, autoTestCases: any, attachments: any, links: any, parameters: any, isDeleted: any): void;
       /**
        * Constructs a <code>WorkItemApiResult</code> from a plain JavaScript object, optionally creating a new instance.
        * Copies all relevant properties from <code>data</code> to <code>obj</code> if supplied or a new instance if not.
@@ -8252,6 +8785,11 @@ declare module 'adapters-api/model/WorkItemEntityTypeApiModel' {
        * @const
        */
       "SharedSteps": string;
+      /**
+       * value: "AutoTestCases"
+       * @const
+       */
+      "AutoTestCases": string;
       /**
       * Returns a <code>WorkItemEntityTypeApiModel</code> enum value from a Javascript object name.
       * @param {Object} data The plain JavaScript object containing the name of the enum value.
@@ -8847,6 +9385,11 @@ declare module 'adapters-api/model/WorkItemTypeModel' {
        * @const
        */
       "SharedSteps": string;
+      /**
+       * value: "AutoTestCases"
+       * @const
+       */
+      "AutoTestCases": string;
       /**
       * Returns a <code>WorkItemTypeModel</code> enum value from a Javascript object name.
       * @param {Object} data The plain JavaScript object containing the name of the enum value.
