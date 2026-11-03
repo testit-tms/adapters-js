@@ -55,14 +55,12 @@ export class TestRunConverter extends BaseConverter implements ITestRunConverter
       configurationId: this.config.configurationId,
       autoTestExternalId: autotest.autoTestExternalId,
       statusType: "InProgress",
-      statusCode: null,
-      outcome: undefined,
       failureReasonNames: undefined,
     };
     if (autotest.startedOn !== undefined) {
       model.startedOn = autotest.startedOn;
     }
-    if (autotest.parameters !== undefined) {
+    if (autotest.parameters !== undefined && Object.keys(autotest.parameters).length > 0) {
       model.parameters = autotest.parameters;
     }
     return model;

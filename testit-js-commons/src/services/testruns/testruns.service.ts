@@ -166,7 +166,11 @@ export class TestRunsService extends BaseService implements ITestRunsService {
     });
   }
 
-  public async loadAutotests(testRunId: string, results: Array<AutotestResult>) {
+  public async loadAutotests(
+    testRunId: string,
+    results: Array<AutotestResult>,
+    options?: { throwOnError?: boolean },
+  ) {
     for (const result of results) {
       const externalId = result.autoTestExternalId;
 
@@ -179,21 +183,23 @@ export class TestRunsService extends BaseService implements ITestRunsService {
         statusCode: autotestResult.statusCode,
         stepCount: autotestResult.stepResults?.length ?? 0,
       });
-      await this.sendAutotestResultWithRetry(testRunId, autotestResult)
-        .then(() => {
-          logTmsLoadTestRun("Finalized test result via sendTestResults", {
-            testRunId,
-            autoTestExternalId: externalId,
-            testResultId: this.testResultIdsByExternalId.get(externalId),
-          });
-        })
-        .catch((err: any) => {
-          logger.error("[testit-js-commons:loadTestRun] FAILED to post final result", {
-            testRunId,
-            autoTestExternalId: autotestResult.autoTestExternalId,
-            error: formatLogError(err),
-          });
+      try {
+        await this.sendAutotestResultWithRetry(testRunId, autotestResult);
+        logTmsLoadTestRun("Finalized test result via sendTestResults", {
+          testRunId,
+          autoTestExternalId: externalId,
+          testResultId: this.testResultIdsByExternalId.get(externalId),
         });
+      } catch (err: unknown) {
+        logger.error("[testit-js-commons:loadTestRun] FAILED to post final result", {
+          testRunId,
+          autoTestExternalId: autotestResult.autoTestExternalId,
+          error: formatLogError(err),
+        });
+        if (options?.throwOnError) {
+          throw err;
+        }
+      }
     }
   }
 

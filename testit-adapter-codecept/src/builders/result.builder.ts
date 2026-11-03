@@ -32,7 +32,7 @@ export class ResultBuilder {
     ];
 
     let traces = typeof test?.err?.cliMessage === "function" ? test.err.cliMessage() : test?.err?.stack;
-    let message = metadata?.message ?? null;
+    let message = metadata?.message;
     // If TMS_IS_CI env is true, trim traces and message to 20 chars and log this
     if (process.env.TMS_IS_CI === "true") {
       if (typeof traces === "string" && traces.length > 20) {
@@ -51,12 +51,12 @@ export class ResultBuilder {
       startedOn: new Date(test.startedAt),
       duration: test.duration,
       attachments: await this.loadAttachments(test, metadata),
-      parameters,
+      parameters: Object.keys(parameters).length > 0 ? parameters : undefined,
       traces: traces,
       teardownResults,
       setupResults,
       completedOn: test.duration ? new Date(test.startedAt + test.duration) : undefined,
-      message: message,
+      message,
       outcome: test.state === "passed" ? "Passed" : "Failed",
       stepResults: this.buildManySteps(test.steps),
     };

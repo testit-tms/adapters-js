@@ -56,18 +56,29 @@ export class BaseStrategy implements IStrategy {
       return;
     }
     const results = this.deferredResults.splice(0, this.deferredResults.length);
+    const externalId = this.deferredExternalId;
+    this.deferredExternalId = undefined;
     logTmsLoadTestRun("flush deferred finals", {
       testRunId,
-      autoTestExternalId: this.deferredExternalId,
+      autoTestExternalId: externalId,
       count: results.length,
     });
-    await this.client.testRuns.loadAutotests(testRunId, results).catch((err: unknown) => {
-      logger.error("[strategy] FAILED to flush deferred results", {
-        autoTestExternalId: this.deferredExternalId,
-        error: (err as { body?: unknown })?.body ?? err,
+    try {
+      await this.client.testRuns.loadAutotests(testRunId, results, { throwOnError: true });
+    } catch (err: unknown) {
+      logger.error("[strategy] FAILED to flush deferred results, retrying once", {
+        autoTestExternalId: externalId,
+        error: formatLogError(err),
       });
-    });
-    this.deferredExternalId = undefined;
+      await this.client.testRuns
+        .loadAutotests(testRunId, results, { throwOnError: true })
+        .catch((retryErr: unknown) => {
+          logger.error("[strategy] FAILED to flush deferred results on retry", {
+            autoTestExternalId: externalId,
+            error: formatLogError(retryErr),
+          });
+        });
+    }
   }
 
   async loadAutotest(autotest: AutotestPost, status: string): Promise<void> {
@@ -212,11 +223,14 @@ export class BaseStrategy implements IStrategy {
       try {
         await this.client.testRuns.postInProgressAutotestResult(testRunId, firstResult);
       } catch (err: unknown) {
-        logTmsLoadTestRun("postInProgressAutotestResult FAILED", {
+        // Cut is already in sync-storage; if TMS stub fails and we throw, the first
+        // test is never finalized and Work X ends with "test result not found".
+        logTmsLoadTestRun("postInProgressAutotestResult FAILED; posting finals without deferral", {
           autoTestExternalId: firstResult.autoTestExternalId,
           message: err instanceof Error ? err.message : String(err),
         });
-        throw err;
+        await this.client.testRuns.loadAutotests(testRunId, autotests);
+        return;
       }
 
       this.deferredExternalId = firstResult.autoTestExternalId;
