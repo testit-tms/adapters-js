@@ -70,7 +70,11 @@ export interface ITestRunsService {
   completeTestRun(testRunId: TestRunId): Promise<void>;
   /** First TMS write as InProgress (mirrors Python realtime in-progress before final load). */
   postInProgressAutotestResult(testRunId: string, result: AutotestResult): Promise<void>;
-  loadAutotests(testRunId: string, autotests: Array<AutotestResult>): Promise<void>;
+  loadAutotests(
+    testRunId: string,
+    autotests: Array<AutotestResult>,
+    options?: { throwOnError?: boolean },
+  ): Promise<void>;
   /** PUT setup/teardown fixture steps onto an already finalized result (importRealtime session end). */
   updateSetupTeardown(results: Array<AutotestResult>): Promise<void>;
 }

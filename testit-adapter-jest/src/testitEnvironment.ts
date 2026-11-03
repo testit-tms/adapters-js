@@ -273,9 +273,9 @@ export default class TestItEnvironment extends NodeEnvironment {
       startedOn: test.startedAt ? new Date(test.startedAt) : undefined,
       duration: test.duration ?? undefined,
       traces: errorTraces,
-      attachments: this.additions.attachments,
+      attachments: [...this.additions.attachments],
       message: this.additions.messages.join("\n").concat(errorMessage ?? ""),
-      links: this.additions.links,
+      links: [...this.additions.links],
     };
 
     if (this.importRealtime) {
@@ -291,6 +291,10 @@ export default class TestItEnvironment extends NodeEnvironment {
       } catch (err: any) {
         logger.error("Failed realtime send in Jest environment:", this.formatError(err));
       }
+      // Keep sync-storage LastStatus fresh; otherwise Force Work X fires after ~60s.
+      await Promise.resolve((this.strategy as { touchWorker?: () => Promise<void> }).touchWorker?.()).catch(
+        () => undefined,
+      );
     } else {
       this.autotests.push(autotestSnapshot);
       this.autotestResults.push(result);
@@ -336,6 +340,13 @@ export default class TestItEnvironment extends NodeEnvironment {
       teardownSteps: teardownSteps.length,
       testSteps: autotest.testSteps.length,
     });
+    // Mutate the same AutotestResult instance that may be queued as deferred InProgress final.
+    // flushRealtimeTeardown patches teardownResults on this ref before strategy.teardown().
+    result.stepResults = autotest.testSteps;
+    result.setupResults = setupSteps;
+    result.teardownResults = teardownSteps;
+    result.parameters = autotest.parameters !== undefined ? mapParams(autotest.parameters) : undefined;
+
     const autotestPost: AutotestPost = {
       externalId: autotest.externalId,
       title: autotest.title,
@@ -348,27 +359,14 @@ export default class TestItEnvironment extends NodeEnvironment {
       classname: autotest.classname ?? Utils.getFileName(this.testPath),
       setup: setupSteps,
       steps: autotest.testSteps,
-      teardown: teardownSteps,
+      // Omit teardown until afterAll is known — empty [] would clear a previous afterAll on TMS.
+      teardown: includeAfterAll ? teardownSteps : undefined,
       externalKey: autotest.externalKey,
+      workItemIds: autotest.workItemIds,
     };
 
     await this.strategy.loadAutotest(autotestPost, result.outcome);
-    await this.strategy.loadTestRun([
-      {
-        autoTestExternalId: autotestPost.externalId,
-        outcome: result.outcome,
-        startedOn: result.startedOn,
-        duration: result.duration,
-        attachments: result.attachments,
-        message: result.message,
-        links: result.links,
-        stepResults: autotest.testSteps,
-        traces: result.traces,
-        setupResults: setupSteps,
-        teardownResults: teardownSteps,
-        parameters: autotest.parameters !== undefined ? mapParams(autotest.parameters) : undefined,
-      },
-    ]);
+    await this.strategy.loadTestRun([result]);
   }
 
   /** afterAll hooks run after all tests; patch teardown when importRealtime is enabled. */
@@ -385,13 +383,37 @@ export default class TestItEnvironment extends NodeEnvironment {
       tests: this.realtimeSent.length,
       afterAllSteps: this.afterAllSteps.length,
     });
+
+    // Patch shared result refs first so deferred final POST (strategy.teardown) includes afterAll.
+    for (const { autotest, result } of this.realtimeSent) {
+      result.setupResults = this.buildSetupSteps(autotest);
+      result.teardownResults = this.buildTeardownSteps(autotest, true);
+    }
+
     for (const { autotest, result } of this.realtimeSent) {
       try {
-        const setupSteps = this.buildSetupSteps(autotest);
-        const teardownSteps = this.buildTeardownSteps(autotest, true);
+        const setupSteps = result.setupResults ?? [];
+        const teardownSteps = result.teardownResults ?? [];
         if (setupSteps.length === 0 && teardownSteps.length === 0) {
           continue;
         }
+        const autotestPost: AutotestPost = {
+          externalId: autotest.externalId,
+          title: autotest.title,
+          name: autotest.name,
+          description: autotest.description,
+          links: autotest.links,
+          labels: autotest.labels,
+          tags: autotest.tags,
+          namespace: autotest.namespace ?? Utils.getDir(this.testPath),
+          classname: autotest.classname ?? Utils.getFileName(this.testPath),
+          setup: setupSteps,
+          steps: autotest.testSteps,
+          teardown: teardownSteps,
+          externalKey: autotest.externalKey,
+          workItemIds: autotest.workItemIds,
+        };
+        await this.strategy.loadAutotest(autotestPost, result.outcome);
         await this.strategy.updateSetupTeardown([
           {
             autoTestExternalId: autotest.externalId,

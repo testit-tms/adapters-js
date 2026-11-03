@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const AdaptersApi = require("../../adapters-api/dist/index");
-import { BaseService, Utils, AdapterConfig, Attachment, withHttpRetry } from "../../common";
+import { BaseService, Utils, AdapterConfig, Attachment, withHttpRetry, formatLogError } from "../../common";
 import { IAttachmentsService } from "./attachments.type";
 import { Buffer } from "buffer";
 import * as fs from "fs";
@@ -74,13 +74,7 @@ export class AttachmentsService extends BaseService implements IAttachmentsServi
         }
       }
     } catch (error: any) {
-      logger.error("Error uploading text attachment:", error);
-      if (error.response) {
-        logger.error("Response details:", {
-          status: error.response.status,
-          text: error.response.text,
-        });
-      }
+      logger.error("Error uploading text attachment:", formatLogError(error));
       throw error;
     }
   }
@@ -112,13 +106,7 @@ export class AttachmentsService extends BaseService implements IAttachmentsServi
 
         attachmentIds.push(id);
       } catch (error: any) {
-        logger.error(`Error uploading attachment ${path}:`, error);
-        if (error.response) {
-          logger.error("Response details:", {
-            status: error.response.status,
-            text: error.response.text,
-          });
-        }
+        logger.error(`Error uploading attachment ${path}:`, formatLogError(error));
         throw error;
       }
     }

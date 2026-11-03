@@ -1,5 +1,7 @@
+import { redactSecrets, redactSecretsInString } from "../common/utils/log-sanitize.util";
+
 // logger.ts
-type LogLevel = 'error' | 'warn' | 'info' | 'debug';
+type LogLevel = "error" | "warn" | "info" | "debug";
 
 interface LogLevels {
   error: 0;
@@ -13,68 +15,66 @@ class Logger {
     error: 0,
     warn: 1,
     info: 2,
-    debug: 3
+    debug: 3,
   };
-  
+
   private currentLevel: number;
 
   constructor() {
-    // Уровень из переменной окружения или по умолчанию 'warn'
-    const envLevel = (process.env.LOG_LEVEL || 'warn').toLowerCase() as LogLevel;
-    this.currentLevel = this.levels[envLevel] !== undefined 
-      ? this.levels[envLevel] 
-      : this.levels.info;
+    // Level from env or default 'warn'
+    const envLevel = (process.env.LOG_LEVEL || "warn").toLowerCase() as LogLevel;
+    this.currentLevel =
+      this.levels[envLevel] !== undefined ? this.levels[envLevel] : this.levels.info;
   }
 
   private log_(level: LogLevel, message: string, ...args: unknown[]): void {
     if (this.levels[level] <= this.currentLevel) {
       const timestamp = new Date().toISOString();
       const prefix = `[${timestamp}] [${level.toUpperCase()}]`;
-      
-      if (level === 'error') {
-        console.error(prefix, message, ...args);
-      } else if (level === 'warn') {
-        console.warn(prefix, message, ...args);
+      const safeMessage = redactSecretsInString(message);
+      const safeArgs = args.map((arg) => redactSecrets(arg));
+
+      if (level === "error") {
+        console.error(prefix, safeMessage, ...safeArgs);
+      } else if (level === "warn") {
+        console.warn(prefix, safeMessage, ...safeArgs);
       } else {
-        console.log(prefix, message, ...args);
+        console.log(prefix, safeMessage, ...safeArgs);
       }
     }
   }
 
   public error(message: string, ...args: unknown[]): void {
-    this.log_('error', message, ...args);
+    this.log_("error", message, ...args);
   }
 
   public warn(message: string, ...args: unknown[]): void {
-    this.log_('warn', message, ...args);
+    this.log_("warn", message, ...args);
   }
 
   public info(message: string, ...args: unknown[]): void {
-    this.log_('info', message, ...args);
+    this.log_("info", message, ...args);
   }
 
   public log(message: string, ...args: unknown[]): void {
-    this.log_('info', message, ...args);
+    this.log_("info", message, ...args);
   }
 
   public debug(message: string, ...args: unknown[]): void {
-    this.log_('debug', message, ...args);
+    this.log_("debug", message, ...args);
   }
 
-  // Проверка, включен ли уровень
   public isLevelEnabled(level: LogLevel): boolean {
     return this.levels[level] <= this.currentLevel;
   }
 
-  // Получить текущий уровень логирования
   public getCurrentLevel(): LogLevel {
     const level = Object.keys(this.levels).find(
-      (key) => this.levels[key as LogLevel] === this.currentLevel
+      (key) => this.levels[key as LogLevel] === this.currentLevel,
     );
-    return (level as LogLevel) || 'info';
+    return (level as LogLevel) || "info";
   }
 
-  // Установить уровень логирования динамически
   public setLevel(level: LogLevel): void {
     if (this.levels[level] !== undefined) {
       this.currentLevel = this.levels[level];
@@ -82,6 +82,5 @@ class Logger {
   }
 }
 
-// Синглтон
 const logger = new Logger();
 export default logger;
