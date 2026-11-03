@@ -6,6 +6,12 @@ declare global {
     displayName(name: string): void;
     links(links: Link[]): void;
     labels(labels: string[]): void;
+    layer(layer: string): void;
+    tags(tags: string[]): void;
+    workItemId(globalId: string): void;
+    /**
+     * @deprecated Use workItemId with a single globalId instead.
+     */
     workItemIds(workItemsIds: string[]): void;
     params(params: any): void;
     step(name: string, description?: string): void;

@@ -8,8 +8,13 @@ export namespace Origin {
     externalId?: string;
     links: Link[];
     labels?: string[];
+    layer?: string;
     tags?: string[];
-    workItemIds?: [];
+    workItemId?: string;
+    /**
+     * @deprecated Use workItemId with a single globalId instead.
+     */
+    workItemIds?: string[];
     classname?: string;
     namespace?: string;
   }

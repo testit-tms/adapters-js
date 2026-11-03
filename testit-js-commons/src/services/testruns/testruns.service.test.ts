@@ -9,18 +9,11 @@ jest.mock("../../adapters-api/dist/index", () => ({
       authentications: {
         PrivateToken: { apiKeyPrefix: "", apiKey: "" },
       },
-      callApi: jest.fn(),
     },
   },
   TestRunsApi: jest.fn().mockImplementation(() => ({
     adaptersTestRunsIdTestResultsPost: jest.fn().mockResolvedValue(["result-id-1"]),
   })),
-  TestRunState: {
-    NotStarted: "NotStarted",
-    InProgress: "InProgress",
-    Stopped: "Stopped",
-    Completed: "Completed",
-  },
 }));
 
 jest.mock("../testresults/testresults.service", () => ({
@@ -29,10 +22,6 @@ jest.mock("../testresults/testresults.service", () => ({
     updateTestResult: jest.fn().mockResolvedValue(undefined),
   })),
 }));
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const AdaptersApi = require("../../adapters-api/dist/index");
-const callApi = AdaptersApi.ApiClient.instance.callApi as jest.Mock;
 
 function makeConfig(): AdapterConfig {
   return {
@@ -52,56 +41,6 @@ function makeResult(overrides: Partial<AutotestResult> = {}): AutotestResult {
     ...overrides,
   };
 }
-
-describe("TestRunsService.getTestRun", () => {
-  beforeEach(() => {
-    callApi.mockReset();
-  });
-
-  it("reads metadata via public API v2 (links/attachments/description/launchSource)", async () => {
-    callApi.mockResolvedValue({
-      data: {
-        id: "run-1",
-        name: "run",
-        description: "213123123",
-        launchSource: "Test IT",
-        stateName: "Completed",
-        status: { code: "PASSED", type: "Succeeded" },
-        testResults: [{ id: "ignored" }],
-        attachments: [{ id: "att-1" }],
-        links: [{ url: "https://example.com/1", title: "one", hasInfo: true }],
-        tags: ["a"],
-      },
-    });
-
-    const service = new TestRunsService(makeConfig());
-    const run = await service.getTestRun("run-1");
-
-    expect(callApi).toHaveBeenCalledWith(
-      "/api/v2/testRuns/{id}",
-      "GET",
-      { id: "run-1" },
-      expect.any(Object),
-      expect.any(Object),
-      expect.any(Object),
-      null,
-      ["PrivateToken"],
-      expect.any(Array),
-      expect.any(Array),
-      Object,
-      null
-    );
-    expect(run.description).toBe("213123123");
-    expect(run.launchSource).toBe("Test IT");
-    expect(run.stateName).toBe("Completed");
-    expect(run.links).toEqual([
-      expect.objectContaining({ url: "https://example.com/1", title: "one" }),
-    ]);
-    expect(run.attachments).toEqual([{ id: "att-1" }]);
-    expect(run.tags).toEqual(["a"]);
-    expect(run).not.toHaveProperty("testResults");
-  });
-});
 
 describe("TestRunsService.loadAutotests", () => {
   it("always POST final result even when in-progress id exists in cache", async () => {

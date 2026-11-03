@@ -50,6 +50,7 @@ export class Converter {
         title: autotestData.title,
         description: autotestData.description,
         labels: autotestData.labels,
+        layer: autotestData.layer,
         tags: autotestData.tags,
         links: autotestData.links,
         namespace: autotestData.namespace,

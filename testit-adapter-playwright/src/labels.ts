@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import test from "@playwright/test";
-import { Link, Label, Attachment, Utils } from "testit-js-commons";
+import { Link, Label, Attachment, Utils, logger } from "testit-js-commons";
 import { patchTestMetadataForRun } from "./metadata-store";
 import { processAttachmentNameExtensions } from "./utils";
 
@@ -11,6 +11,7 @@ export interface MetadataMessage {
   title?: string;
   description?: string;
   labels?: Label[];
+  layer?: string;
   tags?: string[];
   links?: Link[];
   namespace?: string;
@@ -152,7 +153,17 @@ export class testit {
     }
   }
 
+  static async workItemId(globalId: string) {
+    await this.addMetadataAttachment({
+      workItemIds: [globalId],
+    });
+  }
+
+  /**
+   * @deprecated Use workItemId with a single globalId instead.
+   */
   static async workItemIds(value: string[]) {
+    logger.warn("workItemIds is deprecated. Use workItemId with a single globalId instead.");
     await this.addMetadataAttachment({
       workItemIds: value,
     });
@@ -185,6 +196,12 @@ export class testit {
   static async labels(value: string[]) {
     await this.addMetadataAttachment({
       labels: value.map((label) => ({ name: label })),
+    });
+  }
+
+  static async layer(value: string) {
+    await this.addMetadataAttachment({
+      layer: value,
     });
   }
 

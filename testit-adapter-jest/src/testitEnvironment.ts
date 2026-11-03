@@ -115,7 +115,9 @@ export default class TestItEnvironment extends NodeEnvironment {
       displayName: this.setDisplayName.bind(this),
       links: this.setLinks.bind(this),
       labels: this.setLabels.bind(this),
+      layer: this.setLayer.bind(this),
       tags: this.setTags.bind(this),
+      workItemId: this.setWorkItemId.bind(this),
       workItemIds: this.setWorkItems.bind(this),
       params: this.setParams.bind(this),
       step: this.startStep.bind(this),
@@ -325,6 +327,30 @@ export default class TestItEnvironment extends NodeEnvironment {
     return includeAfterAll ? afterEach.concat(this.afterAllSteps) : afterEach;
   }
 
+  private buildAutotestPost(
+    autotest: AutotestData,
+    setupSteps: Step[],
+    teardownSteps: Step[],
+  ): AutotestPost {
+    return {
+      externalId: autotest.externalId,
+      title: autotest.title,
+      name: autotest.name,
+      description: autotest.description,
+      links: autotest.links,
+      labels: autotest.labels,
+      layer: autotest.layer,
+      tags: autotest.tags,
+      namespace: autotest.namespace ?? Utils.getDir(this.testPath),
+      classname: autotest.classname ?? Utils.getFileName(this.testPath),
+      setup: setupSteps,
+      steps: autotest.testSteps,
+      teardown: teardownSteps,
+      externalKey: autotest.externalKey,
+      workItemIds: autotest.workItemIds,
+    };
+  }
+
   private async sendRealtimePayload(
     autotest: AutotestData,
     result: AutotestResult,
@@ -340,6 +366,7 @@ export default class TestItEnvironment extends NodeEnvironment {
       teardownSteps: teardownSteps.length,
       testSteps: autotest.testSteps.length,
     });
+
     // Mutate the same AutotestResult instance that may be queued as deferred InProgress final.
     // flushRealtimeTeardown patches teardownResults on this ref before strategy.teardown().
     result.stepResults = autotest.testSteps;
@@ -347,23 +374,12 @@ export default class TestItEnvironment extends NodeEnvironment {
     result.teardownResults = teardownSteps;
     result.parameters = autotest.parameters !== undefined ? mapParams(autotest.parameters) : undefined;
 
-    const autotestPost: AutotestPost = {
-      externalId: autotest.externalId,
-      title: autotest.title,
-      name: autotest.name,
-      description: autotest.description,
-      links: autotest.links,
-      labels: autotest.labels,
-      tags: autotest.tags,
-      namespace: autotest.namespace ?? Utils.getDir(this.testPath),
-      classname: autotest.classname ?? Utils.getFileName(this.testPath),
-      setup: setupSteps,
-      steps: autotest.testSteps,
-      // Omit teardown until afterAll is known — empty [] would clear a previous afterAll on TMS.
-      teardown: includeAfterAll ? teardownSteps : undefined,
-      externalKey: autotest.externalKey,
-      workItemIds: autotest.workItemIds,
-    };
+    const autotestPost = this.buildAutotestPost(autotest, setupSteps, teardownSteps);
+    // Avoid writing empty teardown to the Autotest card before afterAll is known —
+    // a full replace with [] would clear a previously uploaded afterAll until flush.
+    if (!includeAfterAll) {
+      autotestPost.teardown = undefined;
+    }
 
     await this.strategy.loadAutotest(autotestPost, result.outcome);
     await this.strategy.loadTestRun([result]);
@@ -397,22 +413,7 @@ export default class TestItEnvironment extends NodeEnvironment {
         if (setupSteps.length === 0 && teardownSteps.length === 0) {
           continue;
         }
-        const autotestPost: AutotestPost = {
-          externalId: autotest.externalId,
-          title: autotest.title,
-          name: autotest.name,
-          description: autotest.description,
-          links: autotest.links,
-          labels: autotest.labels,
-          tags: autotest.tags,
-          namespace: autotest.namespace ?? Utils.getDir(this.testPath),
-          classname: autotest.classname ?? Utils.getFileName(this.testPath),
-          setup: setupSteps,
-          steps: autotest.testSteps,
-          teardown: teardownSteps,
-          externalKey: autotest.externalKey,
-          workItemIds: autotest.workItemIds,
-        };
+        const autotestPost = this.buildAutotestPost(autotest, setupSteps, teardownSteps);
         await this.strategy.loadAutotest(autotestPost, result.outcome);
         await this.strategy.updateSetupTeardown([
           {
@@ -446,21 +447,7 @@ export default class TestItEnvironment extends NodeEnvironment {
       const setupSteps = this.beforeAllSteps.concat(autotest.beforeEach);
       const teardownSteps = autotest.afterEach.concat(this.afterAllSteps);
 
-      const autotestPost: AutotestPost = {
-        externalId: autotest.externalId,
-        title: autotest.title,
-        name: autotest.name,
-        description: autotest.description,
-        links: autotest.links,
-        labels: autotest.labels,
-        tags: autotest.tags,
-        namespace: autotest.namespace ?? Utils.getDir(this.testPath),
-        classname: autotest.classname ?? Utils.getFileName(this.testPath),
-        setup: setupSteps,
-        steps: autotest.testSteps,
-        teardown: teardownSteps,
-        externalKey: autotest.externalKey,
-      };
+      const autotestPost = this.buildAutotestPost(autotest, setupSteps, teardownSteps);
 
       try {
         await this.strategy.loadAutotest(autotestPost, result.outcome);
@@ -565,12 +552,26 @@ export default class TestItEnvironment extends NodeEnvironment {
     this.autotestData.labels = labels.map((label) => ({ name: label }));
   }
 
+  setLayer(layer: string) {
+    log("Setting layer to %s for %s", layer, this.autotestData.name);
+    this.autotestData.layer = layer;
+  }
+
   setTags(tags: string[]) {
     log("Setting tags to %s", this.autotestData.name);
     this.autotestData.tags = tags;
   }
 
+  setWorkItemId(globalId: string) {
+    log("Setting work item id to %s", this.autotestData.name);
+    this.autotestData.workItemIds = [globalId];
+  }
+
+  /**
+   * @deprecated Use workItemId with a single globalId instead.
+   */
   setWorkItems(workItems: string[]) {
+    logger.warn("workItemIds is deprecated. Use workItemId with a single globalId instead.");
     log("Setting work items to %s", this.autotestData.name);
     this.autotestData.workItemIds = workItems;
   }

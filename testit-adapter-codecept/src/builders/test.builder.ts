@@ -1,6 +1,6 @@
 import { useCompositeHash, useConfig, useDefaultHash, humanize } from "../common/utils";
 import { Codecept, Origin } from "../types";
-import { AutotestPost, ShortStep } from "testit-js-commons";
+import { AutotestPost, ShortStep, logger } from "testit-js-commons";
 
 export class TestsBuilder {
   public static build(test: Codecept.Test<Origin.TestConfig>): AutotestPost {
@@ -16,6 +16,7 @@ export class TestsBuilder {
       title: config?.title,
       name: config?.displayName ?? test.title,
       labels: (config?.labels ?? []).map((label) => ({ name: label })),
+      layer: config?.layer,
       tags: config?.tags ?? [],
       description: config?.description ?? "",
       steps: this.buildManySteps(test.steps),
@@ -25,6 +26,7 @@ export class TestsBuilder {
       externalId: useDefaultHash(test) ?? useCompositeHash(test),
       namespace: config?.nameSpace,
       classname: config?.className,
+      workItemIds: resolveWorkItemIds(config),
       externalKey: test.title,
     };
   }
@@ -39,4 +41,14 @@ export class TestsBuilder {
   private static reduceAfterOrBeforeSuites(suite: Codecept.Test[]) {
     return suite.reduce((array, suite) => [...array, ...this.buildManySteps(suite?.steps ?? [])], []);
   }
+}
+
+function resolveWorkItemIds(config?: Origin.TestConfig): string[] | undefined {
+  if (config?.workItemIds?.length) {
+    logger.warn("workItemIds is deprecated. Use workItemId with a single globalId instead.");
+  }
+  if (config?.workItemId) {
+    return [config.workItemId];
+  }
+  return config?.workItemIds;
 }

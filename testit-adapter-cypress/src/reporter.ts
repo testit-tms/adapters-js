@@ -430,8 +430,10 @@ export class TmsCypress {
     if (message.type !== "metadata" || !context.currentTestData) return;
     const data = message.data as {
       labels?: Array<string>;
+      layer?: string;
       links?: Array<Link>;
       workItemIds?: string[];
+      workItemId?: string;
       tags?: string[];
       parameters?: Array<Parameter>;
       description?: string;
@@ -447,11 +449,18 @@ export class TmsCypress {
     if (data.labels?.length) {
       current.labels.push(...data.labels);
     }
+    if (data.layer) {
+      current.layer = data.layer;
+    }
     if (data.tags?.length) {
       current.tags.push(...data.tags);
     }
     if (data.workItemIds?.length) {
+      console.warn("addWorkItemIds is deprecated. Use addWorkItemId with a single globalId instead.");
       current.workItemIds.push(...data.workItemIds);
+    }
+    if (data.workItemId) {
+      current.workItemIds = [data.workItemId];
     }
     if (data.links?.length) {
       current.links.push(...data.links);

@@ -129,8 +129,24 @@ export class TestRunsService extends BaseService implements ITestRunsService {
   public async startTestRun(testRunId: TestRunId): Promise<void> {
     try {
       const testRun = await this.getTestRun(testRunId);
-      if (testRun.stateName === "NotStarted") {
-        await this._client.adaptersTestRunsIdStartPost(testRunId);
+      if (testRun.stateName !== "NotStarted") {
+        return;
+      }
+
+      try {
+        await withHttpRetry(() => this._client.adaptersTestRunsIdStartPost(testRunId), {
+          label: `startTestRun:${testRunId}`,
+        });
+      } catch (err) {
+        const refreshed = await this.getTestRun(testRunId);
+        if (refreshed.stateName !== "NotStarted") {
+          logger.debug("[testruns] startTestRun skipped: run already started", {
+            testRunId,
+            stateName: refreshed.stateName,
+          });
+          return;
+        }
+        throw err;
       }
     } catch (err) {
       TestRunErrorHandler.handleErrorStartTestRun(err);

@@ -45,3 +45,7 @@ TMS_TEST_RUN_LINKS=[{"url":"https://gitlab.example.com/group/project/-/jobs/1234
 ```
 
 Подробности и таблицы конфигурации — в README каждого адаптера. Полное ТЗ: [`ТЗ.md`](../ТЗ.md).
+
+## Заметка по adapters-api
+
+OpenAPI-клиент объявляет два способа авторизации (`PrivateToken`, `Identity.Application`), а адаптер использует только `PrivateToken`. В `ApiClient.applyAuthToRequest` отсутствующие схемы пропускаются — иначе GET/PUT test run (в т.ч. early merge tags/links) падали с `Cannot read properties of undefined (reading 'type')`.

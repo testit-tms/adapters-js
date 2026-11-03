@@ -1,5 +1,13 @@
 import { SyncStorageRunner } from "./syncstorage.runner";
 import { AdapterConfig } from "../../common";
+import { spawn } from "child_process";
+
+jest.mock("child_process", () => ({
+  ...jest.requireActual("child_process"),
+  spawn: jest.fn(() => ({})),
+}));
+
+const spawnMock = spawn as jest.MockedFunction<typeof spawn>;
 
 function makeConfig(): AdapterConfig {
   return {
@@ -14,6 +22,27 @@ function makeConfig(): AdapterConfig {
 }
 
 describe("SyncStorageRunner", () => {
+  beforeEach(() => {
+    spawnMock.mockClear();
+    delete process.env.TMS_DEBUG_SYNC_STORAGE;
+  });
+
+  it("should spawn local process with stdio ignored", async () => {
+    const runner = new SyncStorageRunner("run-1", makeConfig());
+    const internal = runner as any;
+    internal.prepareExecutable = jest.fn().mockResolvedValue("/bin/syncstorage");
+    internal.waitForStartup = jest.fn().mockResolvedValue(true);
+    internal.delay = jest.fn().mockResolvedValue(undefined);
+
+    await internal.startLocalProcess();
+
+    expect(spawnMock).toHaveBeenCalledWith(
+      "/bin/syncstorage",
+      expect.arrayContaining(["--testRunId", "run-1"]),
+      expect.objectContaining({ stdio: "ignore" })
+    );
+  });
+
   it("should mark runner as active and resolve master status after start", async () => {
     const runner = new SyncStorageRunner("run-1", makeConfig());
     const internal = runner as any;

@@ -23,6 +23,7 @@ export class Converter {
         title: autotestData.title,
         description: autotestData.description,
         labels: autotestData.labels?.map((label) => ({ name: label })),
+        layer: autotestData.layer,
         tags: autotestData.tags,
         links: autotestData.links,
         namespace: autotestData.namespace,

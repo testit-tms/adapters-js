@@ -98,12 +98,14 @@ Methods and properties can be used to specify information about autotest.
 ### Properties
 
 Description of metadata properties:
-- `workItemIds` - a method that links autotests with manual tests. Receives the array of manual tests' IDs
+- `workItemId` - a method that links an autotest with a manual test. Receives a single globalId
+- `workItemIds` - deprecated, use `workItemId` instead
 - `displayName` - internal autotest name (used in Test IT)
 - `externalId` - unique internal autotest ID (used in Test IT)
 - `title` - autotest name specified in the autotest card. If not specified, the name from the displayName method is used
 - `description` - autotest description specified in the autotest card
 - `labels` - labels listed in the autotest card
+- `layer` - test pyramid layer in the autotest card (source **Run**). Use `TestLayers` from `testit-js-commons` for recommended values, or any custom string
 - `tags` - tags listed in the autotest card
 - `links` - links listed in the autotest card
 - `nameSpace` - directory in the TMS system (default - directory's name of test)
@@ -124,7 +126,7 @@ Description of methods:
 // annotations.spec.ts
 const adapter = require('testcafe-reporter-testit')();
 import { Selector } from 'testcafe';
-import { Link } from 'testit-js-commons';
+import { Link, TestLayers } from 'testit-js-commons';
 import { join } from "path";
 
 fixture('TestCafé Example Fixture - Documentation').page('http://devexpress.github.io/testcafe/example');
@@ -146,8 +148,9 @@ test.meta({
   title: 'title',
   namespace: 'namespace',
   classname: 'classname',
-  workItemIds: ['123', '321'],
+  workItemId: '123',
   labels: ['label1', 'label2'],
+  layer: TestLayers.API,
   tags: ['tag1', 'tag2'],
 })('test', async t => {
   adapter.addMessage(t, "Message");

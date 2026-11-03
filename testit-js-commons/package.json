@@ -40,7 +40,12 @@
   },
   "dependencies": {
     "dotenv": "^16.0.3",
-    "superagent": "^10.3.0"
+    "superagent": "^10.4.1"
+  },
+  "overrides": {
+    "form-data": "^4.0.6",
+    "qs": "^6.17.1",
+    "handlebars": "^4.7.10"
   },
   "files": [
     "lib",

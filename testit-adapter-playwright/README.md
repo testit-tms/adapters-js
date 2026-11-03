@@ -137,12 +137,14 @@ first-job:
 Methods can be used to specify information about autotest.
 
 Description of metadata methods:
-- `testit.workItemIds` - linking an autotest to a test case
+- `testit.workItemId` - linking an autotest to a test case. Receives a single globalId
+- `testit.workItemIds` - deprecated, use `testit.workItemId` instead
 - `testit.displayName` - name of the autotest in the Test IT system (can be replaced with documentation strings)
 - `testit.externalId` - ID of the autotest within the project in the Test IT System
 - `testit.title` - title in the autotest card
 - `testit.description` - description in the autotest card
 - `testit.labels` - labels in the autotest card
+- `testit.layer` - test pyramid layer in the autotest card (source **Run**). Use `TestLayers` from `testit-js-commons` for recommended values (`E2E`, `UI`, `API`, `Contract`, `Integration`, `Component`, `Unit`), or any custom string
 - `testit.tags` - tags in the autotest card
 - `testit.links` - links in the autotest card
 - `testit.namespace` - directory in the TMS system (default - directory's name of test)
@@ -160,6 +162,7 @@ Description of methods:
 ```js
 import { test } from "@playwright/test";
 import { testit } from "testit-adapter-playwright";
+import { TestLayers } from "testit-js-commons";
 
 test('All annotations', async () => {
   testit.externalId('all_annotations');
@@ -167,6 +170,7 @@ test('All annotations', async () => {
   testit.title('All annotations title');
   testit.description('Test with all annotations');
   testit.labels(['label1', 'label2']);
+  await testit.layer(TestLayers.API);
 
   testit.addMessage('This is a message');
   testit.addLinks([

@@ -9,6 +9,12 @@ export function isTmsLoadTestRunDebug(): boolean {
   return v === "1" || v?.toLowerCase() === "true";
 }
 
+/** Trace sync-storage adapter calls only when `TMS_DEBUG_SYNC_STORAGE=1` (not plain LOG_LEVEL=debug). */
+export function isSyncStorageDebug(): boolean {
+  const v = process.env.TMS_DEBUG_SYNC_STORAGE;
+  return v === "1" || v?.toLowerCase() === "true";
+}
+
 export function logTmsLoadTestRun(message: string, data?: Record<string, unknown>): void {
   if (!isTmsLoadTestRunDebug()) {
     return;

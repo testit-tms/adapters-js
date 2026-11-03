@@ -17,8 +17,13 @@ export interface AttachmentOptions {
 
 export interface TestRuntime {
   addLabels(...labels: string[]): PromiseLike<void>;
+  addLayer(layer: string): PromiseLike<void>;
   addTags(...tags: string[]): PromiseLike<void>;
   addLinks(...links: Link[]): PromiseLike<void>;
+  addWorkItemId(globalId: string): PromiseLike<void>;
+  /**
+   * @deprecated Use addWorkItemId with a single globalId instead.
+   */
   addWorkItemIds(...workItemIds: string[]): PromiseLike<void>;
   addParameter(name: string, value: string): PromiseLike<void>;
   addDescription(markdown: string): PromiseLike<void>;
@@ -36,8 +41,10 @@ const noop = { then: () => noop, catch: () => noop } as PromiseLike<void>;
 
 export const noopRuntime: TestRuntime = {
   addLabels: () => noop,
+  addLayer: () => noop,
   addTags: () => noop,
   addLinks: () => noop,
+  addWorkItemId: () => noop,
   addWorkItemIds: () => noop,
   addParameter: () => noop,
   addDescription: () => noop,

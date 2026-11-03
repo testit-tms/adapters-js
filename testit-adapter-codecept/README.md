@@ -140,12 +140,14 @@ $ npx codeceptjs run --grep "$(cat tmp/filter.txt)"
 Methods can be used to specify information about autotest.
 
 Description of metadata methods:
-- `workItemIds` - a method that links autotests with manual tests. Receives the array of manual tests' IDs
+- `workItemId` - a method that links an autotest with a manual test. Receives a single globalId
+- `workItemIds` - deprecated, use `workItemId` instead
 - `displayName` - internal autotest name (used in Test IT)
 - `externalId` - unique internal autotest ID (used in Test IT)
 - `title` - autotest name specified in the autotest card. If not specified, the name from the displayName method is used
 - `description` - autotest description specified in the autotest card
 - `labels` - labels listed in the autotest card
+- `layer` - test pyramid layer in the autotest card (source **Run**). Use `TestLayers` from `testit-js-commons` for recommended values, or any custom string
 - `tags` - tags listed in the autotest card
 - `link` - links listed in the autotest card
 - `namespace` - directory in the TMS system
@@ -170,6 +172,7 @@ Scenario(
     title: 'Title',
     description: 'Description',
     labels: ['Custom label'],
+    layer: 'API',
     links: [
       {
         title: 'Google about this error',
@@ -179,7 +182,7 @@ Scenario(
         hasInfo: true
       }
     ],
-    workItemIds: ['1140']
+    workItemId: '1140'
   },
   ({ I }) => {
     I.amOnPage('https://github.com');

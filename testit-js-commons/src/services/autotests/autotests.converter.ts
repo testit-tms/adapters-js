@@ -1,8 +1,11 @@
 import { BaseConverter, AdapterConfig } from "../../common";
 import { AutotestGet, AutotestPost } from "./autotests.type";
 
+const LAYER_SOURCE_RUN = "Run";
+
 export interface IAutotestConverter {
-  toOriginAutotest(autotest: AutotestPost): any;
+  toOriginAutotestCreate(autotest: AutotestPost): any;
+  toOriginAutotestUpdate(autotest: AutotestPost): any;
   toLocalAutotest(autotest: any): AutotestGet;
 }
 
@@ -11,7 +14,42 @@ export class AutotestConverter extends BaseConverter implements IAutotestConvert
     super(config);
   }
 
-  public toOriginAutotest(autotest: AutotestPost): any {
+  public toOriginAutotestCreate(autotest: AutotestPost): any {
+    const model: Record<string, unknown> = this.baseAutotestFields(autotest);
+    const layer = this.layerToApiModel(autotest.layer);
+    if (layer) {
+      model.layer = layer;
+    }
+    return model;
+  }
+
+  public toOriginAutotestUpdate(autotest: AutotestPost): any {
+    const model: Record<string, unknown> = { ...this.baseAutotestFields(autotest), resetLayer: false };
+    const layer = this.layerToApiModel(autotest.layer);
+    if (layer) {
+      model.layer = layer;
+    }
+    return model;
+  }
+
+  public toLocalAutotest(autotest: any): AutotestGet {
+    return {
+      id: autotest.id,
+      name: autotest.name ?? undefined,
+      externalId: autotest.externalId ?? undefined,
+      links: autotest.links?.map((link: any) => this.toLocalLink(link)),
+      namespace: autotest.namespace ?? undefined,
+      classname: autotest.classname ?? undefined,
+      steps: autotest.steps?.map((step: any) => this.toLocalShortStep(step)),
+      setup: autotest.setup?.map((step: any) => this.toLocalShortStep(step)),
+      teardown: autotest.teardown?.map((step: any) => this.toLocalShortStep(step)),
+      labels: autotest.labels ?? undefined,
+      tags: autotest.tags ?? undefined,
+      layer: autotest.layer?.name ?? undefined,
+    };
+  }
+
+  private baseAutotestFields(autotest: AutotestPost): Record<string, unknown> {
     return {
       externalId: autotest.externalId,
       name: autotest.name,
@@ -32,19 +70,11 @@ export class AutotestConverter extends BaseConverter implements IAutotestConvert
     };
   }
 
-  public toLocalAutotest(autotest: any): AutotestGet {
-    return {
-      id: autotest.id,
-      name: autotest.name ?? undefined,
-      externalId: autotest.externalId ?? undefined,
-      links: autotest.links?.map((link: any) => this.toLocalLink(link)),
-      namespace: autotest.namespace ?? undefined,
-      classname: autotest.classname ?? undefined,
-      steps: autotest.steps?.map((step: any) => this.toLocalShortStep(step)),
-      setup: autotest.setup?.map((step: any) => this.toLocalShortStep(step)),
-      teardown: autotest.teardown?.map((step: any) => this.toLocalShortStep(step)),
-      labels: autotest.labels ?? undefined,
-      tags: autotest.tags ?? undefined,
-    };
+  private layerToApiModel(layer?: string): { name: string; source: string } | undefined {
+    const name = layer?.trim();
+    if (!name) {
+      return undefined;
+    }
+    return { name, source: LAYER_SOURCE_RUN };
   }
 }

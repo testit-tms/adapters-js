@@ -28,6 +28,15 @@ class TmsCypressTestRuntime implements TestRuntime {
     });
   }
 
+  addLayer(layer: string) {
+    return this.#enqueueMessageAsync({
+      type: "metadata",
+      data: {
+        layer,
+      },
+    });
+  }
+
   addTags(...tags: string[]) {
     return this.#enqueueMessageAsync({
       type: "metadata",
@@ -46,7 +55,20 @@ class TmsCypressTestRuntime implements TestRuntime {
     });
   }
 
+  addWorkItemId(globalId: string) {
+    return this.#enqueueMessageAsync({
+      type: "metadata",
+      data: {
+        workItemId: globalId,
+      },
+    });
+  }
+
+  /**
+   * @deprecated Use addWorkItemId with a single globalId instead.
+   */
   addWorkItemIds(...workItemIds: string[]) {
+    console.warn("addWorkItemIds is deprecated. Use addWorkItemId with a single globalId instead.");
     return this.#enqueueMessageAsync({
       type: "metadata",
       data: {

@@ -123,12 +123,14 @@ $ npx jest -t "$(cat tmp/filter.txt)"
 Methods can be used to specify information about autotest.
 
 Description of metadata methods:
-- `testit.workItemIds` - a method that links autotests with manual tests. Receives the array of manual tests' IDs
+- `testit.workItemId` - a method that links an autotest with a manual test. Receives a single globalId
+- `testit.workItemIds` - deprecated, use `testit.workItemId` instead
 - `testit.displayName` - internal autotest name (used in Test IT)
 - `testit.externalId` - unique internal autotest ID (used in Test IT)
 - `testit.title` - autotest name specified in the autotest card. If not specified, the name from the displayName method is used
 - `testit.description` - autotest description specified in the autotest card
 - `testit.labels` - labels listed in the autotest card
+- `testit.layer` - test pyramid layer in the autotest card (source **Run**). Use `TestLayers` from `testit-js-commons` for recommended values (`E2E`, `UI`, `API`, `Contract`, `Integration`, `Component`, `Unit`), or any custom string
 - `testit.tags` - tags listed in the autotest card
 - `testit.link` - links listed in the autotest card
 - `testit.namespace` - directory in the TMS system (default - directory's name of test)
@@ -144,12 +146,15 @@ Description of methods:
 
 #### Simple test
 ```js
+import { TestLayers } from 'testit-js-commons';
+
 test('All annotations', () => {
   testit.externalId('all_annotations');
   testit.displayName('All annotations');
   testit.title('All annotations title');
   testit.description('Test with all annotations');
   testit.labels(['label1', 'label2']);
+  testit.layer(TestLayers.API);
 
   testit.addMessage('This is a message');
   testit.addLinks([
