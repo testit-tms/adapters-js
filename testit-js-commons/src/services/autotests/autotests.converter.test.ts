@@ -49,3 +49,20 @@ describe("AutotestConverter layer", () => {
     expect(withoutLayer.layer).toBeUndefined();
   });
 });
+
+describe("AutotestConverter namespace", () => {
+  const converter = new AutotestConverter(makeConfig());
+
+  it("normalizes backslashes to forward slashes on create/update", () => {
+    const create = converter.toOriginAutotestCreate(makeAutotest({ namespace: "api\\users" }));
+    expect(create.namespace).toBe("api/users");
+
+    const update = converter.toOriginAutotestUpdate(makeAutotest({ namespace: "api\\users\\v1" }));
+    expect(update.namespace).toBe("api/users/v1");
+  });
+
+  it("keeps posix namespace unchanged", () => {
+    const model = converter.toOriginAutotestCreate(makeAutotest({ namespace: "api/users" }));
+    expect(model.namespace).toBe("api/users");
+  });
+});
