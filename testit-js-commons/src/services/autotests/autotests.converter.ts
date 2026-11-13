@@ -53,7 +53,7 @@ export class AutotestConverter extends BaseConverter implements IAutotestConvert
     return {
       externalId: autotest.externalId,
       name: autotest.name,
-      namespace: autotest.namespace,
+      namespace: autotest.namespace?.replace(/\\/g, "/"),
       classname: autotest.classname,
       steps: autotest.steps,
       setup: autotest.setup,
