@@ -386,7 +386,8 @@ class TmsReporter implements Reporter {
     const autotestData = await this.getAutotestData(test, result);
 
     const dictionaries = this.getDictionariesByTest(test);
-    const pathNamespace = dictionaries.slice(0, -1).join(path.sep);
+    // Always `/` so Windows and Linux/macOS produce the same TMS namespace.
+    const pathNamespace = dictionaries.slice(0, -1).join("/");
     const pathClassname = dictionaries[dictionaries.length - 1];
     // Prefer testit.namespace / testit.classname from metadata; file path only when missing.
     if (pathNamespace.length > 0 && autotestData.namespace == null) {
