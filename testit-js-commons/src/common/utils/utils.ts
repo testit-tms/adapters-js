@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "crypto";
-import { dirname, join, basename, extname } from "path";
+import { join, basename, extname, posix } from "path";
 import fs, { mkdtempSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 
@@ -8,8 +8,13 @@ export namespace Utils {
     return createHash("md5").update(input).digest("hex");
   }
 
+  /** Normalize path separators to `/` so namespaces match across Windows and Unix. */
+  export function toPosixPath(file: string): string {
+    return file.replace(/\\/g, "/");
+  }
+
   export function getDir(file: string): string {
-    return dirname(file);
+    return posix.dirname(toPosixPath(file));
   }
 
   export function removeDir(path: string): void {
