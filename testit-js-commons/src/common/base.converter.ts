@@ -4,7 +4,20 @@ import { AdapterConfig, Link, LinkType, Outcome, ShortStep, Step } from "./types
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const AdaptersApi = require("../adapters-api/dist/index");
 const AvailableTestResultOutcomeEnum = AdaptersApi.AvailableTestResultOutcome;
-const OriginLinkTypeEnum = AdaptersApi.LinkType;
+
+// The generated LinkType enum declares members as instance class fields
+// ("Defect" = "Defect"), so LinkType["Defect"] on the class itself is undefined
+// and every lookup used to fall back to "Related". The local LinkType union
+// carries the same values as the API enum names, so map through it instead —
+// Record<> keeps this exhaustive when the union changes.
+const LINK_TYPE_VALUES: Record<LinkType, LinkType> = {
+  Related: "Related",
+  BlockedBy: "BlockedBy",
+  Defect: "Defect",
+  Issue: "Issue",
+  Requirement: "Requirement",
+  Repository: "Repository",
+};
 
 export interface IBaseConverter {
   toOriginOutcome(outcome: Outcome): any;
@@ -35,13 +48,11 @@ export class BaseConverter implements IBaseConverter {
   }
 
   toOriginLinkType(linkType: LinkType): any {
-    // @ts-ignore
-    return OriginLinkTypeEnum[linkType];
+    return LINK_TYPE_VALUES[linkType] ?? undefined;
   }
 
   toLocalLinkType(linkType: any): LinkType {
-    // @ts-ignore
-    return OriginLinkTypeEnum[linkType] as LinkType;
+    return LINK_TYPE_VALUES[linkType as LinkType] ?? ("Related" as LinkType);
   }
 
   toOriginLink(link: Link): any {

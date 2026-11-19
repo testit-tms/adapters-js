@@ -57,3 +57,42 @@ describe("TestRunConverter.toOriginSetupTeardownUpdate", () => {
     expect(model.message).toBeUndefined();
   });
 });
+
+describe("TestRunConverter.toOriginAutotestResult links", () => {
+  it("keeps each addLinks type instead of collapsing to Related", () => {
+    const converter = new TestRunConverter(makeConfig());
+    const model = converter.toOriginAutotestResult({
+      autoTestExternalId: "ext-1",
+      outcome: "Passed",
+      links: [
+        { url: "https://test01.example", title: "Example01", type: "BlockedBy" },
+        { url: "https://test02.example", title: "Example02", type: "Defect" },
+        { url: "https://test03.example", title: "Example03", type: "Issue" },
+        { url: "https://test04.example", title: "Example04", type: "Requirement" },
+        { url: "https://test05.example", title: "Example05", type: "Repository" },
+        { url: "https://test06.example", title: "Example06", type: "Related" },
+      ],
+    } as AutotestResult);
+
+    expect(model.links.map((link: { type: string }) => link.type)).toEqual([
+      "BlockedBy",
+      "Defect",
+      "Issue",
+      "Requirement",
+      "Repository",
+      "Related",
+    ]);
+  });
+
+  it("defaults link without type to Related", () => {
+    const converter = new TestRunConverter(makeConfig());
+    const model = converter.toOriginAutotestResult({
+      autoTestExternalId: "ext-1",
+      outcome: "Passed",
+      links: [{ url: "https://test01.example", title: "Example01" }],
+    } as AutotestResult);
+
+    expect(model.links).toHaveLength(1);
+    expect(model.links[0].type).toBe("Related");
+  });
+});
