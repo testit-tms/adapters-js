@@ -1,5 +1,6 @@
 import { createWriteStream, existsSync, mkdirSync } from "fs";
 import { chmod } from "fs/promises";
+import { get as httpGet } from "http";
 import { get } from "https";
 import { join } from "path";
 import { arch, platform } from "process";
@@ -13,6 +14,8 @@ type RegisterResponse = {
   is_master?: boolean;
 };
 
+type PortAction = "START_NEW" | "ATTACH" | "TRY_NEXT";
+
 // Generated sync-storage client is bundled into lib/sync-storage/dist during build.
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const SyncStorageClient = require("../../sync-storage/dist/index");
@@ -25,22 +28,24 @@ export class SyncStorageRunner implements ISyncStorageRunner {
   private static readonly REQUEST_TIMEOUT_MS = 15000;
   private static readonly RETRY_COUNT = 3;
   private static readonly IN_PROGRESS_POLL_MS = 200;
+  private static readonly DEFAULT_PORT_MAX_BUMP = 10;
   private static readonly REPO_BASE =
     "https://github.com/testit-tms/sync-storage-public/releases/download";
 
   private readonly workerPid: string;
   private readonly baseUrl: string;
-  private readonly serviceUrl: string;
-  private readonly port: string;
+  private readonly preferredPort: number;
+  private port: string;
+  private serviceUrl: string;
   private isMaster = false;
   private alreadyInProgress = false;
   private inProgressPublishing = false;
   private running = false;
   private syncStorageProcess?: ChildProcess;
-  private readonly healthApi: any;
-  private readonly workersApi: any;
-  private readonly testResultsApi: any;
-  private readonly completionApi: any;
+  private healthApi: any;
+  private workersApi: any;
+  private testResultsApi: any;
+  private completionApi: any;
   private readonly registerRequestModel: any;
   private readonly setWorkerStatusRequestModel: any;
   private readonly testResultCutModel: any;
@@ -48,30 +53,151 @@ export class SyncStorageRunner implements ISyncStorageRunner {
   constructor(private readonly testRunId: string, private readonly config: AdapterConfig) {
     this.workerPid = `worker-${process.pid}-${Date.now()}`;
     this.baseUrl = config.url;
-    this.port = config.syncStoragePort ?? "49152";
+    this.preferredPort = SyncStorageRunner.parsePort(config.syncStoragePort, 49152);
+    this.port = String(this.preferredPort);
     this.serviceUrl = `http://localhost:${this.port}`;
 
+    this.registerRequestModel = SyncStorageClient.RegisterRequest;
+    this.setWorkerStatusRequestModel = SyncStorageClient.SetWorkerStatusRequest;
+    this.testResultCutModel = SyncStorageClient.TestResultCutApiModel;
+    this.rebindClients();
+  }
+
+  public static parsePort(value: string | undefined | null, defaultPort: number): number {
+    if (value == null || value === "" || value === "null") {
+      return defaultPort;
+    }
+    const parsed = Number.parseInt(String(value).trim(), 10);
+    return Number.isFinite(parsed) ? parsed : defaultPort;
+  }
+
+  public static resolvePortMaxBump(): number {
+    const raw =
+      process.env.SYNC_STORAGE_PORT_MAX_BUMP ||
+      process.env.TMS_SYNC_STORAGE_PORT_MAX_BUMP;
+    if (!raw) {
+      return SyncStorageRunner.DEFAULT_PORT_MAX_BUMP;
+    }
+    const parsed = Number.parseInt(String(raw).trim(), 10);
+    return Number.isFinite(parsed) && parsed >= 0
+      ? parsed
+      : SyncStorageRunner.DEFAULT_PORT_MAX_BUMP;
+  }
+
+  public static resolvePortAction(
+    healthOk: boolean,
+    runningTestRunId: string | undefined,
+    myTestRunId: string
+  ): PortAction {
+    if (!healthOk) {
+      return "START_NEW";
+    }
+    if (!runningTestRunId) {
+      return "ATTACH";
+    }
+    if (runningTestRunId === myTestRunId) {
+      return "ATTACH";
+    }
+    return "TRY_NEXT";
+  }
+
+  /**
+   * Start or attach. Foreign testRunId / bind-register race → port+1 .. +maxBump.
+   * Do not process.exit-kill SS (detached / CI wait-completion); wait is completeProcessing().
+   */
+  public async start(): Promise<boolean> {
+    try {
+      if (this.running) {
+        return true;
+      }
+
+      const maxBump = SyncStorageRunner.resolvePortMaxBump();
+      for (let offset = 0; offset <= maxBump; offset++) {
+        const candidate = this.preferredPort + offset;
+        this.port = String(candidate);
+        this.rebindClients();
+
+        const healthOk = await this.healthcheck();
+        const runningId = healthOk ? await this.fetchHealthTestRunId() : undefined;
+        const action = SyncStorageRunner.resolvePortAction(
+          healthOk,
+          runningId,
+          this.testRunId
+        );
+
+        if (action === "TRY_NEXT") {
+          logger.info(
+            `Port ${candidate} busy with testRunId=${runningId}; trying ${candidate + 1}`
+          );
+          continue;
+        }
+
+        if (candidate !== this.preferredPort) {
+          logger.info(
+            `syncStoragePort effective=${this.port} (preferred=${this.preferredPort})`
+          );
+        }
+
+        if (action === "ATTACH") {
+          if (!runningId) {
+            logger.warn(
+              `Existing sync-storage on port ${this.port} does not report testRunId in /health; ` +
+                `compatibility cannot be verified. Current testRunId: ${this.testRunId}`
+            );
+          }
+          if (await this.tryRegister()) {
+            this.running = true;
+            return true;
+          }
+          logger.info(
+            `Attach/register failed on port ${candidate} (race or incompatible); trying next`
+          );
+          continue;
+        }
+
+        if (await this.tryStartOwnedProcess()) {
+          if (await this.tryRegister()) {
+            this.running = true;
+            return true;
+          }
+          this.cleanupFailedSpawn();
+          logger.info(
+            `Could not claim port ${candidate} for testRunId=${this.testRunId}; trying next`
+          );
+          continue;
+        }
+
+        this.cleanupFailedSpawn();
+        logger.info(
+          `Could not start sync-storage on port ${candidate}; trying next`
+        );
+      }
+
+      logger.warn(
+        `No free sync-storage port in ${this.preferredPort}..${
+          this.preferredPort + maxBump
+        } for testRunId ${this.testRunId}`
+      );
+      return false;
+    } catch (error) {
+      logger.warn(`Sync storage start failed: ${error}`);
+      this.cleanupFailedSpawn();
+      return false;
+    }
+  }
+
+  private rebindClients(): void {
+    this.serviceUrl = `http://localhost:${this.port}`;
     const apiClient = new SyncStorageClient.ApiClient(this.serviceUrl);
     apiClient.timeout = SyncStorageRunner.REQUEST_TIMEOUT_MS;
     this.healthApi = new SyncStorageClient.HealthApi(apiClient);
     this.workersApi = new SyncStorageClient.WorkersApi(apiClient);
     this.testResultsApi = new SyncStorageClient.TestResultsApi(apiClient);
     this.completionApi = new SyncStorageClient.CompletionApi(apiClient);
-    this.registerRequestModel = SyncStorageClient.RegisterRequest;
-    this.setWorkerStatusRequestModel = SyncStorageClient.SetWorkerStatusRequest;
-    this.testResultCutModel = SyncStorageClient.TestResultCutApiModel;
   }
 
-  public async start(): Promise<boolean> {
+  private async tryRegister(): Promise<boolean> {
     try {
-      const healthy = await this.healthcheck();
-      if (!healthy) {
-        const started = await this.startLocalProcess();
-        if (!started) {
-          return false;
-        }
-      }
-
       const request = this.registerRequestModel.constructFromObject({
         pid: this.workerPid,
         testRunId: this.testRunId,
@@ -82,12 +208,10 @@ export class SyncStorageRunner implements ISyncStorageRunner {
         async () => this.workersApi.registerPost(request),
         SyncStorageRunner.RETRY_COUNT
       );
-
       this.isMaster = Boolean(response?.is_master);
-      this.running = true;
       return true;
     } catch (error) {
-      logger.warn(`Sync storage start failed: ${error}`);
+      logger.warn(`Sync storage register failed on port ${this.port}: ${error}`);
       return false;
     }
   }
@@ -254,7 +378,39 @@ export class SyncStorageRunner implements ISyncStorageRunner {
     }
   }
 
-  private async startLocalProcess(): Promise<boolean> {
+  private async fetchHealthTestRunId(): Promise<string | undefined> {
+    return new Promise((resolve) => {
+      const req = httpGet(
+        `http://localhost:${this.port}/health`,
+        { timeout: 1000 },
+        (res) => {
+          let body = "";
+          res.on("data", (chunk) => {
+            body += chunk;
+          });
+          res.on("end", () => {
+            try {
+              const data = JSON.parse(body);
+              resolve(
+                typeof data.testRunId === "string" && data.testRunId
+                  ? data.testRunId
+                  : undefined
+              );
+            } catch {
+              resolve(undefined);
+            }
+          });
+        }
+      );
+      req.on("error", () => resolve(undefined));
+      req.on("timeout", () => {
+        req.destroy();
+        resolve(undefined);
+      });
+    });
+  }
+
+  private async tryStartOwnedProcess(): Promise<boolean> {
     try {
       const executablePath = await this.prepareExecutable();
       const command = [
@@ -264,22 +420,47 @@ export class SyncStorageRunner implements ISyncStorageRunner {
         "--privateToken", this.config.privateToken,
       ];
 
-      // Do not inherit stdout/stderr: sync-storage binary logs stay silent unless TMS_DEBUG_SYNC_STORAGE=1 adapter traces.
+      // Detached where supported; do not process.exit-kill SS (CI/Work X must outlive runner).
+      // Wait for Work X via completeProcessing(), not exit hooks.
       this.syncStorageProcess = spawn(executablePath, command, {
         cwd: join(process.cwd(), "build", ".caches"),
         stdio: "ignore",
-        detached: platform === "win32",
+        detached: true,
       });
+      this.syncStorageProcess.unref?.();
 
       const started = await this.waitForStartup();
-      if (started) {
-        await this.delay(SyncStorageRunner.PROCESS_WARMUP_MS);
+      if (!started) {
+        return false;
       }
-      return started;
+
+      const runningId = await this.fetchHealthTestRunId();
+      if (runningId && runningId !== this.testRunId) {
+        logger.info(
+          `Port ${this.port} became sync-storage for other testRunId=${runningId} after start race`
+        );
+        return false;
+      }
+
+      await this.delay(SyncStorageRunner.PROCESS_WARMUP_MS);
+      return true;
     } catch (error) {
       logger.warn(`Sync storage local process start failed: ${error}`);
       return false;
     }
+  }
+
+  private cleanupFailedSpawn(): void {
+    this.running = false;
+    this.isMaster = false;
+    if (this.syncStorageProcess && !this.syncStorageProcess.killed) {
+      try {
+        this.syncStorageProcess.kill();
+      } catch {
+        // best-effort
+      }
+    }
+    this.syncStorageProcess = undefined;
   }
 
   private async waitForStartup(): Promise<boolean> {
